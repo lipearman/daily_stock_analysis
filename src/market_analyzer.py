@@ -23,6 +23,7 @@ import pandas as pd
 from src.agent.provider_trace import resolved_model_provider_identity
 from src.config import get_config
 from src.report_language import normalize_report_language
+from src.utils.zh_name_translation import translate_market_names
 from src.search_service import SearchService
 from src.core.market_profile import get_profile, MarketProfile
 from src.core.market_strategy import get_market_strategy_blueprint
@@ -639,6 +640,15 @@ Focus on index trend, liquidity, and sector rotation to shape the next-session t
                     )
                     indices.append(index)
 
+            if indices:
+                translations = translate_market_names(
+                    [idx.name for idx in indices],
+                    target_language=self._get_output_language(),
+                )
+                if translations:
+                    for idx in indices:
+                        idx.name = translations.get(idx.name, idx.name)
+
             if not indices:
                 logger.warning("[大盘] %s action=get_main_indices status=empty", self._log_context())
             else:
@@ -693,6 +703,14 @@ Focus on index trend, liquidity, and sector rotation to shape the next-session t
             top_sectors, bottom_sectors = self.data_manager.get_sector_rankings(5)
 
             if top_sectors or bottom_sectors:
+                translations = translate_market_names(
+                    [s['name'] for s in top_sectors + bottom_sectors if s.get('name')],
+                    target_language=self._get_output_language(),
+                )
+                if translations:
+                    for s in top_sectors + bottom_sectors:
+                        s['name'] = translations.get(s['name'], s['name'])
+
                 overview.top_sectors = top_sectors
                 overview.bottom_sectors = bottom_sectors
 
@@ -716,6 +734,14 @@ Focus on index trend, liquidity, and sector rotation to shape the next-session t
             top_concepts, bottom_concepts = self.data_manager.get_concept_rankings(5)
 
             if top_concepts or bottom_concepts:
+                translations = translate_market_names(
+                    [s.get('name') for s in top_concepts + bottom_concepts if s.get('name')],
+                    target_language=self._get_output_language(),
+                )
+                if translations:
+                    for s in top_concepts + bottom_concepts:
+                        s['name'] = translations.get(s['name'], s['name'])
+
                 overview.top_concepts = top_concepts
                 overview.bottom_concepts = bottom_concepts
 
