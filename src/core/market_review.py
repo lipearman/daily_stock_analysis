@@ -139,6 +139,18 @@ def _get_market_review_text(language: str) -> dict[str, str]:
             "tw_title": "# 대만 시황 리뷰",
             "separator": "> 다음 시장 시황 리뷰",
         }
+    if normalized == "th":
+        return {
+            "root_title": "# 🎯 รีวิวตลาด",
+            "push_title": "🎯 รีวิวตลาด",
+            "cn_title": "# รีวิวตลาดหุ้นจีน A-share",
+            "us_title": "# รีวิวตลาดหุ้นสหรัฐ",
+            "hk_title": "# รีวิวตลาดหุ้นฮ่องกง",
+            "jp_title": "# รีวิวตลาดหุ้นญี่ปุ่น",
+            "kr_title": "# รีวิวตลาดหุ้นเกาหลี",
+            "tw_title": "# รีวิวตลาดหุ้นไต้หวัน",
+            "separator": "> ต่อไปเป็นรีวิวตลาดถัดไป",
+        }
     return {
         "root_title": "# 🎯 大盘复盘",
         "push_title": "🎯 大盘复盘",
@@ -210,7 +222,7 @@ def run_market_review(
     """
     runtime_config = config or get_config()
     history_query_id = query_id or f"market_review_{uuid.uuid4().hex}"
-    review_text = _get_market_review_text(getattr(runtime_config, "report_language", "zh"))
+    review_text = _get_market_review_text(getattr(runtime_config, "report_language", "th"))
     raw_region = (
         override_region
         if override_region is not None
@@ -307,7 +319,7 @@ def run_market_review(
                 review_report=review_report,
                 payloads=market_review_payloads,
                 region=persist_region,
-                language=getattr(runtime_config, "report_language", "zh"),
+                language=getattr(runtime_config, "report_language", "th"),
                 root_title=review_text["root_title"],
             )
             markdown_report = _render_market_review_payload_markdown(
@@ -796,7 +808,7 @@ def _persist_market_review_history(
     try:
         from src.storage import DatabaseManager
 
-        report_language = normalize_report_language(getattr(config, "report_language", "zh"))
+        report_language = normalize_report_language(getattr(config, "report_language", "th"))
         summary = _summarize_market_review(review_report, report_language)
         if report_language == "en":
             stock_name = "Market Review"
@@ -806,6 +818,10 @@ def _persist_market_review_history(
             stock_name = "시황 리뷰"
             operation_advice = "리뷰 보기"
             trend_prediction = "시황 리뷰"
+        elif report_language == "th":
+            stock_name = "รีวิวตลาด"
+            operation_advice = "ดูรีวิว"
+            trend_prediction = "รีวิวตลาด"
         else:
             stock_name = "大盘复盘"
             operation_advice = "查看复盘"
@@ -912,6 +928,7 @@ def _build_market_review_context_overview(
     label = (
         "Market review" if report_language == "en"
         else "시황 리뷰" if report_language == "ko"
+        else "รีวิวตลาด" if report_language == "th"
         else "大盘复盘"
     )
     return {
@@ -954,4 +971,6 @@ def _summarize_market_review(review_report: str, report_language: str) -> str:
         return "Market review report generated."
     if report_language == "ko":
         return "시황 리뷰 리포트가 생성되었습니다."
+    if report_language == "th":
+        return "สร้างรายงานรีวิวตลาดแล้ว"
     return "大盘复盘报告已生成。"

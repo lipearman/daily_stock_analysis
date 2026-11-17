@@ -30,14 +30,14 @@ _ACTION_VALUES = set(get_args(DecisionAction))
 _NON_STOCK_REPORT_TYPES = {"market_review"}
 
 _ACTION_LABELS: Dict[str, Dict[str, str]] = {
-    "buy": {"zh": "买入", "en": "Buy", "ko": "매수"},
-    "add": {"zh": "加仓", "en": "Add", "ko": "추가 매수"},
-    "hold": {"zh": "持有", "en": "Hold", "ko": "보유"},
-    "reduce": {"zh": "减仓", "en": "Reduce", "ko": "비중축소"},
-    "sell": {"zh": "卖出", "en": "Sell", "ko": "매도"},
-    "watch": {"zh": "观望", "en": "Watch", "ko": "관망"},
-    "avoid": {"zh": "回避", "en": "Avoid", "ko": "회피"},
-    "alert": {"zh": "预警", "en": "Alert", "ko": "경고"},
+    "buy": {"zh": "买入", "en": "Buy", "ko": "매수", "th": "ซื้อ"},
+    "add": {"zh": "加仓", "en": "Add", "ko": "추가 매수", "th": "เพิ่มสัดส่วน"},
+    "hold": {"zh": "持有", "en": "Hold", "ko": "보유", "th": "ถือ"},
+    "reduce": {"zh": "减仓", "en": "Reduce", "ko": "비중축소", "th": "ลดสัดส่วน"},
+    "sell": {"zh": "卖出", "en": "Sell", "ko": "매도", "th": "ขาย"},
+    "watch": {"zh": "观望", "en": "Watch", "ko": "관망", "th": "รอจังหวะ"},
+    "avoid": {"zh": "回避", "en": "Avoid", "ko": "회피", "th": "หลีกเลี่ยง"},
+    "alert": {"zh": "预警", "en": "Alert", "ko": "경고", "th": "เตือน"},
 }
 
 _EXPLICIT_ALIASES: Dict[str, DecisionAction] = {
@@ -449,7 +449,7 @@ def _display_result_kwargs(
         "explicit_action": getattr(result, "action", None),
         "action_label": getattr(result, "action_label", None),
         "report_type": report_type or getattr(result, "report_type", None),
-        "report_language": report_language or getattr(result, "report_language", "zh"),
+        "report_language": report_language or getattr(result, "report_language", "th"),
         "sentiment_score": getattr(result, "sentiment_score", None),
         "guardrail_reason": _result_guardrail_reason(result),
     }
@@ -481,7 +481,7 @@ def display_operation_advice_for_result(
     )
     if fields["action_label"]:
         return fields["action_label"]
-    language = report_language or getattr(result, "report_language", "zh")
+    language = report_language or getattr(result, "report_language", "th")
     return localize_operation_advice(getattr(result, "operation_advice", None), language)
 
 

@@ -37,7 +37,7 @@ def claim_scheduled_analysis(config: Any, args: Any, scheduled_for: datetime) ->
         },
         "market_review_enabled": bool(getattr(config, "market_review_enabled", False)),
         "market_review_region": getattr(config, "market_review_region", "cn"),
-        "report_language": getattr(config, "report_language", "zh"),
+        "report_language": getattr(config, "report_language", "th"),
         "report_type": getattr(config, "report_type", "simple"),
     }
     workload_key = hashlib.sha256(

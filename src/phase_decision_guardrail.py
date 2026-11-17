@@ -79,6 +79,8 @@ _KO_POSTMARKET_RECAP_PATTERNS = (
 )
 _IMMEDIATE_ACTION_MARKERS_KO = ("즉시 매수", "지금 매수", "즉시 비중확대", "즉시 매도", "지금 매도", "즉시 비중축소")
 _NEGATION_PREFIXES_KO = ("하지", "권하지 않", "금지", "삼가", "불필요", "피하", "불가", "않", "안")
+_IMMEDIATE_ACTION_MARKERS_TH = ("ซื้อด่วน", "ซื้อตอนนี้", "เพิ่มสัดส่วนทันที", "ขายด่วน", "ขายตอนนี้", "ลดสัดส่วนทันที")
+_NEGATION_PREFIXES_TH = ("ไม่ควร", "ไม่แนะนำ", "ห้าม", "ไม่จำเป็น", "เลี่ยง", "ยังไม่", "อย่า", "ไม่")
 
 
 def _recap_patterns_for(language: str) -> tuple[str, ...]:
@@ -86,6 +88,9 @@ def _recap_patterns_for(language: str) -> tuple[str, ...]:
         return _EN_POSTMARKET_RECAP_PATTERNS
     if language == "ko":
         return _KO_POSTMARKET_RECAP_PATTERNS
+    if language == "th":
+        # Thai reuses the English structural markers (same approach as Korean).
+        return _EN_POSTMARKET_RECAP_PATTERNS
     return _ZH_POSTMARKET_RECAP_PATTERNS
 
 
@@ -94,6 +99,8 @@ def _immediate_markers_for(language: str) -> tuple[str, ...]:
         return _IMMEDIATE_ACTION_MARKERS_EN
     if language == "ko":
         return _IMMEDIATE_ACTION_MARKERS_KO
+    if language == "th":
+        return _IMMEDIATE_ACTION_MARKERS_TH
     return _IMMEDIATE_ACTION_MARKERS_ZH
 
 
@@ -102,14 +109,18 @@ def _negations_for(language: str) -> tuple[str, ...]:
         return _NEGATION_PREFIXES_EN
     if language == "ko":
         return _NEGATION_PREFIXES_KO
+    if language == "th":
+        return _NEGATION_PREFIXES_TH
     return _NEGATION_PREFIXES_ZH
 
 
-def _reason_text(language: str, *, en: str, zh: str, ko: str) -> str:
+def _reason_text(language: str, *, en: str, zh: str, ko: str, th: Optional[str] = None) -> str:
     if language == "en":
         return en
     if language == "ko":
         return ko
+    if language == "th":
+        return th if th is not None else en
     return zh
 
 
@@ -118,14 +129,14 @@ def apply_phase_decision_guardrails(
     *,
     market_phase_summary: Optional[Dict[str, Any]],
     analysis_context_pack_overview: Optional[Dict[str, Any]],
-    report_language: str = "zh",
+    report_language: str = "th",
 ) -> List[str]:
     """Apply phase/data-quality guardrails to an AnalysisResult in place."""
 
     if result is None:
         return []
 
-    language = normalize_report_language(report_language or getattr(result, "report_language", "zh"))
+    language = normalize_report_language(report_language or getattr(result, "report_language", "th"))
     phase_summary = _safe_phase_summary(market_phase_summary)
     overview = analysis_context_pack_overview if isinstance(analysis_context_pack_overview, Mapping) else None
     adjustments: List[str] = []
@@ -261,6 +272,8 @@ def _phase_warning_limitations(summary: Optional[Mapping[str, Any]], *, language
         return [f"market phase warning: {item}" for item in warnings]
     if language == "ko":
         return [f"시장 단계 경고: {item}" for item in warnings]
+    if language == "th":
+        return [f"คำเตือนเฟสตลาด: {item}" for item in warnings]
     return [f"市场阶段提醒：{item}" for item in warnings]
 
 

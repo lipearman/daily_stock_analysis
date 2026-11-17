@@ -41,11 +41,19 @@ _KO_ZERO_RESULTS = (
     "⚠️ 이번 분석에서 사용 가능한 뉴스 데이터를 가져오지 못해 "
     "아래 결론에는 뉴스 근거를 반영하지 않았습니다."
 )
+_TH_NOT_CONFIGURED = (
+    "⚠️ ยังไม่ได้ตั้งค่าช่องทางค้นหาข่าว จึงไม่ได้นำหลักฐานจากข่าวมาใช้ในการวิเคราะห์ครั้งนี้"
+)
+_TH_ZERO_RESULTS = (
+    "⚠️ ไม่สามารถดึงข้อมูลข่าวที่ใช้ได้สำหรับรอบนี้ได้ "
+    "ข้อสรุปด้านล่างจึงไม่ได้รวมหลักฐานจากมิติข่าวสาร"
+)
 
 _DISCLOSURES = {
     "zh": (_ZH_NOT_CONFIGURED, _ZH_ZERO_RESULTS),
     "en": (_EN_NOT_CONFIGURED, _EN_ZERO_RESULTS),
     "ko": (_KO_NOT_CONFIGURED, _KO_ZERO_RESULTS),
+    "th": (_TH_NOT_CONFIGURED, _TH_ZERO_RESULTS),
 }
 
 if set(_DISCLOSURES) != set(SUPPORTED_REPORT_LANGUAGES):
@@ -127,7 +135,7 @@ def _disclosure_for_state(
     return None
 
 
-def empty_news_disclosure(result: Any, language: str = "zh") -> Optional[str]:
+def empty_news_disclosure(result: Any, language: str = "th") -> Optional[str]:
     """未执行或零命中时返回对应提示；正常命中时返回 None。
 
     判定必须独立于模型是否产出了消息面文字：analyzer 的输出 schema 即使
@@ -153,7 +161,7 @@ def empty_news_disclosure(result: Any, language: str = "zh") -> Optional[str]:
 def empty_news_disclosure_from_stored(
     raw_result: Any,
     context_snapshot: Any,
-    language: str = "zh",
+    language: str = "th",
 ) -> Optional[str]:
     """为历史/API 入口从持久化载荷生成披露；旧记录缺字段时保持静默。"""
     news_result_count, known = persisted_news_result_state(raw_result, context_snapshot)

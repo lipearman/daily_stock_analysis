@@ -33,7 +33,7 @@ class DecisionAgent(BaseAgent):
         return ctx.meta.get("response_mode") == "chat"
 
     def system_prompt(self, ctx: AgentContext) -> str:
-        report_language = normalize_report_language(ctx.meta.get("report_language", "zh"))
+        report_language = normalize_report_language(ctx.meta.get("report_language", "th"))
         if self._is_chat_mode(ctx):
             prompt = """\
 You are a **Decision Synthesis Agent** replying directly to the user's latest
@@ -53,6 +53,8 @@ Requirements:
                 return prompt + "\nAlways answer in English.\n"
             if report_language == "ko":
                 return prompt + "\n항상 한국어로 답변하세요.\n"
+            if report_language == "th":
+                return prompt + "\nตอบเป็นภาษาไทยเสมอ\n"
             return prompt + "\n默认使用中文回答。\n"
 
         skills = ""
@@ -147,6 +149,14 @@ should sum to 100; all-zero means no effective signal and must not be faked.
 - Keep every JSON key unchanged.
 - `decision_type` must remain `buy|hold|sell`.
 - Write all human-readable JSON values in Korean (한국어).
+"""
+        if report_language == "th":
+            return prompt + """
+
+## Output Language
+- Keep every JSON key unchanged.
+- `decision_type` must remain `buy|hold|sell`.
+- Write all human-readable JSON values in Thai (ภาษาไทย).
 """
         return prompt + """
 

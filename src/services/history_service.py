@@ -1129,24 +1129,26 @@ class HistoryService:
         """
         report_date = record.created_at.strftime("%Y-%m-%d") if record.created_at else datetime.now().strftime("%Y-%m-%d")
         report_time = record.created_at.strftime("%H:%M:%S") if record.created_at else datetime.now().strftime("%H:%M:%S")
-        report_language = normalize_report_language(getattr(result, "report_language", "zh"))
+        report_language = normalize_report_language(getattr(result, "report_language", "th"))
         labels = get_report_labels(report_language)
 
-        def _label(en: str, zh: str, ko: str) -> str:
+        def _label(en: str, zh: str, ko: str, th: Optional[str] = None) -> str:
             if report_language == "en":
                 return en
             if report_language == "ko":
                 return ko
+            if report_language == "th":
+                return th if th is not None else en
             return zh
 
-        analysis_date_label = _label("Analysis Date", "分析日期", "분석일")
-        report_time_label = _label("Report Time", "报告生成时间", "생성 시각")
-        reason_label = _label("Rationale", "操作理由", "판단 근거")
-        risk_warning_label = _label("Risk Warning", "风险提示", "리스크 경고")
-        technical_heading = _label("Technicals", "技术面", "기술적 분석")
-        ma_label = _label("Moving Averages", "均线", "이동평균")
-        volume_analysis_label = _label("Volume", "量能", "거래량")
-        news_heading = _label("News Flow", "消息面", "뉴스 흐름")
+        analysis_date_label = _label("Analysis Date", "分析日期", "분석일", "วันที่วิเคราะห์")
+        report_time_label = _label("Report Time", "报告生成时间", "생성 시각", "เวลาสร้างรายงาน")
+        reason_label = _label("Rationale", "操作理由", "판단 근거", "เหตุผลการตัดสินใจ")
+        risk_warning_label = _label("Risk Warning", "风险提示", "리스크 경고", "คำเตือนความเสี่ยง")
+        technical_heading = _label("Technicals", "技术面", "기술적 분석", "ด้านเทคนิค")
+        ma_label = _label("Moving Averages", "均线", "이동평균", "เส้นค่าเฉลี่ยเคลื่อนที่")
+        volume_analysis_label = _label("Volume", "量能", "거래량", "วอลุ่ม")
+        news_heading = _label("News Flow", "消息面", "뉴스 흐름", "ข่าวสาร")
 
         # Escape markdown special characters in stock name
         name_escaped = self._escape_md(
@@ -1469,7 +1471,7 @@ class HistoryService:
         return "\n".join(report_lines)
 
     @staticmethod
-    def _format_strategy_skill_items(items: Any, report_language: str = "zh") -> str:
+    def _format_strategy_skill_items(items: Any, report_language: str = "th") -> str:
         none_text = get_report_labels(report_language).get("none_label", "None")
         if not isinstance(items, list):
             return none_text
@@ -1512,12 +1514,12 @@ class HistoryService:
     ) -> str:
         return display_operation_advice_for_result(
             result,
-            report_language=report_language or getattr(result, "report_language", "zh"),
+            report_language=report_language or getattr(result, "report_language", "th"),
         )
 
     def _get_signal_level(self, result: AnalysisResult) -> Tuple[str, str, str]:
         """Get display text and signal metadata from the resolved action."""
-        report_language = getattr(result, "report_language", "zh")
+        report_language = getattr(result, "report_language", "th")
         display_fields = display_action_fields_for_result(
             result,
             report_language=report_language,

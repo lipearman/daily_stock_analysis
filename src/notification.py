@@ -111,7 +111,7 @@ def _safe_float(value: Any) -> Optional[float]:
         return None
 
 
-def _format_strategy_skill_items(items: Any, report_language: str = "zh") -> str:
+def _format_strategy_skill_items(items: Any, report_language: str = "th") -> str:
     none_text = get_report_labels(report_language).get("none_label", "None")
     if not isinstance(items, list):
         return none_text
@@ -360,7 +360,7 @@ class NotificationService(
             if language:
                 return normalize_report_language(language)
 
-        return normalize_report_language(getattr(get_config(), "report_language", "zh"))
+        return normalize_report_language(getattr(get_config(), "report_language", "th"))
 
     def _get_labels(self, payload: Optional[Any] = None) -> Dict[str, str]:
         return get_report_labels(self._get_report_language(payload))
@@ -1139,6 +1139,36 @@ class NotificationService(
             return []
         return [str(item).strip() for item in value if str(item).strip()]
 
+    _TH_DASHBOARD_ENUMS = {
+        "Act now": "ดำเนินการทันที",
+        "Today": "ภายในวันนี้",
+        "This week": "ภายในสัปดาห์นี้",
+        "No rush": "ไม่เร่งร้อน",
+        "Wait for confirmation": "รอการยืนยัน",
+        "Watch": "เฝ้าดู",
+        "Stop-loss or take-profit alert": "แจ้งเตือนตัดขาดทุน/ทำกำไร",
+        "Do not chase": "อย่าไล่ซื้อ",
+        "No intraday action": "ไม่มีการดำเนินการระหว่างวัน",
+        "Pre-market plan": "แผนก่อนเปิดตลาด",
+        "Intraday tracking": "ติดตามระหว่างวัน",
+        "Midday confirmation": "ยืนยันช่วงกลางวัน",
+        "Pre-close risk control": "ควบคุมความเสี่ยงก่อนปิดตลาด",
+        "Post-market review": "รีวิวหลังปิดตลาด",
+        "Non-trading-day watch": "เฝ้าดูวันไม่ซื้อขาย",
+    }
+
+    @classmethod
+    def _localize_dashboard_enum(cls, value: Any, report_language: str) -> Any:
+        """Map known English dashboard enum values to Thai at render time.
+
+        The LLM copies these enum-ish fields (time_sensitivity, phase_decision
+        actions) verbatim from the English JSON schema examples even when the
+        output-language directive requests Thai, so translate the fixed set here.
+        """
+        if report_language != "th" or not isinstance(value, str):
+            return value
+        return cls._TH_DASHBOARD_ENUMS.get(value.strip(), value)
+
     @classmethod
     def _phase_decision_has_content(cls, phase_decision: Dict[str, Any]) -> bool:
         text_keys = (
@@ -1159,6 +1189,7 @@ class NotificationService(
         report_lines: List[str],
         dashboard: Dict[str, Any],
         labels: Dict[str, str],
+        report_language: str = "th",
     ) -> None:
         phase_decision = dashboard.get("phase_decision") if dashboard else None
         if not isinstance(phase_decision, dict):
@@ -1174,8 +1205,8 @@ class NotificationService(
             "",
             f"| {labels['action_window_label']} | {labels['immediate_action_label']} | {labels['next_check_time_label']} |",
             "|---------|---------|---------|",
-            f"| {phase_decision.get('action_window') or 'N/A'} | "
-            f"{phase_decision.get('immediate_action') or 'N/A'} | "
+            f"| {self._localize_dashboard_enum(phase_decision.get('action_window'), report_language) or 'N/A'} | "
+            f"{self._localize_dashboard_enum(phase_decision.get('immediate_action'), report_language) or 'N/A'} | "
             f"{phase_decision.get('next_check_time') or 'N/A'} |",
             "",
         ])
@@ -1273,19 +1304,21 @@ class NotificationService(
         report_language = self._get_report_language(results)
         labels = get_report_labels(report_language)
 
-        def _nlabel(en: str, zh: str, ko: str) -> str:
+        def _nlabel(en: str, zh: str, ko: str, th: Optional[str] = None) -> str:
             if report_language == "en":
                 return en
             if report_language == "ko":
                 return ko
+            if report_language == "th":
+                return th if th is not None else en
             return zh
 
-        reason_label = _nlabel("Rationale", "操作理由", "판단 근거")
-        risk_warning_label = _nlabel("Risk Warning", "风险提示", "리스크 경고")
-        technical_heading = _nlabel("Technicals", "技术面", "기술적 분석")
-        ma_label = _nlabel("Moving Averages", "均线", "이동평균")
-        volume_analysis_label = _nlabel("Volume", "量能", "거래량")
-        news_heading = _nlabel("News Flow", "消息面", "뉴스 흐름")
+        reason_label = _nlabel("Rationale", "操作理由", "판단 근거", "เหตุผลการตัดสินใจ")
+        risk_warning_label = _nlabel("Risk Warning", "风险提示", "리스크 경고", "คำเตือนความเสี่ยง")
+        technical_heading = _nlabel("Technicals", "技术面", "기술적 분석", "ด้านเทคนิค")
+        ma_label = _nlabel("Moving Averages", "均线", "이동평균", "เส้นค่าเฉลี่ยเคลื่อนที่")
+        volume_analysis_label = _nlabel("Volume", "量能", "거래량", "วอลุ่ม")
+        news_heading = _nlabel("News Flow", "消息面", "뉴스 흐름", "ข่าวสาร")
         if getattr(config, 'report_renderer_enabled', False) and results:
             from src.services.report_renderer import render
             out = render(
@@ -1392,7 +1425,10 @@ class NotificationService(
                 # ========== 核心结论 ==========
                 core = dashboard.get('core_conclusion', {}) if dashboard else {}
                 one_sentence = core.get('one_sentence', result.analysis_summary)
-                time_sense = core.get('time_sensitivity', labels['default_time_sensitivity'])
+                time_sense = self._localize_dashboard_enum(
+                    core.get('time_sensitivity', labels['default_time_sensitivity']),
+                    report_language,
+                )
                 pos_advice = core.get('position_advice', {})
 
                 report_lines.extend([
@@ -1487,7 +1523,7 @@ class NotificationService(
                                 "",
                             ])
 
-                self._append_phase_decision_block(report_lines, dashboard, labels)
+                self._append_phase_decision_block(report_lines, dashboard, labels, report_language)
 
                 # ========== 作战计划 ==========
                 battle = dashboard.get('battle_plan', {}) if dashboard else {}

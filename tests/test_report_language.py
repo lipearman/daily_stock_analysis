@@ -98,8 +98,8 @@ class KoreanReportLanguageTestCase(unittest.TestCase):
         self.assertEqual(normalize_report_language("kr"), "ko")
 
     def test_unknown_language_falls_back_to_default(self) -> None:
-        self.assertEqual(normalize_report_language("fr"), "zh")
-        self.assertEqual(normalize_report_language(None), "zh")
+        self.assertEqual(normalize_report_language("fr"), "th")
+        self.assertEqual(normalize_report_language(None), "th")
 
     def test_korean_labels_cover_full_english_key_set(self) -> None:
         ko_labels = get_report_labels("ko")
@@ -148,6 +148,58 @@ class KoreanReportLanguageTestCase(unittest.TestCase):
     def test_korean_values_canonicalize_back_for_other_languages(self) -> None:
         self.assertEqual(localize_trend_prediction("상승", "en"), "Bullish")
         self.assertEqual(localize_operation_advice("적극 매도", "zh"), "强烈卖出")
+
+
+class ThaiReportLanguageTestCase(unittest.TestCase):
+    def test_thai_is_supported_and_default(self) -> None:
+        self.assertIn("th", SUPPORTED_REPORT_LANGUAGES)
+        self.assertEqual(normalize_report_language(None), "th")
+
+    def test_normalize_thai_aliases(self) -> None:
+        self.assertEqual(normalize_report_language("th"), "th")
+        self.assertEqual(normalize_report_language("thai"), "th")
+        self.assertEqual(normalize_report_language("th-TH"), "th")
+        self.assertEqual(normalize_report_language("ไทย"), "th")
+
+    def test_thai_labels_cover_full_english_key_set(self) -> None:
+        th_labels = get_report_labels("th")
+        en_labels = get_report_labels("en")
+        self.assertEqual(set(th_labels.keys()), set(en_labels.keys()))
+        self.assertEqual(th_labels["dashboard_title"], "แดชบอร์ดการตัดสินใจ")
+        self.assertEqual(th_labels["risk_alerts_label"], "เตือนความเสี่ยง")
+
+    def test_data_sources_label_is_localized_for_thai(self) -> None:
+        self.assertEqual(get_report_labels("th")["data_sources_label"], "แหล่งข้อมูล")
+
+    def test_thai_sentiment_label_bands(self) -> None:
+        self.assertEqual(get_sentiment_label(80, "th"), "บวกมาก")
+        self.assertEqual(get_sentiment_label(40, "th"), "เป็นกลาง")
+        self.assertEqual(get_sentiment_label(0, "th"), "ลบมาก")
+
+    def test_thai_operation_advice_and_trend(self) -> None:
+        self.assertEqual(localize_operation_advice("买入", "th"), "ซื้อ")
+        self.assertEqual(localize_operation_advice("strong sell", "th"), "ขายเด็ดขาด")
+        self.assertEqual(localize_trend_prediction("bullish", "th"), "ขาขึ้น")
+
+    def test_thai_input_canonicalizes_back_for_other_languages(self) -> None:
+        self.assertEqual(localize_trend_prediction("ขาขึ้น", "en"), "Bullish")
+        self.assertEqual(localize_operation_advice("ขายเด็ดขาด", "zh"), "强烈卖出")
+
+    def test_thai_localized_stock_name_placeholder(self) -> None:
+        self.assertEqual(
+            get_localized_stock_name("股票AAPL", "AAPL", "th"),
+            "หุ้นไม่ระบุชื่อ",
+        )
+
+    def test_thai_advice_canonicalizes_to_decision_type(self) -> None:
+        self.assertEqual(infer_decision_type_from_advice("ซื้อ"), "buy")
+        self.assertEqual(infer_decision_type_from_advice("ขาย"), "sell")
+        self.assertEqual(infer_decision_type_from_advice("ถือ"), "hold")
+        self.assertEqual(infer_decision_type_from_advice("รอจังหวะ"), "hold")
+
+    def test_thai_advice_resolves_signal_level(self) -> None:
+        self.assertEqual(get_signal_level("ซื้อ", 72, "th"), ("ซื้อ", "🟢", "buy"))
+        self.assertEqual(get_signal_level("ขาย", 30, "th"), ("ขาย", "🔴", "sell"))
 
 
 if __name__ == "__main__":

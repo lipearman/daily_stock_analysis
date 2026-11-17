@@ -2687,7 +2687,7 @@ _FIELD_DEFINITIONS: Dict[str, Dict[str, Any]] = {
         "examples": [
             "REPORT_TYPE=simple",
             "REPORT_TYPE=full",
-            "REPORT_LANGUAGE=zh",
+            "REPORT_LANGUAGE=th",
         ],
         "docs": [
             {
@@ -2699,25 +2699,27 @@ _FIELD_DEFINITIONS: Dict[str, Dict[str, Any]] = {
     },
     "REPORT_LANGUAGE": {
         "title": "Report Language",
-        "description": "Default output language for reports, Agent Chat fallback replies, and notification templates. Supported values: zh, en, ko.",
+        "description": "Default output language for reports, Agent Chat fallback replies, and notification templates. Supported values: zh, en, ko, th.",
         "category": "notification",
         "data_type": "string",
         "ui_control": "select",
         "is_sensitive": False,
         "is_required": False,
         "is_editable": True,
-        "default_value": "zh",
+        "default_value": "th",
         "options": [
+            {"label": "Thai", "value": "th"},
             {"label": "Chinese", "value": "zh"},
             {"label": "English", "value": "en"},
             {"label": "Korean", "value": "ko"},
         ],
-        "validation": {"enum": ["zh", "en", "ko"]},
+        "validation": {"enum": ["zh", "en", "ko", "th"]},
         "display_order": 56,
         "help_key": "settings.notification.report_output",
         "examples": [
-            "REPORT_LANGUAGE=zh",
+            "REPORT_LANGUAGE=th",
             "REPORT_LANGUAGE=en",
+            "REPORT_LANGUAGE=zh",
             "REPORT_LANGUAGE=ko",
         ],
         "docs": [

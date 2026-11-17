@@ -482,7 +482,7 @@ class StockAnalysisPipeline:
             )
             market_phase_context_dict = market_phase_context.to_dict()
             market_phase_summary = render_market_phase_summary(market_phase_context_dict)
-            report_language = normalize_report_language(getattr(self.config, "report_language", "zh"))
+            report_language = normalize_report_language(getattr(self.config, "report_language", "th"))
             daily_market_target_date = self._coerce_daily_market_context_date(
                 getattr(market_phase_context, "effective_daily_bar_date", None)
                 or market_phase_context_dict.get("effective_daily_bar_date")
@@ -910,7 +910,7 @@ class StockAnalysisPipeline:
                     market_phase_summary=market_phase_summary,
                     analysis_context_pack_overview=analysis_context_pack_overview,
                     report_language=getattr(result, "report_language", None)
-                    or getattr(self.config, "report_language", "zh"),
+                    or getattr(self.config, "report_language", "th"),
                 )
                 if adjustments:
                     logger.info("[phase_decision_guardrail] Applied adjustments for %s: %s", code, adjustments)
@@ -918,7 +918,7 @@ class StockAnalysisPipeline:
                     result,
                     daily_market_context=enhanced_context.get("daily_market_context"),
                     report_language=getattr(result, "report_language", None)
-                    or getattr(self.config, "report_language", "zh"),
+                    or getattr(self.config, "report_language", "th"),
                 )
                 if market_context_adjustments:
                     logger.info(
@@ -1028,7 +1028,7 @@ class StockAnalysisPipeline:
             增强后的上下文
         """
         enhanced = context.copy()
-        enhanced["report_language"] = normalize_report_language(getattr(self.config, "report_language", "zh"))
+        enhanced["report_language"] = normalize_report_language(getattr(self.config, "report_language", "th"))
         
         # 添加股票名称
         if stock_name:
@@ -1502,7 +1502,7 @@ class StockAnalysisPipeline:
         """
         try:
             from src.agent.factory import build_agent_executor
-            report_language = normalize_report_language(getattr(self.config, "report_language", "zh"))
+            report_language = normalize_report_language(getattr(self.config, "report_language", "th"))
 
             is_index = (
                 analysis_target is not None
@@ -1616,7 +1616,7 @@ class StockAnalysisPipeline:
                 initial_context["analysis_context_pack_summary"] = analysis_context_pack_summary
 
             # 运行 Agent
-            if report_language in ("en", "ko"):
+            if report_language in ("en", "ko", "th"):
                 message = f"Analyze stock {code} ({stock_name}) and return the full decision dashboard JSON."
             else:
                 message = f"请分析股票 {code} ({stock_name})，并生成决策仪表盘报告。"
@@ -1762,7 +1762,7 @@ class StockAnalysisPipeline:
                     market_phase_summary=market_phase_summary,
                     analysis_context_pack_overview=analysis_context_pack_overview,
                     report_language=getattr(result, "report_language", None)
-                    or getattr(self.config, "report_language", "zh"),
+                    or getattr(self.config, "report_language", "th"),
                 )
                 if adjustments:
                     logger.info("[phase_decision_guardrail] Applied agent adjustments for %s: %s", code, adjustments)
@@ -1789,7 +1789,7 @@ class StockAnalysisPipeline:
                     result,
                     daily_market_context=initial_context.get("daily_market_context"),
                     report_language=getattr(result, "report_language", None)
-                    or getattr(self.config, "report_language", "zh"),
+                    or getattr(self.config, "report_language", "th"),
                 )
                 if market_context_adjustments:
                     logger.info(
@@ -2164,7 +2164,7 @@ class StockAnalysisPipeline:
         """
         将 AgentResult 转换为 AnalysisResult。
         """
-        report_language = normalize_report_language(getattr(self.config, "report_language", "zh"))
+        report_language = normalize_report_language(getattr(self.config, "report_language", "th"))
         dash = None
         result = AnalysisResult(
             code=code,
@@ -2330,6 +2330,7 @@ class StockAnalysisPipeline:
                 result.error_message = (
                     "Agent failed to generate a valid decision dashboard" if report_language == "en"
                     else "에이전트가 유효한 결정 대시보드를 생성하지 못했습니다" if report_language == "ko"
+                    else "Agent สร้างแดชบอร์ดการตัดสินใจที่ใช้ได้ไม่สำเร็จ" if report_language == "th"
                     else "Agent 未能生成有效的决策仪表盘"
                 )
 
@@ -2457,7 +2458,7 @@ class StockAnalysisPipeline:
     @staticmethod
     def _trend_label_fallback(
         trend_result: Optional[TrendAnalysisResult],
-        report_language: str = "zh",
+        report_language: str = "th",
     ) -> str:
         if trend_result is None:
             return ""
@@ -2470,7 +2471,7 @@ class StockAnalysisPipeline:
     @staticmethod
     def _trend_signal_fallback(
         trend_result: Optional[TrendAnalysisResult],
-        report_language: str = "zh",
+        report_language: str = "th",
     ) -> str:
         if trend_result is None:
             return ""
@@ -2553,6 +2554,8 @@ class StockAnalysisPipeline:
                 return f"Trend view: {trend}; action advice: {advice}."
             if report_language == "ko":
                 return f"추세 결론: {trend}; 대응 전략: {advice}."
+            if report_language == "th":
+                return f"มุมมองเทรนด์: {trend}; คำแนะนำ: {advice}"
             return f"趋势结论：{trend}；操作建议：{advice}。"
         return ""
 
@@ -2592,6 +2595,7 @@ class StockAnalysisPipeline:
             ) or (
                 "Analysis pending" if report_language == "en"
                 else "분석 보완 예정" if report_language == "ko"
+                else "รอการวิเคราะห์เพิ่มเติม" if report_language == "th"
                 else "分析待补充"
             )
 

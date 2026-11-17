@@ -40,9 +40,20 @@ _AGGRESSIVE_BUY_MARKERS_KO = (
     "추격 매수",
     "비중 확대",
 )
+_AGGRESSIVE_BUY_MARKERS_TH = (
+    "ซื้อด่วน",
+    "ซื้อตอนนี้",
+    "ซื้อเด็ดขาด",
+    "ซื้อแบบก้าวร้าว",
+    "ไล่ซื้อ",
+    "เพิ่มสัดส่วน",
+    "ซื้อเพิ่ม",
+    "แบ่งซื้อ",
+)
 _NEGATION_HINTS_ZH = ("暂不", "不建议", "不应", "不宜", "不能", "无法", "不允许", "禁止", "避免", "不要", "别", "先不")
 _NEGATION_HINTS_EN = (" not ", "do not", "don't", "no ", "never", "avoid")
 _NEGATION_HINTS_KO = ("권하지 않", "하지 않", "하지 마", "불가", "금지", "피하", "보류", "않", "말")
+_NEGATION_HINTS_TH = ("ไม่ควร", "ไม่แนะนำ", "อย่า", "ยังไม่", "ห้าม", "เลี่ยง", "ไม่", "อย่าเพิ่ง")
 _NEGATION_LOOKBACK = 16
 _GUARDRAIL_SENTIMENT_SCORE = 52
 
@@ -56,6 +67,8 @@ def _negation_hints_for(language: str) -> tuple[str, ...]:
         return _NEGATION_HINTS_EN
     if language == "ko":
         return _NEGATION_HINTS_KO
+    if language == "th":
+        return _NEGATION_HINTS_TH
     return _NEGATION_HINTS_ZH
 
 
@@ -63,14 +76,14 @@ def apply_daily_market_context_guardrail(
     result: Any,
     *,
     daily_market_context: Any,
-    report_language: str = "zh",
+    report_language: str = "th",
 ) -> List[str]:
     """Soften aggressive buy advice when daily market context is conservative."""
 
     if result is None or not _is_conservative_context(daily_market_context):
         return []
 
-    language = normalize_report_language(report_language or getattr(result, "report_language", "zh"))
+    language = normalize_report_language(report_language or getattr(result, "report_language", "th"))
     if not _has_aggressive_buy_signal(result, language=language):
         return []
 
@@ -145,6 +158,11 @@ def _softened_position_advice(language: str) -> dict[str, str]:
             "no_position": "시장 위험이 완화되거나 확인 신호가 나오기 전까지 신규 진입하지 마세요.",
             "has_position": "소량만 보유하고 비중을 늘리지 마세요. 리스크 관리선이 무너지면 비중을 줄이세요.",
         }
+    if language == "th":
+        return {
+            "no_position": "ยังไม่เปิดสถานะใหม่จนกว่าความเสี่ยงตลาดจะทุเลาลงหรือมีสัญญาณยืนยัน",
+            "has_position": "ถือเฉพาะสัดส่วนเล็ก อย่าเพิ่มสัดส่วน และลดสัดส่วนเมื่อเส้นควบคุมความเสี่ยงถูกทะลุ",
+        }
     return {
         "no_position": "大盘环境偏谨慎，暂不开新仓，等待风险缓解或确认信号。",
         "has_position": "仅保留小仓观察，暂不扩大仓位；若跌破风控位优先降低仓位。",
@@ -165,6 +183,12 @@ def _softened_position_strategy(language: str) -> dict[str, str]:
             "entry_plan": position_advice["no_position"],
             "risk_control": "시장 위험이 완화되기 전까지 비중을 늘리지 말고 낙폭을 엄격히 관리하세요.",
         }
+    if language == "th":
+        return {
+            "suggested_position": "สัดส่วนเล็ก/ป้องกันความเสี่ยง",
+            "entry_plan": position_advice["no_position"],
+            "risk_control": "ยังไม่เพิ่มสัดส่วนก่อนความเสี่ยงตลาดทุเลาลง และควบคุมการขาดทุนอย่างเข้มงวด",
+        }
     return {
         "suggested_position": "小仓/低仓位",
         "entry_plan": position_advice["no_position"],
@@ -180,6 +204,8 @@ def _append_softening_limitation(phase_decision: dict[str, Any], *, language: st
         limitation = "Daily market context is conservative/high risk; aggressive buy advice was softened."
     elif language == "ko":
         limitation = "대시장 환경이 보수적/고위험이라 공격적 매수 권고를 완화했습니다."
+    elif language == "th":
+        limitation = "ภาพรวมตลาดวันนี้เป็นฝั่งระมัดระวัง/เสี่ยงสูง จึงปรับลดคำแนะนำซื้อแบบก้าวร้าวลง"
     else:
         limitation = "大盘环境偏谨慎/高风险，已软化激进买入建议。"
     if limitation not in limitations:
@@ -190,6 +216,8 @@ def _append_softening_limitation(phase_decision: dict[str, Any], *, language: st
         reason_note = "Market context requires conservative sizing."
     elif language == "ko":
         reason_note = "시장 환경상 보수적인 비중 관리가 필요합니다."
+    elif language == "th":
+        reason_note = "สภาพตลาดต้องการการบริหารสัดส่วนแบบระมัดระวัง"
     else:
         reason_note = "大盘环境要求降低进攻性并控制仓位。"
     separator = "; " if language == "en" else "；"
@@ -234,6 +262,8 @@ def _buy_markers(language: str) -> tuple[str, ...]:
         return _AGGRESSIVE_BUY_MARKERS_EN
     if language == "ko":
         return _AGGRESSIVE_BUY_MARKERS_KO
+    if language == "th":
+        return _AGGRESSIVE_BUY_MARKERS_TH
     return _AGGRESSIVE_BUY_MARKERS_ZH
 
 

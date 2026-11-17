@@ -8,7 +8,7 @@ from typing import Any, Dict, Optional
 
 from src.schemas.decision_scale import signal_key_for_score
 
-SUPPORTED_REPORT_LANGUAGES = ("zh", "en", "ko")
+SUPPORTED_REPORT_LANGUAGES = ("zh", "en", "ko", "th")
 
 _REPORT_LANGUAGE_ALIASES = {
     "zh-cn": "zh",
@@ -28,6 +28,10 @@ _REPORT_LANGUAGE_ALIASES = {
     "kr": "ko",
     "ko-kr": "ko",
     "ko_kr": "ko",
+    "thai": "th",
+    "th-th": "th",
+    "th_th": "th",
+    "ไทย": "th",
 }
 
 _OPERATION_ADVICE_CANONICAL_MAP = {
@@ -63,16 +67,25 @@ _OPERATION_ADVICE_CANONICAL_MAP = {
     "비중축소": "reduce",
     "매도": "sell",
     "적극 매도": "strong_sell",
+    "ซื้อเด็ดขาด": "strong_buy",
+    "ซื้อ": "buy",
+    "ถือ": "hold",
+    "ถือและเฝ้าดู": "hold",
+    "รอจังหวะ": "watch",
+    "เฝ้าดู": "watch",
+    "ลดสัดส่วน": "reduce",
+    "ขาย": "sell",
+    "ขายเด็ดขาด": "strong_sell",
 }
 
 _OPERATION_ADVICE_TRANSLATIONS = {
-    "strong_buy": {"zh": "强烈买入", "en": "Strong Buy", "ko": "적극 매수"},
-    "buy": {"zh": "买入", "en": "Buy", "ko": "매수"},
-    "hold": {"zh": "持有", "en": "Hold", "ko": "보유"},
-    "watch": {"zh": "观望", "en": "Watch", "ko": "관망"},
-    "reduce": {"zh": "减仓", "en": "Reduce", "ko": "비중축소"},
-    "sell": {"zh": "卖出", "en": "Sell", "ko": "매도"},
-    "strong_sell": {"zh": "强烈卖出", "en": "Strong Sell", "ko": "적극 매도"},
+    "strong_buy": {"zh": "强烈买入", "en": "Strong Buy", "ko": "적극 매수", "th": "ซื้อเด็ดขาด"},
+    "buy": {"zh": "买入", "en": "Buy", "ko": "매수", "th": "ซื้อ"},
+    "hold": {"zh": "持有", "en": "Hold", "ko": "보유", "th": "ถือ"},
+    "watch": {"zh": "观望", "en": "Watch", "ko": "관망", "th": "รอจังหวะ"},
+    "reduce": {"zh": "减仓", "en": "Reduce", "ko": "비중축소", "th": "ลดสัดส่วน"},
+    "sell": {"zh": "卖出", "en": "Sell", "ko": "매도", "th": "ขาย"},
+    "strong_sell": {"zh": "强烈卖出", "en": "Strong Sell", "ko": "적극 매도", "th": "ขายเด็ดขาด"},
 }
 
 _TREND_PREDICTION_CANONICAL_MAP = {
@@ -104,14 +117,20 @@ _TREND_PREDICTION_CANONICAL_MAP = {
     "횡보": "sideways",
     "하락": "bearish",
     "강한 하락": "strong_bearish",
+    "ขาขึ้นแรง": "strong_bullish",
+    "ขาขึ้น": "bullish",
+    "ออกข้าง": "sideways",
+    "แกว่งตัว": "sideways",
+    "ขาลง": "bearish",
+    "ขาลงแรง": "strong_bearish",
 }
 
 _TREND_PREDICTION_TRANSLATIONS = {
-    "strong_bullish": {"zh": "强烈看多", "en": "Strong Bullish", "ko": "강한 상승"},
-    "bullish": {"zh": "看多", "en": "Bullish", "ko": "상승"},
-    "sideways": {"zh": "震荡", "en": "Sideways", "ko": "횡보"},
-    "bearish": {"zh": "看空", "en": "Bearish", "ko": "하락"},
-    "strong_bearish": {"zh": "强烈看空", "en": "Strong Bearish", "ko": "강한 하락"},
+    "strong_bullish": {"zh": "强烈看多", "en": "Strong Bullish", "ko": "강한 상승", "th": "ขาขึ้นแรง"},
+    "bullish": {"zh": "看多", "en": "Bullish", "ko": "상승", "th": "ขาขึ้น"},
+    "sideways": {"zh": "震荡", "en": "Sideways", "ko": "횡보", "th": "ออกข้าง"},
+    "bearish": {"zh": "看空", "en": "Bearish", "ko": "하락", "th": "ขาลง"},
+    "strong_bearish": {"zh": "强烈看空", "en": "Strong Bearish", "ko": "강한 하락", "th": "ขาลงแรง"},
 }
 
 _CONFIDENCE_LEVEL_CANONICAL_MAP = {
@@ -125,12 +144,16 @@ _CONFIDENCE_LEVEL_CANONICAL_MAP = {
     "높음": "high",
     "보통": "medium",
     "낮음": "low",
+    "สูง": "high",
+    "ปานกลาง": "medium",
+    "กลาง": "medium",
+    "ต่ำ": "low",
 }
 
 _CONFIDENCE_LEVEL_TRANSLATIONS = {
-    "high": {"zh": "高", "en": "High", "ko": "높음"},
-    "medium": {"zh": "中", "en": "Medium", "ko": "보통"},
-    "low": {"zh": "低", "en": "Low", "ko": "낮음"},
+    "high": {"zh": "高", "en": "High", "ko": "높음", "th": "สูง"},
+    "medium": {"zh": "中", "en": "Medium", "ko": "보통", "th": "ปานกลาง"},
+    "low": {"zh": "低", "en": "Low", "ko": "낮음", "th": "ต่ำ"},
 }
 
 _STRATEGY_SIGNAL_CANONICAL_MAP = {
@@ -146,14 +169,19 @@ _STRATEGY_SIGNAL_CANONICAL_MAP = {
     "strong sell": "strong_sell",
     "strong_sell": "strong_sell",
     "强烈卖出": "strong_sell",
+    "ซื้อเด็ดขาด": "strong_buy",
+    "ซื้อ": "buy",
+    "ถือ": "hold",
+    "ขาย": "sell",
+    "ขายเด็ดขาด": "strong_sell",
 }
 
 _STRATEGY_SIGNAL_TRANSLATIONS = {
-    "strong_buy": {"zh": "强烈买入", "en": "Strong Buy", "ko": "적극 매수"},
-    "buy": {"zh": "买入", "en": "Buy", "ko": "매수"},
-    "hold": {"zh": "持有", "en": "Hold", "ko": "보유"},
-    "sell": {"zh": "卖出", "en": "Sell", "ko": "매도"},
-    "strong_sell": {"zh": "强烈卖出", "en": "Strong Sell", "ko": "적극 매도"},
+    "strong_buy": {"zh": "强烈买入", "en": "Strong Buy", "ko": "적극 매수", "th": "ซื้อเด็ดขาด"},
+    "buy": {"zh": "买入", "en": "Buy", "ko": "매수", "th": "ซื้อ"},
+    "hold": {"zh": "持有", "en": "Hold", "ko": "보유", "th": "ถือ"},
+    "sell": {"zh": "卖出", "en": "Sell", "ko": "매도", "th": "ขาย"},
+    "strong_sell": {"zh": "强烈卖出", "en": "Strong Sell", "ko": "적극 매도", "th": "ขายเด็ดขาด"},
 }
 
 _CONSENSUS_LEVEL_CANONICAL_MAP = {
@@ -167,13 +195,17 @@ _CONSENSUS_LEVEL_CANONICAL_MAP = {
     "证据不足": "insufficient",
     "Insufficient": "insufficient",
     "증거 부족": "insufficient",
+    "สูง": "high",
+    "ปานกลาง": "medium",
+    "ต่ำ": "low",
+    "หลักฐานไม่เพียงพอ": "insufficient",
 }
 
 _CONSENSUS_LEVEL_TRANSLATIONS = {
-    "high": {"zh": "高", "en": "High", "ko": "높음"},
-    "medium": {"zh": "中", "en": "Medium", "ko": "보통"},
-    "low": {"zh": "低", "en": "Low", "ko": "낮음"},
-    "insufficient": {"zh": "证据不足", "en": "Insufficient", "ko": "증거 부족"},
+    "high": {"zh": "高", "en": "High", "ko": "높음", "th": "สูง"},
+    "medium": {"zh": "中", "en": "Medium", "ko": "보통", "th": "ปานกลาง"},
+    "low": {"zh": "低", "en": "Low", "ko": "낮음", "th": "ต่ำ"},
+    "insufficient": {"zh": "证据不足", "en": "Insufficient", "ko": "증거 부족", "th": "หลักฐานไม่เพียงพอ"},
 }
 
 _CONFLICT_SEVERITY_CANONICAL_MAP = {
@@ -185,13 +217,17 @@ _CONFLICT_SEVERITY_CANONICAL_MAP = {
     "中": "medium",
     "high": "high",
     "高": "high",
+    "ไม่มี": "none",
+    "ต่ำ": "low",
+    "ปานกลาง": "medium",
+    "สูง": "high",
 }
 
 _CONFLICT_SEVERITY_TRANSLATIONS = {
-    "none": {"zh": "无", "en": "None", "ko": "없음"},
-    "low": {"zh": "低", "en": "Low", "ko": "낮음"},
-    "medium": {"zh": "中", "en": "Medium", "ko": "보통"},
-    "high": {"zh": "高", "en": "High", "ko": "높음"},
+    "none": {"zh": "无", "en": "None", "ko": "없음", "th": "ไม่มี"},
+    "low": {"zh": "低", "en": "Low", "ko": "낮음", "th": "ต่ำ"},
+    "medium": {"zh": "中", "en": "Medium", "ko": "보통", "th": "ปานกลาง"},
+    "high": {"zh": "高", "en": "High", "ko": "높음", "th": "สูง"},
 }
 
 _STRATEGY_SKILL_CANONICAL_MAP = {
@@ -243,21 +279,21 @@ _STRATEGY_SKILL_CANONICAL_MAP = {
 }
 
 _STRATEGY_SKILL_TRANSLATIONS = {
-    "bull_trend": {"zh": "默认多头趋势", "en": "Bull Trend", "ko": "기본 상승 추세"},
-    "hot_theme": {"zh": "热点题材", "en": "Hot Theme", "ko": "핫 테마"},
-    "volume_breakout": {"zh": "放量突破", "en": "Volume Breakout", "ko": "거래량 돌파"},
-    "ma_golden_cross": {"zh": "均线金叉", "en": "MA Golden Cross", "ko": "이평선 골든크로스"},
-    "growth_quality": {"zh": "成长质量", "en": "Growth Quality", "ko": "성장 품질"},
-    "bottom_volume": {"zh": "底部放量", "en": "Bottom Volume", "ko": "저점 거래량"},
-    "box_oscillation": {"zh": "箱体震荡", "en": "Box Oscillation", "ko": "박스권 등락"},
-    "chan_theory": {"zh": "缠论结构", "en": "Chan Theory", "ko": "찬 이론 구조"},
-    "dragon_head": {"zh": "龙头战法", "en": "Dragon Head", "ko": "대장주 전략"},
-    "emotion_cycle": {"zh": "情绪周期", "en": "Emotion Cycle", "ko": "심리 사이클"},
-    "event_driven": {"zh": "事件驱动", "en": "Event Driven", "ko": "이벤트 드리븐"},
-    "expectation_repricing": {"zh": "预期重估", "en": "Expectation Repricing", "ko": "기대 재평가"},
-    "one_yang_three_yin": {"zh": "一阳三阴", "en": "One Yang Three Yin", "ko": "일양삼음"},
-    "shrink_pullback": {"zh": "缩量回踩", "en": "Shrink Pullback", "ko": "거래량 축소 눌림"},
-    "wave_theory": {"zh": "波浪理论", "en": "Wave Theory", "ko": "파동 이론"},
+    "bull_trend": {"zh": "默认多头趋势", "en": "Bull Trend", "ko": "기본 상승 추세", "th": "เทรนด์ขาขึ้น"},
+    "hot_theme": {"zh": "热点题材", "en": "Hot Theme", "ko": "핫 테마", "th": "ธีมร้อน"},
+    "volume_breakout": {"zh": "放量突破", "en": "Volume Breakout", "ko": "거래량 돌파", "th": "วอลุ่มทะลุ"},
+    "ma_golden_cross": {"zh": "均线金叉", "en": "MA Golden Cross", "ko": "이평선 골든크로스", "th": "MA ตัดขึ้น"},
+    "growth_quality": {"zh": "成长质量", "en": "Growth Quality", "ko": "성장 품질", "th": "คุณภาพการเติบโต"},
+    "bottom_volume": {"zh": "底部放量", "en": "Bottom Volume", "ko": "저점 거래량", "th": "วอลุ่มจุดต่ำ"},
+    "box_oscillation": {"zh": "箱体震荡", "en": "Box Oscillation", "ko": "박스권 등락", "th": "แกว่งในกรอบ"},
+    "chan_theory": {"zh": "缠论结构", "en": "Chan Theory", "ko": "찬 이론 구조", "th": "โครงสร้างทฤษฎีชาน"},
+    "dragon_head": {"zh": "龙头战法", "en": "Dragon Head", "ko": "대장주 전략", "th": "หุ้นนำตลาด"},
+    "emotion_cycle": {"zh": "情绪周期", "en": "Emotion Cycle", "ko": "심리 사이클", "th": "วงจรจิตวิทยาตลาด"},
+    "event_driven": {"zh": "事件驱动", "en": "Event Driven", "ko": "이벤트 드리븐", "th": "ขับเคลื่อนด้วยเหตุการณ์"},
+    "expectation_repricing": {"zh": "预期重估", "en": "Expectation Repricing", "ko": "기대 재평가", "th": "รีไพรซ์คาดการณ์"},
+    "one_yang_three_yin": {"zh": "一阳三阴", "en": "One Yang Three Yin", "ko": "일양삼음", "th": "ขาขึ้นหนึ่ง-ย่อสาม"},
+    "shrink_pullback": {"zh": "缩量回踩", "en": "Shrink Pullback", "ko": "거래량 축소 눌림", "th": "ย่อตัวเบาวอลุ่ม"},
+    "wave_theory": {"zh": "波浪理论", "en": "Wave Theory", "ko": "파동 이론", "th": "ทฤษฎีเวฟ"},
 }
 
 _CHIP_HEALTH_CANONICAL_MAP = {
@@ -270,12 +306,15 @@ _CHIP_HEALTH_CANONICAL_MAP = {
     "양호": "healthy",
     "보통": "average",
     "주의": "caution",
+    "แข็งแรง": "healthy",
+    "ปานกลาง": "average",
+    "เฝ้าระวัง": "caution",
 }
 
 _CHIP_HEALTH_TRANSLATIONS = {
-    "healthy": {"zh": "健康", "en": "Healthy", "ko": "양호"},
-    "average": {"zh": "一般", "en": "Average", "ko": "보통"},
-    "caution": {"zh": "警惕", "en": "Caution", "ko": "주의"},
+    "healthy": {"zh": "健康", "en": "Healthy", "ko": "양호", "th": "แข็งแรง"},
+    "average": {"zh": "一般", "en": "Average", "ko": "보통", "th": "ปานกลาง"},
+    "caution": {"zh": "警惕", "en": "Caution", "ko": "주의", "th": "เฝ้าระวัง"},
 }
 
 _BIAS_STATUS_CANONICAL_MAP = {
@@ -290,36 +329,43 @@ _BIAS_STATUS_CANONICAL_MAP = {
     "안전": "safe",
     "경계": "caution",
     "위험": "danger",
+    "ปลอดภัย": "safe",
+    "ระวัง": "caution",
+    "อันตราย": "danger",
 }
 
 _BIAS_STATUS_TRANSLATIONS = {
-    "safe": {"zh": "安全", "en": "Safe", "ko": "안전"},
-    "caution": {"zh": "警戒", "en": "Caution", "ko": "경계"},
-    "danger": {"zh": "危险", "en": "Danger", "ko": "위험"},
+    "safe": {"zh": "安全", "en": "Safe", "ko": "안전", "th": "ปลอดภัย"},
+    "caution": {"zh": "警戒", "en": "Caution", "ko": "경계", "th": "เฝ้าระวัง"},
+    "danger": {"zh": "危险", "en": "Danger", "ko": "위험", "th": "อันตราย"},
 }
 
 _PLACEHOLDER_BY_LANGUAGE = {
     "zh": "待补充",
     "en": "TBD",
     "ko": "미정",
+    "th": "รอเพิ่มเติม",
 }
 
 _UNKNOWN_BY_LANGUAGE = {
     "zh": "未知",
     "en": "Unknown",
     "ko": "알 수 없음",
+    "th": "ไม่ทราบ",
 }
 
 _NO_DATA_BY_LANGUAGE = {
     "zh": "数据缺失",
     "en": "Data unavailable",
     "ko": "데이터 없음",
+    "th": "ไม่มีข้อมูล",
 }
 
 _CHIP_UNAVAILABLE_BY_LANGUAGE = {
     "zh": "筹码分布未启用或数据源暂不可用，未纳入筹码判断。",
     "en": "Chip distribution is disabled or temporarily unavailable; chip signals were not used.",
     "ko": "매물대가 비활성화되었거나 데이터 소스를 일시적으로 사용할 수 없어 매물대 신호를 반영하지 않았습니다.",
+    "th": "ข้อมูลโครงสร้างการถือครองปิดใช้งานหรือแหล่งข้อมูลใช้ไม่ได้ชั่วคราว จึงไม่นำมาพิจารณา",
 }
 
 _CHIP_PLACEHOLDER_EXACT = {
@@ -334,6 +380,9 @@ _CHIP_PLACEHOLDER_EXACT = {
     "未知",
     "暂无",
     "待补充",
+    "ไม่ทราบ",
+    "ไม่มีข้อมูล",
+    "รอเพิ่มเติม",
 }
 
 _CHIP_PLACEHOLDER_HINTS = (
@@ -344,6 +393,8 @@ _CHIP_PLACEHOLDER_HINTS = (
     "not available",
     "missing",
     "not supported",
+    "ไม่มีข้อมูล",
+    "ใช้ไม่ได้",
 )
 
 _CHIP_METRIC_KEYS = ("profit_ratio", "avg_cost", "concentration")
@@ -357,6 +408,7 @@ _GENERIC_STOCK_NAME_BY_LANGUAGE = {
     "zh": "待确认股票",
     "en": "Unnamed Stock",
     "ko": "미확인 종목",
+    "th": "หุ้นไม่ระบุชื่อ",
 }
 
 _REPORT_LABELS: Dict[str, Dict[str, str]] = {
@@ -765,6 +817,141 @@ _REPORT_LABELS: Dict[str, Dict[str, str]] = {
         "strategy_opposing_skills_label": "반대 전략",
         "strategy_invalid_opinions_label": "추가로 {count}개 전략이 유효한 신호를 생성하지 못했습니다",
     },
+    "th": {
+        "dashboard_title": "แดชบอร์ดการตัดสินใจ",
+        "brief_title": "บรีฟการตัดสินใจ",
+        "analyzed_prefix": "วิเคราะห์แล้ว",
+        "stock_unit": "หุ้น",
+        "stock_unit_compact": "หุ้น",
+        "buy_label": "ซื้อ",
+        "watch_label": "รอจังหวะ",
+        "sell_label": "ขาย",
+        "summary_heading": "สรุปผลการวิเคราะห์",
+        "info_heading": "ข้อมูลสำคัญด่วน",
+        "sentiment_summary_label": "กระแสความรู้สึก",
+        "earnings_outlook_label": "แนวโน้มผลประกอบการ",
+        "risk_alerts_label": "เตือนความเสี่ยง",
+        "positive_catalysts_label": "ปัจจัยเชิงบวก",
+        "latest_news_label": "ข่าวล่าสุด",
+        "core_conclusion_heading": "บทสรุปหลัก",
+        "one_sentence_label": "ตัดสินใจในหนึ่งบรรทัด",
+        "time_sensitivity_label": "ความเร่งด่วน",
+        "default_time_sensitivity": "ภายในสัปดาห์นี้",
+        "position_status_label": "สถานะการถือครอง",
+        "action_advice_label": "คำแนะนำการดำเนินการ",
+        "no_position_label": "ยังไม่มีสถานะ",
+        "has_position_label": "ถืออยู่",
+        "continue_holding": "ถือต่อไป",
+        "market_snapshot_heading": "ภาพตลาดวันนี้",
+        "close_label": "ราคาปิด",
+        "prev_close_label": "ปิดเมื่อวาน",
+        "open_label": "ราคาเปิด",
+        "high_label": "สูงสุด",
+        "low_label": "ต่ำสุด",
+        "change_pct_label": "%เปลี่ยนแปลง",
+        "change_amount_label": "เปลี่ยนแปลง",
+        "amplitude_label": "ช่วงแกว่ง",
+        "volume_label": "ปริมาณซื้อขาย",
+        "amount_label": "มูลค่าซื้อขาย",
+        "current_price_label": "ราคาปัจจุบัน",
+        "volume_ratio_label": "อัตราวอลุ่ม",
+        "turnover_rate_label": "อัตราหมุนเวียน",
+        "source_label": "แหล่งข้อมูลราคา",
+        "data_sources_label": "แหล่งข้อมูล",
+        "data_perspective_heading": "มุมมองข้อมูล",
+        "ma_alignment_label": "การจัดเรียง MA",
+        "bullish_alignment_label": "เรียงตัวขาขึ้น",
+        "yes_label": "ใช่",
+        "no_label": "ไม่",
+        "none_label": "ไม่มี",
+        "trend_strength_label": "ความแรงเทรนด์",
+        "price_metrics_label": "ตัวชี้วัดราคา",
+        "ma5_label": "MA5",
+        "ma10_label": "MA10",
+        "ma20_label": "MA20",
+        "bias_ma5_label": "BIAS (MA5)",
+        "support_level_label": "แนวรับ",
+        "resistance_level_label": "แนวต้าน",
+        "chip_label": "โครงสร้างการถือครอง",
+        "phase_decision_heading": "กันชนการตัดสินใจระหว่างวัน",
+        "action_window_label": "หน้าต่างดำเนินการ",
+        "immediate_action_label": "การกระทำปัจจุบัน",
+        "watch_conditions_label": "เงื่อนไขเฝ้าระวัง",
+        "next_check_time_label": "รอบตรวจถัดไป",
+        "confidence_reason_label": "เหตุผลความมั่นใจ",
+        "data_limitations_label": "ข้อจำกัดของข้อมูล",
+        "battle_plan_heading": "แผนปฏิบัติการ",
+        "ideal_buy_label": "จุดซื้ออุดมคติ",
+        "secondary_buy_label": "จุดซื้อสำรอง",
+        "stop_loss_label": "จุดตัดขาดทุน",
+        "take_profit_label": "จุดทำกำไรเป้าหมาย",
+        "suggested_position_label": "สัดส่วนที่แนะนำ",
+        "entry_plan_label": "แผนเข้าซื้อ",
+        "risk_control_label": "กลยุทธ์ควบคุมความเสี่ยง",
+        "checklist_heading": "รายการตรวจสอบ",
+        "failed_checks_heading": "รายการที่ยังไม่ผ่าน",
+        "history_compare_heading": "เปรียบเทียบสัญญาณย้อนหลัง",
+        "time_label": "เวลา",
+        "score_label": "คะแนน",
+        "advice_label": "คำแนะนำ",
+        "trend_label": "เทรนด์",
+        "generated_at_label": "สร้างเมื่อ",
+        "report_time_label": "เวลาสร้าง",
+        "no_results": "ไม่มีผลการวิเคราะห์",
+        "report_title": "รายงานวิเคราะห์หุ้น",
+        "avg_score_label": "คะแนนเฉลี่ย",
+        "action_points_heading": "ระดับราคาดำเนินการ",
+        "position_advice_heading": "คำแนะนำสถานะ",
+        "analysis_model_label": "โมเดลวิเคราะห์",
+        "not_investment_advice": "สร้างโดย AI เพื่อใช้อ้างอิงเท่านั้น ไม่ใช่คำแนะนำการลงทุน",
+        "details_report_hint": "ดูรายงานฉบับเต็ม:",
+        "financial_summary_heading": "สรุปการเงิน",
+        "report_date_label": "งวดรายงาน",
+        "revenue_label": "รายได้",
+        "net_profit_label": "กำไรสุทธิ (บริษัทแม่)",
+        "operating_cash_flow_label": "กระแสเงินสดจากการดำเนินงาน",
+        "roe_label": "ROE",
+        "revenue_yoy_label": "รายได้เทียบปีก่อน",
+        "net_profit_yoy_label": "กำไรสุทธิเทียบปีก่อน",
+        "gross_margin_label": "อัตรากำไรขั้นต้น",
+        "shareholder_return_heading": "ผลตอบแทนผู้ถือหุ้น",
+        "ttm_cash_dividend_label": "ปันผลเงินสด/หุ้น 12 เดือนล่าสุด (ก่อนภาษี)",
+        "ttm_event_count_label": "จำนวนครั้งจ่ายปันผล 12 เดือนล่าสุด",
+        "ttm_dividend_yield_label": "อัตราผลตอบแทนปันผล TTM",
+        "latest_ex_dividend_label": "วันตัดสิทธิรับปันผลล่าสุด",
+        "institutional_flow_heading": "การไหลของสถาบัน (3 กลุ่มหลัก)",
+        "institutional_flow_note": "ค่าบวก=ซื้อสุทธิ ค่าลบ=ขายสุทธิ หน่วย: หุ้น",
+        "inst_foreign_label": "ต่างชาติ",
+        "inst_trust_label": "ทรัสต์ลงทุน",
+        "inst_dealer_label": "โบรกเกอร์/ดีลเลอร์",
+        "inst_total_label": "รวม 3 กลุ่มหลัก",
+        "related_boards_heading": "กลุ่มที่เกี่ยวข้อง",
+        "industry_boards_heading": "กลุ่มอุตสาหกรรม",
+        "concept_boards_heading": "กลุ่มธีม",
+        "board_name_label": "กลุ่ม",
+        "board_type_label": "ประเภท",
+        "board_status_label": "สถานะกลุ่ม",
+        "board_change_pct_label": "%เปลี่ยนแปลงกลุ่ม",
+        "leading_board_label": "กลุ่มนำขึ้น",
+        "lagging_board_label": "กลุ่มนำลง",
+        "signal_attribution_heading": "วิเคราะห์ที่มาของสัญญาณ",
+        "attribution_weights_label": "น้ำหนักสัญญาณ",
+        "technical_indicators_label": "อินดิเคเตอร์เทคนิค",
+        "news_sentiment_label": "กระแสข่าว",
+        "fundamentals_label": "ปัจจัยพื้นฐาน",
+        "market_conditions_label": "สภาพตลาด",
+        "strongest_bullish_signal_label": "สัญญาณขาขึ้นแรงที่สุด",
+        "strongest_bearish_signal_label": "สัญญาณขาลงแรงที่สุด",
+        "strategy_synthesis_heading": "สังเคราะห์หลายกลยุทธ์",
+        "strategy_final_signal_label": "สัญญาณสุดท้าย",
+        "strategy_consensus_level_label": "ฉันทามติ",
+        "strategy_conflict_label": "ความขัดแย้ง",
+        "strategy_confidence_label": "ความมั่นใจ",
+        "strategy_summary_label": "คำอธิบายรวม",
+        "strategy_supporting_skills_label": "กลยุทธ์ที่หนุน",
+        "strategy_opposing_skills_label": "กลยุทธ์ที่ต้าน",
+        "strategy_invalid_opinions_label": "อีก {count} กลยุทธ์สร้างสัญญาณที่ใช้ได้ไม่สำเร็จ",
+    },
 }
 
 _DECISION_INTENT_NEGATIONS = (
@@ -812,7 +999,7 @@ def _strip_decision_negation_connectors(text: str) -> str:
     return suffix
 
 
-def normalize_report_language(value: Optional[str], default: str = "zh") -> str:
+def normalize_report_language(value: Optional[str], default: str = "th") -> str:
     """Normalize report language to a supported short code."""
     candidate = (value or default).strip().lower().replace(" ", "_")
     candidate = _REPORT_LANGUAGE_ALIASES.get(candidate, candidate)
@@ -1088,21 +1275,25 @@ def localize_strategy_conflict_description(conflict_type: Any, language: Optiona
             "zh": "策略方向出现对立：部分策略看多，部分策略看空，综合结论需要降低确定性。",
             "en": "Strategy directions diverge: some strategies are bullish while others are bearish, so conviction should be reduced.",
             "ko": "전략 방향이 엇갈립니다. 일부 전략은 상승을, 일부 전략은 하락을 보며 확신도를 낮춰야 합니다.",
+            "th": "ทิศทางกลยุทธ์ขัดกัน: บางกลยุทธ์มองขาขึ้น บางกลยุทธ์มองขาลง จึงควรลดน้ำหนักความมั่นใจของบทสรุปรวม",
         },
         "wide_score_dispersion": {
             "zh": "策略信号分数分布较宽，说明多策略对行情结构存在明显分歧。",
             "en": "Strategy signal scores are widely dispersed, indicating meaningful disagreement on market structure.",
             "ko": "전략 신호 점수 분포가 넓어 시장 구조에 대한 전략 간 이견이 큽니다.",
+            "th": "คะแนนสัญญาณของกลยุทธ์กระจายกว้าง สะท้อนว่าแต่ละกลยุทธ์เห็นต่างกันชัดเจนเรื่องโครงสร้างตลาด",
         },
         "high_confidence_dissent": {
             "zh": "存在高置信少数派策略与综合信号明显不一致，应保留反方观点。",
             "en": "A high-confidence minority strategy materially disagrees with the final signal and should be kept as a dissenting view.",
             "ko": "높은 확신도의 소수 전략이 종합 신호와 크게 달라 반대 관점으로 보존해야 합니다.",
+            "th": "มีกลยุทธ์เสียงข้างน้อยที่มั่นใจสูงขัดกับสัญญาณรวมอย่างชัดเจน ควรคงมุมมองฝั่งตรงข้ามไว้",
         },
         "adjustment_contradiction": {
             "zh": "策略加减分方向相互矛盾，说明不同策略对同一标的的边际评分分歧较大。",
             "en": "Strategy score adjustments contradict each other, showing large disagreement in marginal scoring.",
             "ko": "전략별 점수 조정 방향이 서로 충돌해 동일 종목의 한계 평가 차이가 큽니다.",
+            "th": "ทิศทางการเพิ่ม/ลดคะแนนของกลยุทธ์ขัดแย้งกัน แสดงว่ามีความเห็นต่างมากในการให้คะแนนเชิงสัมพันธ์",
         },
     }
     localized = translations.get(key, {})
@@ -1185,6 +1376,12 @@ def localize_strategy_synthesis_summary(strategy_synthesis: Any, language: Optio
             base = f"{opinion_count}개 전략의 종합 판단: 종합 신호는 {final_signal}, 공감도는 {consensus_level}, 충돌 강도는 {conflict_severity}입니다."
         else:
             base = f"{opinion_count}개 전략의 종합 판단: 종합 신호는 {final_signal}, 공감도는 {consensus_level}, 감지된 전략 충돌은 없습니다."
+        return base
+    if lang == "th":
+        if conflict_count:
+            base = f"สังเคราะห์จาก {opinion_count} กลยุทธ์: สัญญาณสุดท้ายคือ {final_signal} ฉันทามติ {consensus_level} ความรุนแรงของความขัดแย้ง {conflict_severity}"
+        else:
+            base = f"สังเคราะห์จาก {opinion_count} กลยุทธ์: สัญญาณสุดท้ายคือ {final_signal} ฉันทามติ {consensus_level} ไม่พบความขัดแย้งของกลยุทธ์"
         return base
     if conflict_count:
         base = f"来自 {opinion_count} 个策略的综合判断：综合信号为{final_signal}，共识度为{consensus_level}，冲突强度为{conflict_severity}。"
@@ -1329,6 +1526,17 @@ def get_sentiment_label(score: int, language: Optional[str]) -> str:
         if score >= 20:
             return "비관"
         return "매우 비관"
+
+    if normalized == "th":
+        if score >= 80:
+            return "บวกมาก"
+        if score >= 60:
+            return "บวก"
+        if score >= 40:
+            return "เป็นกลาง"
+        if score >= 20:
+            return "ลบ"
+        return "ลบมาก"
 
     if score >= 80:
         return "极度乐观"

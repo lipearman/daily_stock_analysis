@@ -44,7 +44,7 @@ _WARNING_LABELS_EN = {
 def format_market_phase_prompt_section(
     market_phase_context: Optional[Dict[str, Any]],
     *,
-    report_language: str = "zh",
+    report_language: str = "th",
 ) -> str:
     """Return a human-readable prompt section for a P1a market phase payload.
 
@@ -58,7 +58,7 @@ def format_market_phase_prompt_section(
 
     # Korean reuses the English structural context; the output-language
     # directive (see decision agent) constrains the model to write in Korean.
-    lang = "en" if str(report_language or "").lower() in {"en", "ko"} else "zh"
+    lang = "en" if str(report_language or "").lower() in {"en", "ko", "th"} else "zh"
     raw_phase = market_phase_context.get("phase")
     phase = raw_phase if isinstance(raw_phase, str) and raw_phase in _KNOWN_PHASES else "unknown"
 

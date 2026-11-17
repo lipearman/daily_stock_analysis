@@ -286,14 +286,14 @@ class MarketAnalyzer:
     def _get_output_language(self) -> str:
         """Return the truthful report language (zh/en/ko) for payload and directives."""
         return normalize_report_language(
-            getattr(getattr(self, "config", None), "report_language", "zh")
+            getattr(getattr(self, "config", None), "report_language", "th")
         )
 
     def _get_review_language(self) -> str:
-        # Structural/template language. Korean reuses the English scaffolding;
-        # the Korean output directive is applied in the prompt builder.
+        # Structural/template language. Korean and Thai reuse the English scaffolding;
+        # the output language directive is applied in the prompt builder.
         language = self._get_output_language()
-        return "en" if language == "ko" else language
+        return "en" if language in ("ko", "th") else language
 
     def _get_template_review_language(self) -> str:
         return self._get_review_language()
@@ -1713,9 +1713,16 @@ Focus on index trend, liquidity, and sector rotation to shape the next-session t
     def _build_review_prompt(self, overview: MarketOverview, news: List) -> str:
         """构建复盘报告 Prompt"""
         review_language = self._get_review_language()
-        # Korean reuses the English structural template but the model is told to
-        # write the entire shell, headings, guidance and conclusion in Korean.
-        shell_language_label = "Korean (한국어)" if self._get_output_language() == "ko" else "English"
+        # Korean and Thai reuse the English structural template but the model is told to
+        # write the entire shell, headings, guidance and conclusion in the target language.
+        output_language = self._get_output_language()
+        shell_language_label = (
+            "Korean (한국어)"
+            if output_language == "ko"
+            else "Thai (ภาษาไทย)"
+            if output_language == "th"
+            else "English"
+        )
 
         # 指数行情信息（简洁格式，不用emoji）
         indices_text = ""

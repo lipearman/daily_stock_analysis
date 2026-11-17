@@ -12,7 +12,7 @@ from src.schemas.market_structure import MARKET_STRUCTURE_SCHEMA_VERSION
 
 def format_market_structure_prompt_section(
     context: Any,
-    report_language: str = "zh",
+    report_language: str = "th",
 ) -> str:
     """Render a compact, low-sensitive market structure section for LLM prompts."""
     if not isinstance(context, dict):
@@ -53,6 +53,11 @@ def format_market_structure_prompt_section(
         return "\n".join(lines) + "\n"
     if language == "ko":
         lines = _format_ko(context, stock_position, active_themes, leading_concepts, leading_industries, primary_name, risk_tags, missing_fields)
+        return "\n".join(lines) + "\n"
+    if language == "th":
+        # Thai reuses the English structural context (same approach as Korean),
+        # and the output-language directive tells the model to write in Thai.
+        lines = _format_en(context, stock_position, active_themes, leading_concepts, leading_industries, primary_name, risk_tags, missing_fields)
         return "\n".join(lines) + "\n"
 
     lines = _format_zh(context, stock_position, active_themes, leading_concepts, leading_industries, primary_name, risk_tags, missing_fields)
