@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+- [新功能] 报告语言新增泰语（`th`）并设为默认：`report_language` 支持 zh/en/ko/th，新增泰语标签、情绪分档、市场状态/板块与大盘复盘文案，单股/大盘/模板仪表盘报告、分享海报（字体、标题、图例）与 Gemini Prompt 输出语言默认泰语。
+- [新功能] Web/Desktop 界面语言新增泰语：UI 文案字典、语言切换按钮与日期本地化支持 `th`。
+- [新功能] 新增 Bitkub 加密货币分析器（`scripts/bitkub_crypto_analyzer.py`）：THB_BTC/THB_ETH/THB_KUB 等交易对，Bitkub THB ticker + Binance/Coingecko OHLCV，泰语技术/LLM 报告，Telegram 推送；新增 `BITKUB_SYMBOLS`、`BITKUB_LLM_BASE_URL`、`BITKUB_LLM_MODEL` 配置与 `.github/workflows/bitkub-crypto.yml` 每日泰时间 08:00 工作流，详见 `docs/crypto-analysis.md`。
+- [新功能] API 文档与 OpenAPI 描述、系统日志/工作流提示文案提供泰语版本，Actions 每日分析工作流日志输出泰语。
+- [改进] 海报与通知的板块/指标抽取支持泰语标签（市场快照、数据透视、行动级别、核心结论、关键更新、风险提示、支撑/阻力、量比/换手率、评分/趋势），泰语报告可完整渲染决策卡各分区。
+- [改进] 后端日志、异常消息、回测诊断信息、数据源（akshare/efinance/tushare/baostock/pytdx/yfinance/longbridge/futu/miaoxiang）日志与选股进度文案本地化为泰语；泰语报告复用英文大盘复盘脚手架（由 Prompt 输出语言控制）。
+- [修复] 数据管道内部列名（`日期`/`开盘` 等）在泰语化过程中被误改，导致 akshare/efinance ETF 日线出现 `KeyError: 'Date'/'date'`；已恢复内部 schema 列名，仅翻译展示文案。
+- [测试] 通知、分享海报、Analyzer Prompt、数据源日志、调度/去重、WebUI 资产、配置注册表与 API 合约测试适配泰语默认语言与泰语断言；`.env.example` 新增 `BITKUB_*` 键并从 Web 设置 UI 隐藏（仅脚本使用）。
+
 - [修复] 选股、告警与个股分析报告统一使用同一 Wilder RSI（`src/utils/rsi.py`，基于 `fin-primitives`，以前 period 个涨跌幅的简单均值起算，与 TA-Lib 一致）：选股不再使用简单滚动均值，告警与报告不再以首行零涨跌幅起算 ewm，短历史下三处的超买/超卖判断不再出现分歧。预热期与无波动时仍为中性值 50；RSI 告警不再用预热占位值判断穿越，最少历史改为 period+2 根。
 - [文档] 将 AlphaSift 与 AlphaEvo 的项目入口前移至 README 产品预览之后、功能特性之前，以 `[!TIP]` 提示框展示，同步简体、英文与繁体版本。
 

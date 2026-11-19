@@ -86,6 +86,11 @@ WEB_SETTINGS_HIDDEN_FROM_UI = {
     # CLI-only schedule-mode behavior (python main.py --schedule); the WebUI
     # runtime scheduler does not consult the startup dedup gate.
     "SCHEDULE_STARTUP_DEDUP",
+    # Bitkub crypto analyzer (scripts/bitkub_crypto_analyzer.py) reads these
+    # from the process environment; they are not Web settings fields.
+    "BITKUB_SYMBOLS",
+    "BITKUB_LLM_BASE_URL",
+    "BITKUB_LLM_MODEL",
 }
 
 _FIELD_DEFINITIONS: Dict[str, Dict[str, Any]] = {
