@@ -42,12 +42,12 @@ const QUICK_QUESTIONS: Array<{
   skill: string;
   stockContext?: ActiveStockContext;
 }> = [
-  { label: '用缠论分析茅台', skill: 'chan_theory', stockContext: { stock_code: '600519', stock_name: '贵州茅台' } },
-  { label: '波浪理论看宁德时代', skill: 'wave_theory', stockContext: { stock_code: '300750', stock_name: '宁德时代' } },
-  { label: '分析比亚迪趋势', skill: 'bull_trend', stockContext: { stock_code: '002594', stock_name: '比亚迪' } },
-  { label: '用箱体震荡分析 A 股中芯国际 688981', skill: 'box_oscillation', stockContext: { stock_code: '688981', stock_name: '中芯国际' } },
-  { label: '分析腾讯 hk00700', skill: 'bull_trend', stockContext: { stock_code: 'HK00700', stock_name: '腾讯控股' } },
-  { label: '用情绪周期分析东方财富', skill: 'emotion_cycle', stockContext: { stock_code: '300059', stock_name: '东方财富' } },
+  { label: 'วิเคราะห์หุ้น Kweichow Moutai ด้วยทฤษฎีแบบหมุนเวียน', skill: 'chan_theory', stockContext: { stock_code: '600519', stock_name: 'Kweichow Moutai' } },
+  { label: 'มองหุ้น CATL ด้วยทฤษฎีคลื่น', skill: 'wave_theory', stockContext: { stock_code: '300750', stock_name: 'CATL' } },
+  { label: 'วิเคราะห์เทรนด์ BYD', skill: 'bull_trend', stockContext: { stock_code: '002594', stock_name: 'BYD' } },
+  { label: 'วิเคราะห์หุ้น SMIC 688981 ด้วยกลุ่มกลั่น', skill: 'box_oscillation', stockContext: { stock_code: '688981', stock_name: 'SMIC' } },
+  { label: 'วิเคราะห์ Tencent hk00700', skill: 'bull_trend', stockContext: { stock_code: 'HK00700', stock_name: 'Tencent Holdings' } },
+  { label: 'วิเคราะห์ Eastern Wealth ด้วยไซเคิลอารมณ์', skill: 'emotion_cycle', stockContext: { stock_code: '300059', stock_name: 'Eastern Wealth' } },
 ];
 
 const MAX_SELECTED_SKILLS = 3;
@@ -147,7 +147,7 @@ const ChatPage: React.FC = () => {
 
   // Set page title
   useEffect(() => {
-    document.title = '问股 - DSA';
+    document.title = 'ถามหุ้น - DSA';
   }, []);
 
   useEffect(() => {
@@ -199,7 +199,7 @@ const ChatPage: React.FC = () => {
         }
       } catch {
         if (isMountedRef.current) {
-          setWatchlistMessage('操作失败，请重试');
+          setWatchlistMessage('การดำเนินการล้มเหลว โปรดลองอีกครั้ง');
         }
       } finally {
         if (isMountedRef.current) {
@@ -364,7 +364,7 @@ const ChatPage: React.FC = () => {
         }
         const parsed = getParsedApiError(error);
         setContextCompressionLoaded(false);
-        setContextCompressionError(parsed.message || '无法读取上下文压缩配置');
+        setContextCompressionError(parsed.message || 'ไม่สามารถอ่านการตั้งค่าการบีบอัดบริบท');
         console.error('Failed to load context compression setting:', error);
       });
 
@@ -400,7 +400,7 @@ const ChatPage: React.FC = () => {
       } catch (error) {
         const parsed = getParsedApiError(error);
         setContextCompressionEnabled(previousEnabled);
-        setContextCompressionError(parsed.message || '上下文压缩设置保存失败');
+        setContextCompressionError(parsed.message || 'บันทึกการตั้งค่าการบีบอัดบริบทล้มเหลว');
       } finally {
         setContextCompressionSaving(false);
       }
@@ -572,7 +572,7 @@ const ChatPage: React.FC = () => {
       const usedSkillIds = normalizeSelectedSkillIds(
         requestedSkillIds ?? selectedSkillIds,
       );
-      const usedSkillNames = usedSkillIds.length > 0 ? getSkillNames(usedSkillIds) : ['通用'];
+      const usedSkillNames = usedSkillIds.length > 0 ? getSkillNames(usedSkillIds) : ['ทั่วไป'];
       // Only report/shortcut hints accompany this request. Ordinary follow-ups
       // rely on the server's accepted state, not a replay or a client-selected fact.
       const contextForSend = overrideStockContext ?? followUpContextRef.current ?? undefined;
@@ -656,7 +656,7 @@ const ChatPage: React.FC = () => {
 
   const downloadMessageAsMarkdown = useCallback((msg: Message) => {
     const skillLabel = getMessageSkillLabel(msg);
-    const heading = msg.role === 'user' ? '# 用户消息' : `# AI 回复${skillLabel ? ` · ${skillLabel}` : ''}`;
+    const heading = msg.role === 'user' ? '# ข้อความผู้ใช้' : `# AI 回复${skillLabel ? ` · ${skillLabel}` : ''}`;
     const content = [heading, '', msg.content].join('\n');
     const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
     const url = URL.createObjectURL(blob);
@@ -670,9 +670,9 @@ const ChatPage: React.FC = () => {
   }, []);
 
   const getCurrentStage = (steps: ProgressStep[]): string => {
-    if (steps.length === 0) return '正在连接...';
+    if (steps.length === 0) return 'กำลังเชื่อมต่อ...';
     const last = steps[steps.length - 1];
-    if (last.type === 'thinking') return last.message || 'AI 正在思考...';
+    if (last.type === 'thinking') return last.message || 'AI กำลังคิด...';
     if (last.type === 'tool_start')
       return `${last.display_name || last.tool}...`;
     if (last.type === 'tool_done')
@@ -686,8 +686,8 @@ const ChatPage: React.FC = () => {
     if (last.type === 'pipeline_budget_skipped')
       return getPipelineBudgetSkippedLabel(last);
     if (last.type === 'generating')
-      return last.message || '正在生成最终分析...';
-    return '处理中...';
+      return last.message || 'กำลังสร้างการวิเคราะห์สุดท้าย...';
+    return 'กำลังดำเนินการ...';
   };
 
   const renderThinkingBlock = (msg: Message) => {
@@ -763,7 +763,7 @@ const ChatPage: React.FC = () => {
           statusClass = 'chat-progress-item-muted';
           iconClass = 'chat-progress-dot-muted';
         } else if (step.type === 'generating') {
-          text = step.message || '生成分析';
+          text = step.message || 'สร้างการวิเคราะห์';
           statusClass = 'chat-progress-item-generating';
           iconClass = 'chat-progress-dot-generating';
         } else {
@@ -794,7 +794,7 @@ const ChatPage: React.FC = () => {
         <button
           onClick={handleStartNewChat}
           className="rounded-lg p-1.5 text-muted-text transition-all hover:bg-white/10 hover:text-foreground"
-          aria-label="开启新对话"
+          aria-label="เริ่มการสนทนาใหม่"
         >
           <svg
             className="w-4 h-4"
@@ -816,14 +816,14 @@ const ChatPage: React.FC = () => {
           <DashboardStateBlock
             loading
             compact
-            title="加载对话中..."
+            title="กำลังโหลดการสนทนา..."
             className="rounded-2xl border border-dashed border-border/50 bg-surface/30"
           />
         ) : sessions.length === 0 ? (
           <DashboardStateBlock
             compact
-            title="暂无历史对话"
-            description="开始提问后，这里会保留会话记录。"
+            title="ยังไม่มีประวัติการสนทนา"
+            description="หลังเริ่มต้นการสอบถาม ที่นี่จะรักษาประวัติการสนทนา"
             className="rounded-2xl border border-dashed border-border/50 bg-surface/30"
           />
         ) : (
@@ -887,7 +887,7 @@ const ChatPage: React.FC = () => {
 
   const selectedSkillSummary = selectedSkillIds.length > 0
     ? getSkillNames(selectedSkillIds).join('、')
-    : '通用分析';
+    : 'วิเคราะห์ทั่วไป';
 
   return (
     <div
@@ -918,10 +918,10 @@ const ChatPage: React.FC = () => {
       {/* Delete confirmation dialog */}
       <ConfirmDialog
         isOpen={Boolean(deleteConfirmId)}
-        title="删除对话"
-        message="删除后，该对话将不可恢复，确认删除吗？"
-        confirmText="删除"
-        cancelText="取消"
+        title="ลบการสนทนา"
+        message="หลังลบ การสนทนานี้จะไม่สามารถกู้คืนได้ ยืนยันการลบหรือไม่?"
+        confirmText="ลบ"
+        cancelText="ยกเลิก"
         isDanger
         onConfirm={confirmDelete}
         onCancel={() => setDeleteConfirmId(null)}
@@ -935,7 +935,7 @@ const ChatPage: React.FC = () => {
               <button
                 onClick={() => setSidebarOpen(true)}
                 className="md:hidden p-1.5 -ml-1 rounded-lg hover:bg-hover transition-colors text-secondary-text hover:text-foreground"
-                aria-label="历史对话"
+                aria-label="ประวัติการสนทนา"
               >
                 <svg
                   className="w-5 h-5"
@@ -976,13 +976,13 @@ const ChatPage: React.FC = () => {
             </h1>
             {messages.length > 0 && (
               <div className="flex flex-shrink-0 flex-wrap items-center justify-end gap-2">
-                <Tooltip content="导出会话为 Markdown 文件">
+                <Tooltip content="ส่งออกการสนทนาเป็นไฟล์ Markdown">
                   <span className="inline-flex">
                     <Button
                       variant="action-primary"
                       size="sm"
                       onClick={() => downloadSession(messages)}
-                      aria-label="导出会话为 Markdown 文件"
+                      aria-label="ส่งออกการสนทนาเป็นไฟล์ Markdown"
                     >
                       <svg
                         className="w-4 h-4"
@@ -1001,7 +1001,7 @@ const ChatPage: React.FC = () => {
                     </Button>
                   </span>
                 </Tooltip>
-                <Tooltip content="发送到已配置的通知机器人/邮箱">
+                <Tooltip content="ส่งไปยังโรบอตแจ้งเตือน/อีเมลที่ตั้งค่าแล้ว">
                   <span className="inline-flex">
                     <Button
                       variant="action-primary"
@@ -1014,18 +1014,18 @@ const ChatPage: React.FC = () => {
                         try {
                           const content = formatSessionAsMarkdown(messages);
                           await agentApi.sendChat(content);
-                          showSendFeedback({ type: 'success', message: '已发送到通知渠道' }, 3000);
+                          showSendFeedback({ type: 'success', message: 'ส่งไปยังช่องทางการแจ้งเตือนแล้ว' }, 3000);
                         } catch (err) {
                           const parsed = getParsedApiError(err);
                           showSendFeedback({
                             type: 'error',
-                            message: parsed.message || '发送失败',
+                            message: parsed.message || 'การส่งล้มเหลว',
                           }, 5000);
                         } finally {
                           setSending(false);
                         }
                       }}
-                      aria-label="发送到已配置的通知机器人/邮箱"
+                      aria-label="ส่งไปยังโรบอตแจ้งเตือน/อีเมลที่ตั้งค่าแล้ว"
                     >
                       {sending ? (
                         <svg
@@ -1075,7 +1075,7 @@ const ChatPage: React.FC = () => {
           {sendToast ? (
             <InlineAlert
               variant={sendToast.type === 'success' ? 'success' : 'danger'}
-              title={sendToast.type === 'success' ? '发送成功' : '发送失败'}
+              title={sendToast.type === 'success' ? 'ส่งสำเร็จ' : 'การส่งล้มเหลว'}
               message={sendToast.message}
               className="max-w-md rounded-xl px-3 py-2 text-xs shadow-none"
             />
@@ -1094,7 +1094,7 @@ const ChatPage: React.FC = () => {
             {messages.length === 0 && !loading ? (
               <div className="flex h-full items-center justify-center">
                 <EmptyState
-                  title="开始问股"
+                  title="เริ่มต้นถามหุ้น"
                   description={t('chat.emptyDescriptionDefault')}
                   className="max-w-2xl border-dashed bg-card/55"
                   icon={(
@@ -1195,7 +1195,7 @@ const ChatPage: React.FC = () => {
                             type="button"
                             onClick={() => downloadMessageAsMarkdown(msg)}
                             className="chat-copy-btn"
-                            aria-label="导出此条消息为 Markdown"
+                            aria-label="ส่งออกข้อความนี้เป็น Markdown"
                           >
                             导出
                           </button>
@@ -1255,7 +1255,7 @@ const ChatPage: React.FC = () => {
                   requestScrollToBottom('smooth');
                   scrollToBottom('smooth');
                 }}
-                aria-label="查看最新消息"
+                aria-label="ดูข่าวล่าสุด"
               >
                 <svg
                   className="h-3.5 w-3.5"
@@ -1332,8 +1332,8 @@ const ChatPage: React.FC = () => {
               {isFollowUpContextLoading ? (
                 <InlineAlert
                   variant="info"
-                  title="追问上下文加载中"
-                  message="正在加载历史分析上下文；现在可直接发送追问。"
+                  title="กำลังโหลดบริบทการสอบถามเพิ่มเติม"
+                  message="กำลังโหลดบริบทการวิเคราะห์ประวัติศาสตร์; ตอนนี้สามารถส่งคำถามเพิ่มเติมได้เลย"
                   className="rounded-xl px-3 py-2 text-xs shadow-none"
                 />
               ) : null}
@@ -1358,16 +1358,16 @@ const ChatPage: React.FC = () => {
                 </label>
                 <span className="text-xs text-muted-text">
                   {contextCompressionSaving
-                    ? '保存中...'
+                    ? 'กำลังบันทึก...'
                     : contextCompressionEnabled
-                      ? '已启用'
-                      : '未启用'}
+                      ? 'เปิดใช้งานแล้ว'
+                      : 'ไม่ได้ใช้งาน'}
                 </span>
               </div>
               {contextCompressionError ? (
                 <InlineAlert
                   variant="danger"
-                  title="上下文压缩设置未保存"
+                  title="การตั้งค่าการบีบอัดบริบทยังไม่ได้บันทึก"
                   message={contextCompressionError}
                   className="rounded-xl px-3 py-2 text-xs shadow-none"
                 />
@@ -1377,7 +1377,7 @@ const ChatPage: React.FC = () => {
                   <button
                     type="button"
                     className="home-surface-button flex h-10 w-full items-center justify-between gap-3 rounded-xl px-3 text-left text-sm text-foreground md:hidden"
-                    aria-label={mobileSkillPickerOpen ? '收起策略选择' : '展开策略选择'}
+                    aria-label={mobileSkillPickerOpen ? 'ย่อการเลือกกลยุทธ์' : 'ขยายการเลือกกลยุทธ์'}
                     aria-expanded={mobileSkillPickerOpen}
                     aria-controls="chat-skill-picker-panel"
                     onClick={() => setMobileSkillPickerOpen((open) => !open)}
@@ -1473,7 +1473,7 @@ const ChatPage: React.FC = () => {
                   onClick={() => void handleToggleWatchlist(activeStockCode)}
                   className="text-[11px]"
                 >
-                  {stockInWatchlist(activeStockCode) ? '从自选删除' : '加入自选'}
+                  {stockInWatchlist(activeStockCode) ? 'ลบจากรายการที่เลือก' : 'เพิ่มในรายการที่เลือก'}
                 </Button>
                 {watchlistMessage && (
                   <span className="text-[11px] text-secondary-text animate-in fade-in">{watchlistMessage}</span>
@@ -1486,7 +1486,7 @@ const ChatPage: React.FC = () => {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder="例如：分析 600519 / 茅台现在适合买入吗？ (Enter 发送, Shift+Enter 换行)"
+                  placeholder="ตัวอย่างเช่น: วิเคราะห์ 600519 / มาโถวไทยเหมาะกับการซื้อตอนนี้หรือไม่? (กด Enter เพื่อส่ง, Shift+Enter เพื่อขึ้นบรรทัดใหม่)"
                   disabled={loading || !agentAvailable}
                   rows={1}
                   className="input-surface input-focus-glow flex-1 min-h-[44px] max-h-[200px] rounded-xl border bg-transparent px-4 py-2.5 text-sm transition-all focus:outline-none resize-none disabled:cursor-not-allowed disabled:opacity-60"

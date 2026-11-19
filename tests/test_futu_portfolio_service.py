@@ -181,7 +181,7 @@ class FutuPortfolioServiceTest(unittest.TestCase):
             side_effect=ImportError("No module named 'futu'"),
         ), self.assertRaisesRegex(
             service.FutuPortfolioError,
-            "未安装 Futu OpenAPI SDK",
+            "ยังไม่ได้ติดตั้ง Futu OpenAPI SDK",
         ) as raised:
             service._load_futu_api()
 
@@ -193,7 +193,7 @@ class FutuPortfolioServiceTest(unittest.TestCase):
             side_effect=PermissionError("log directory denied"),
         ), self.assertRaisesRegex(
             service.FutuPortfolioError,
-            "加载 Futu OpenAPI SDK 失败: log directory denied",
+            "โหลด Futu OpenAPI SDK ไม่สำเร็จ: log directory denied",
         ):
             service._load_futu_api()
 
@@ -304,7 +304,7 @@ class FutuPortfolioServiceTest(unittest.TestCase):
             return_value=api,
         ), self.assertRaisesRegex(
             service.FutuPortfolioError,
-            "无法转换.*HK.BAD",
+            "แปลงรหัสหุ้นสามัญ Futu ที่ยืนยันแล้วเป็นรูปแบบการวิเคราะห์ปัจจุบันไม่ได้.*HK.BAD",
         ):
             service.load_futu_stock_codes()
 
@@ -374,7 +374,7 @@ class FutuPortfolioServiceTest(unittest.TestCase):
             return_value=api,
         ), self.assertRaisesRegex(
             service.FutuPortfolioError,
-            "无法确认证券类型.*US.MSFT",
+            "สถานะถือครอง Futu ที่ยืนยันประเภทหลักทรัพย์ไม่ได้.*US.MSFT",
         ):
             service.load_futu_stock_codes()
 
@@ -404,7 +404,7 @@ class FutuPortfolioServiceTest(unittest.TestCase):
             return_value=api,
         ), self.assertRaisesRegex(
             service.FutuPortfolioError,
-            "无法确认证券类型.*US.MSFT",
+            "สถานะถือครอง Futu ที่ยืนยันประเภทหลักทรัพย์ไม่ได้.*US.MSFT",
         ):
             service.load_futu_stock_codes()
 
@@ -435,7 +435,7 @@ class FutuPortfolioServiceTest(unittest.TestCase):
             return_value=api,
         ), self.assertRaisesRegex(
             service.FutuPortfolioError,
-            "账户查询返回了无效账户 ID",
+            "การสอบถามบัญชี Futu ส่งคืนรหัสบัญชีที่ไม่ถูกต้อง",
         ):
             service.load_futu_stock_codes()
 
@@ -475,7 +475,7 @@ class FutuPortfolioServiceTest(unittest.TestCase):
                     return_value=api,
                 ), self.assertRaisesRegex(
                     service.FutuPortfolioError,
-                    "账户查询返回了无效账户 ID",
+                    "การสอบถามบัญชี Futu ส่งคืนรหัสบัญชีที่ไม่ถูกต้อง",
                 ):
                     service.load_futu_stock_codes()
 
@@ -511,7 +511,7 @@ class FutuPortfolioServiceTest(unittest.TestCase):
             return_value=api,
         ), self.assertRaisesRegex(
             service.FutuPortfolioError,
-            "持仓数量无效.*US.MSFT",
+            "จำนวนสถานะถือครอง Futu ไม่ถูกต้อง.*US.MSFT",
         ):
             service.load_futu_stock_codes()
 
@@ -542,7 +542,7 @@ class FutuPortfolioServiceTest(unittest.TestCase):
             return_value=api,
         ), self.assertRaisesRegex(
             service.FutuPortfolioError,
-            "非零持仓返回了空证券代码",
+            "สถานะถือครองที่ไม่เป็นศูนย์ของ Futu ส่งคืนรหัสหลักทรัพย์ว่างเปล่า",
         ):
             service.load_futu_stock_codes()
 
@@ -551,7 +551,7 @@ class FutuPortfolioServiceTest(unittest.TestCase):
     def test_load_futu_stock_codes_rejects_missing_nonzero_long_code(self):
         with self.assertRaisesRegex(
             service.FutuPortfolioError,
-            "非零持仓返回了无效证券代码",
+            "สถานะถือครองที่ไม่เป็นศูนย์ของ Futu ส่งคืนรหัสหลักทรัพย์ที่ไม่ถูกต้อง",
         ):
             _load_codes_for_accounts(
                 [_account(1001, "NORMAL")],
@@ -566,7 +566,7 @@ class FutuPortfolioServiceTest(unittest.TestCase):
     def test_load_futu_stock_codes_rejects_unqualified_nonzero_long_code(self):
         with self.assertRaisesRegex(
             service.FutuPortfolioError,
-            "非零持仓返回了无效证券代码",
+            "สถานะถือครองที่ไม่เป็นศูนย์ของ Futu ส่งคืนรหัสหลักทรัพย์ที่ไม่ถูกต้อง",
         ):
             _load_codes_for_accounts(
                 [_account(1001, "NORMAL")],
@@ -582,7 +582,7 @@ class FutuPortfolioServiceTest(unittest.TestCase):
         for invalid_code in (True, 123, b"US.AAPL"):
             with self.subTest(code=invalid_code), self.assertRaisesRegex(
                 service.FutuPortfolioError,
-                "非零持仓返回了无效证券代码",
+                "สถานะถือครองที่ไม่เป็นศูนย์ของ Futu ส่งคืนรหัสหลักทรัพย์ที่ไม่ถูกต้อง",
             ):
                 _load_codes_for_accounts(
                     [_account(1001, "NORMAL")],
@@ -680,7 +680,7 @@ class FutuPortfolioServiceTest(unittest.TestCase):
             clear=True,
         ), patch.object(service, "_load_futu_api", return_value=api), self.assertRaisesRegex(
             service.FutuPortfolioError,
-            "不支持的 FUTU_SECURITY_FIRM: UNKNOWN",
+            "ไม่รองรับ FUTU_SECURITY_FIRM: UNKNOWN",
         ):
             service.load_futu_stock_codes()
 
@@ -704,7 +704,7 @@ class FutuPortfolioServiceTest(unittest.TestCase):
                     return_value=api,
                 ), self.assertRaisesRegex(
                     service.FutuPortfolioError,
-                    "FUTU_ACC_ID 必须是正整数账户 ID",
+                    "FUTU_ACC_ID ต้องเป็นรหัสบัญชีจำนวนเต็มบวก",
                 ):
                     service.load_futu_stock_codes()
 
@@ -734,7 +734,7 @@ class FutuPortfolioServiceTest(unittest.TestCase):
             return_value=api,
         ), self.assertRaisesRegex(
             service.FutuPortfolioError,
-            "查询 Futu 真实账户失败: broker unavailable",
+            "สอบถามบัญชีจริง Futu ไม่สำเร็จ: broker unavailable",
         ):
             service.load_futu_stock_codes()
 
@@ -778,7 +778,7 @@ class FutuPortfolioServiceTest(unittest.TestCase):
                     return_value=api,
                 ), self.assertRaisesRegex(
                     service.FutuPortfolioError,
-                    "未找到状态为 ACTIVE",
+                    "ไม่พบบัญชีหลักทรัพย์ Futu REAL แบบปกติหรือ MASTER ที่สถานะ ACTIVE",
                 ):
                     service.load_futu_stock_codes()
 
@@ -876,7 +876,7 @@ class FutuPortfolioServiceTest(unittest.TestCase):
         for quantity in (float("nan"), float("inf"), float("-inf"), None, True):
             with self.subTest(quantity=quantity), self.assertRaisesRegex(
                 service.FutuPortfolioError,
-                "持仓数量无效.*US.AAPL",
+                "จำนวนสถานะถือครอง Futu ไม่ถูกต้อง.*US.AAPL",
             ):
                 _load_codes_for_accounts(
                     [_account(1001, "NORMAL")],
@@ -926,7 +926,7 @@ class FutuPortfolioServiceTest(unittest.TestCase):
             clear=True,
         ), patch.object(service, "_load_futu_api", return_value=api), self.assertRaisesRegex(
             service.FutuPortfolioError,
-            "FUTU_ACC_ID 未匹配",
+            "FUTU_ACC_ID ไม่ตรงกับบัญชีหลักทรัพย์จริงที่ใช้ได้",
         ):
             service.load_futu_stock_codes()
 
@@ -979,7 +979,7 @@ class FutuPortfolioServiceTest(unittest.TestCase):
                     clear=True,
                 ), self.assertRaisesRegex(
                     service.FutuPortfolioError,
-                    "网络层仅支持 IPv4",
+                    "รองรับเฉพาะ IPv4",
                 ):
                     service._connection_settings()
 

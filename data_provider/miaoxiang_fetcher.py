@@ -130,7 +130,7 @@ class MiaoxiangFetcher(BaseFetcher):
                 return cached[1]
 
         if not self._request_lock.acquire(blocking=False):
-            raise DataFetchError("妙想 API 请求仍在执行，跳过本次补充查询")
+            raise DataFetchError("คำขอ Miaoxiang API ยังทำงานอยู่ ข้ามการสอบถามเสริมครั้งนี้")
         try:
             wait = MX_MIN_REQUEST_INTERVAL_SECONDS - (time.time() - self._last_request_ts)
             if wait > 0:
@@ -145,7 +145,7 @@ class MiaoxiangFetcher(BaseFetcher):
                 response.raise_for_status()
                 payload = response.json()
             except requests.RequestException as exc:
-                raise DataFetchError(f"妙想 API 请求失败: {exc}") from exc
+                raise DataFetchError(f"คำขอ Miaoxiang API ล้มเหลว: {exc}") from exc
             finally:
                 self._last_request_ts = time.time()
         finally:
@@ -153,7 +153,7 @@ class MiaoxiangFetcher(BaseFetcher):
 
         if payload.get("status") != 0:
             message = str(payload.get("message", ""))[:120]
-            raise DataFetchError(f"妙想 API 返回错误: status={payload.get('status')} {message}")
+            raise DataFetchError(f"Miaoxiang API ส่งคืนข้อผิดพลาด: status={payload.get('status')} {message}")
 
         # 兼容两种官方返回形态（有限的显式候选路径，不做递归兜底）：
         #   A. 实测形态:  data.data.searchDataResultDTO.dataTableDTOList
@@ -172,7 +172,7 @@ class MiaoxiangFetcher(BaseFetcher):
                     tables = [t for t in candidate if isinstance(t, dict)]
                     break
         if not tables:
-            raise DataFetchError("妙想 API 未返回数据表格")
+            raise DataFetchError("Miaoxiang API ไม่ได้ส่งคืนตารางข้อมูล")
 
         with self._cache_lock:
             self._cache[cache_key] = (time.time(), tables)
@@ -266,7 +266,7 @@ class MiaoxiangFetcher(BaseFetcher):
         """
         stock_code = normalize_stock_code(stock_code)
         if _is_non_cn_request(stock_code) or _is_etf_code(stock_code):
-            logger.debug(f"[API跳过] {stock_code} 非A股个股，无筹码分布数据")
+            logger.debug(f"[API skipped] {stock_code} is not an A-share stock, no shareholding distribution data")
             return None
 
         tables = self._query_tables(
@@ -281,11 +281,11 @@ class MiaoxiangFetcher(BaseFetcher):
         if target is None:
             target = self._find_table_by_label(tables, "筹码")
         if target is None:
-            raise DataFetchError("妙想 API 筹码分布返回缺少可用表格")
+            raise DataFetchError("Miaoxiang API การกระจายตัวของหุ้นส่งคืนโดยไม่มีตารางที่ใช้ได้")
 
         rows = self._table_rows(target)
         if not rows:
-            raise DataFetchError("妙想 API 筹码分布表格为空")
+            raise DataFetchError("ตารางการกระจายตัวของหุ้น Miaoxiang API ว่างเปล่า")
         row = rows[0]
 
         avg_cost = _parse_number(row.get("平均成本"))
@@ -294,7 +294,7 @@ class MiaoxiangFetcher(BaseFetcher):
         concentration_70 = _parse_ratio(row.get("70%筹码集中度"))
 
         if avg_cost is None or avg_cost <= 0:
-            raise DataFetchError(f"妙想 API 筹码分布平均成本无效: {row}")
+            raise DataFetchError(f"ต้นทุนเฉลี่ยการกระจายตัวของหุ้น Miaoxiang API ไม่ถูกต้อง: {row}")
 
         chip = ChipDistribution(
             code=stock_code,
@@ -394,7 +394,7 @@ class MiaoxiangFetcher(BaseFetcher):
     # ------------------------------------------------------------------
 
     def _fetch_raw_data(self, stock_code: str, start_date: str, end_date: str) -> pd.DataFrame:
-        raise DataFetchError("MiaoxiangFetcher 不提供日线行情数据（专用补充数据源）")
+        raise DataFetchError("MiaoxiangFetcher ไม่ให้บริการข้อมูลรายวัน (แหล่งข้อมูลเสริมเฉพาะทาง)")
 
     def _normalize_data(self, df: pd.DataFrame, stock_code: str) -> pd.DataFrame:
-        raise DataFetchError("MiaoxiangFetcher 不提供日线行情数据（专用补充数据源）")
+        raise DataFetchError("MiaoxiangFetcher ไม่ให้บริการข้อมูลรายวัน (แหล่งข้อมูลเสริมเฉพาะทาง)")

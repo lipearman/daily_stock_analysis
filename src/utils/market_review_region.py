@@ -49,21 +49,21 @@ def normalize_market_review_region_strict(value: str) -> str:
         "或 cn/hk/us/jp/kr/tw 的合法逗号分隔组合"
     )
     if not normalized:
-        raise ValueError(f"region 不能为空；合法值：{valid_hint}")
+        raise ValueError(f"region ต้องไม่ว่างเปล่า ค่าที่ใช้ได้: {valid_hint}")
 
     tokens = [token.strip() for token in normalized.split(",")]
     if any(not token for token in tokens):
-        raise ValueError(f"region 不能包含空项；合法值：{valid_hint}")
+        raise ValueError(f"region ห้ามมีรายการว่าง ค่าที่ใช้ได้: {valid_hint}")
 
     invalid_tokens = sorted({token for token in tokens if token not in MARKET_REVIEW_REGION_SET and token != "both"})
     if invalid_tokens:
         raise ValueError(
-            f"region 包含非法值：{', '.join(invalid_tokens)}；合法值：{valid_hint}"
+            f"region มีค่าที่ไม่ถูกต้อง: {', '.join(invalid_tokens)} ค่าที่ใช้ได้: {valid_hint}"
         )
 
     if "both" in tokens:
         if len(tokens) != 1:
-            raise ValueError("region 中 both 必须单独使用，不能与其他市场混合")
+            raise ValueError("both ใน region ต้องใช้เดี่ยวเท่านั้น ห้ามผสมกับตลาดอื่น")
         return MARKET_REVIEW_REGION_ALL
 
     requested = set(tokens)

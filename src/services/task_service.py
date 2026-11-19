@@ -108,7 +108,7 @@ class TaskService:
         else:
             normalized_code = resolve_index_stock_code_for_analysis(code)
         if not normalized_code:
-            raise ValueError("股票代码不能为空或仅包含空白字符")
+            raise ValueError("รหัสหุ้นต้องไม่ว่างเปล่าหรือมีเฉพาะช่องว่าง")
 
         task_id = f"{normalized_code}_{datetime.now().strftime('%Y%m%d_%H%M%S_%f')}"
 
@@ -125,7 +125,7 @@ class TaskService:
         )
 
         logger.info(
-            f"[TaskService] 已提交股票 {normalized_code} 的分析任务, "
+            f"[TaskService] ส่งงานวิเคราะห์หุ้นแล้ว {normalized_code} "
             f"task_id={task_id}, report_type={report_type.value}"
         )
 
@@ -194,7 +194,7 @@ class TaskService:
             from src.config import get_config
             from main import StockAnalysisPipeline
 
-            logger.info(f"[TaskService] 开始分析股票: {code}")
+            logger.info(f"[TaskService] เริ่มวิเคราะห์หุ้น: {code}")
 
             # 创建分析管道
             config = get_config()
@@ -235,7 +235,7 @@ class TaskService:
                         "result": result_data
                     })
 
-                logger.info(f"[TaskService] 股票 {code} 分析完成: {result.operation_advice}")
+                logger.info(f"[TaskService] หุ้น {code} วิเคราะห์เสร็จสิ้น: {result.operation_advice}")
                 return {"success": True, "task_id": task_id, "result": result_data}
             else:
                 fail_message = "分析返回空结果"
@@ -248,12 +248,12 @@ class TaskService:
                         "error": fail_message
                     })
 
-                logger.warning(f"[TaskService] 股票 {code} 分析失败: {fail_message}")
+                logger.warning(f"[TaskService] หุ้น {code} วิเคราะห์ล้มเหลว: {fail_message}")
                 return {"success": False, "task_id": task_id, "error": fail_message}
 
         except Exception as e:
             error_msg = str(e)
-            logger.error(f"[TaskService] 股票 {code} 分析异常: {error_msg}")
+            logger.error(f"[TaskService] หุ้น {code} วิเคราะห์ผิดปกติ: {error_msg}")
 
             with self._tasks_lock:
                 self._tasks[task_id].update({

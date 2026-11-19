@@ -339,7 +339,7 @@ export const useAgentChatStore = create<AgentChatState & AgentChatActions>((set,
     };
     const skillNames = meta?.skillNames?.length
       ? meta.skillNames
-      : [meta?.skillName ?? '通用'];
+      : [meta?.skillName ?? 'ทั่วไป'];
     const skillName = skillNames.join('、');
 
     const userMessage: Message = {
@@ -373,8 +373,8 @@ export const useAgentChatStore = create<AgentChatState & AgentChatActions>((set,
       let acceptedEvent: StreamAcceptedEvent | null = null;
       const currentProgressSteps: ProgressStep[] = [];
       const protocolError = (message: string) => createParsedApiError({
-        title: '请求未被接受',
-        message: 'Agent 没有确认接收本次问题，请保留当前内容后重试。',
+        title: 'คำขอไม่ได้รับการยอมรับ',
+        message: 'Agent ไม่ได้ยืนยันการรับคำถามครั้งนี้ กรุณารักษาเนื้อหาปัจจุบันและลองอีกครั้ง',
         rawMessage: message,
         category: 'upstream_network',
       });
@@ -429,7 +429,7 @@ export const useAgentChatStore = create<AgentChatState & AgentChatActions>((set,
           const failureEvent = event as unknown as StreamFailureEvent;
           throw getStreamFailureError(
             failureEvent,
-            '分析出错',
+            'เกิดข้อผิดพลาดในการวิเคราะห์',
           );
         }
         if (!acceptedEvent) {
@@ -445,7 +445,7 @@ export const useAgentChatStore = create<AgentChatState & AgentChatActions>((set,
           if (doneEvent.success === false) {
             throw getStreamFailureError(
               doneEvent,
-              '大模型调用出错，请检查 API Key 配置',
+              'เกิดข้อผิดพลาดในการเรียกใช้โมเดลขนาดใหญ่ กรุณาตรวจสอบการตั้งค่า API Key',
             );
           }
           finalContent = doneEvent.content ?? '';
@@ -490,8 +490,8 @@ export const useAgentChatStore = create<AgentChatState & AgentChatActions>((set,
 
       if (!receivedDoneEvent && !ac.signal.aborted) {
         throw createParsedApiError({
-          title: '回复未完整返回',
-          message: 'Agent 流式响应在完成前中断，请重试。',
+          title: 'ไม่ได้รับคำตอบครบถ้วน',
+          message: 'การตอบกลับแบบสตรีมของ Agent ถูกยกเลิกก่อนที่จะเสร็จสิ้น กรุณาลองอีกครั้ง',
           rawMessage: 'Agent stream ended before a done event was received.',
           category: 'upstream_network',
         });
@@ -507,7 +507,7 @@ export const useAgentChatStore = create<AgentChatState & AgentChatActions>((set,
             {
               id: (Date.now() + 1).toString(),
               role: 'assistant',
-              content: finalContent || '（无内容）',
+              content: finalContent || '(ไม่มีเนื้อหา)',
               skills: payload.skills,
               skill: payload.skills?.[0],
               skillNames,

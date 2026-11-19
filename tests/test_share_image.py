@@ -549,7 +549,7 @@ def test_market_share_image_merges_partial_structured_sectors_with_markdown_fall
 
 ## 板块主线
 
-### 领涨板块 Top 3
+### 'กลุ่มนำขึ้น'板块 Top 3
 
 | 排名 | 板块 | 涨跌幅 |
 | --- | --- | --- |
@@ -557,7 +557,7 @@ def test_market_share_image_merges_partial_structured_sectors_with_markdown_fall
 | 2 | 机器人 | +2.10% |
 | 3 | 算力租赁 | +1.50% |
 
-### 领跌板块 Top 3
+### 'กลุ่มนำลง'板块 Top 3
 
 | 排名 | 板块 | 涨跌幅 |
 | --- | --- | --- |
@@ -599,7 +599,7 @@ def test_market_share_image_does_not_replace_markdown_sector_with_unmatched_name
 
 ## 板块主线
 
-### 领涨板块 Top 3
+### 'กลุ่มนำขึ้น'板块 Top 3
 
 | 排名 | 板块 | 涨跌幅 |
 | --- | --- | --- |
@@ -662,7 +662,7 @@ def test_market_share_image_populates_decision_modules_from_report_contract():
 
 ### 三、板块主线
 
-#### 领涨板块 Top 3
+#### 'กลุ่มนำขึ้น'板块 Top 3
 
 | 排名 | 板块 | 涨跌幅 |
 | --- | --- | --- |
@@ -1084,7 +1084,7 @@ def test_stock_share_image_reads_chinese_volume_label_from_data_view():
         generated_on=date(2026, 7, 31),
     )
 
-    assert "技术参考" in html
+    assert '技术参考' in html
     assert ">量能<" in html
     assert "1.35" in html
     assert "0.82%" in html

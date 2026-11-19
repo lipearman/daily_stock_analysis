@@ -76,17 +76,17 @@ _IMAGE_SIGNATURES = {
 def _verify_image_magic_bytes(image_bytes: bytes, mime_type: str) -> None:
     """Verify actual file content matches declared MIME type (rejects forged Content-Type)."""
     if len(image_bytes) < 12:
-        raise ValueError("图片文件过小或损坏")
+        raise ValueError("ไฟล์รูปภาพเล็กเกินไปหรือเสียหาย")
     if mime_type not in _IMAGE_SIGNATURES:
-        raise ValueError(f"无法验证类型: {mime_type}")
+        raise ValueError(f"ตรวจสอบประเภทไม่ได้: {mime_type}")
     if mime_type == "image/webp":
         if image_bytes[:4] != b"RIFF" or image_bytes[8:12] != b"WEBP":
-            raise ValueError("文件内容与声明的类型 image/webp 不匹配，可能被篡改")
+            raise ValueError("เนื้อหาไฟล์ไม่ตรงกับประเภท image/webp ที่ระบุ อาจถูกแก้ไข")
         return
     for sig in _IMAGE_SIGNATURES[mime_type]:
         if image_bytes.startswith(sig):
             return
-    raise ValueError(f"文件内容与声明的类型 {mime_type} 不匹配，可能被篡改")
+    raise ValueError(f"เนื้อหาไฟล์ไม่ตรงกับประเภท {mime_type} ที่ระบุ อาจถูกแก้ไข")
 
 
 def _normalize_code(raw: str) -> Optional[str]:
@@ -204,7 +204,7 @@ def _parse_items_from_text(text: str) -> List[Tuple[str, Optional[str], str]]:
     # Fallback: legacy format (codes only)
     codes = _parse_codes_from_text(text)
     if not codes:
-        logger.info("[ImageExtractor] 无法解析为结构化 items，且 legacy code 提取为空")
+        logger.info("[ImageExtractor] ไม่สามารถแยกข้อมูลเป็นโครงสร้างได้ และโค้ดแบบดั้งเดิมไม่สามารถดึงข้อมูลได้")
     return [(c, None, "medium") for c in codes]
 
 
@@ -273,9 +273,9 @@ def _call_litellm_vision(image_b64: str, mime_type: str, api_key: Optional[str] 
     cfg = get_config()
     model = _resolve_vision_model()
     if not model:
-        raise ValueError("未配置 Vision API。请设置 LITELLM_MODEL 或相关 API Key。")
+        raise ValueError("ยังไม่ได้ตั้งค่า Vision API กรุณาตั้งค่า LITELLM_MODEL หรือ API Key ที่เกี่ยวข้อง")
     if route_has_hermes(getattr(cfg, "llm_model_list", []) or [], model):
-        raise ValueError("Hermes Vision 未验证：VISION_MODEL 不能选择包含 Hermes deployment 的 route。")
+        raise ValueError("Hermes Vision ยังไม่ผ่านการตรวจสอบ: VISION_MODEL ห้ามเลือก route ที่มี Hermes deployment")
 
     deployments = _matching_vision_deployments(model, cfg)
     keys = _get_api_keys_for_model(model, cfg)
@@ -364,10 +364,10 @@ def extract_stock_codes_from_image(
     """
     mime_type = (mime_type or "image/jpeg").strip().lower().split(";")[0].strip()
     if mime_type not in ALLOWED_MIME:
-        raise ValueError(f"不支持的图片类型: {mime_type}。允许: {list(ALLOWED_MIME)}")
+        raise ValueError(f"ไม่รองรับประเภทรูปภาพ: {mime_type} ที่อนุญาต: {list(ALLOWED_MIME)}")
 
     if not image_bytes:
-        raise ValueError("图片内容为空")
+        raise ValueError("เนื้อหารูปภาพว่างเปล่า")
 
     if len(image_bytes) > MAX_SIZE_BYTES:
         raise ValueError(f"Image too large (max {MAX_SIZE_BYTES // (1024 * 1024)}MB)")
@@ -386,7 +386,7 @@ def extract_stock_codes_from_image(
             logger.debug("[ImageExtractor] raw LLM response:\n%s", raw)
             items = _parse_items_from_text(raw)
             logger.info(
-                f"[ImageExtractor] {model} 提取 {len(items)} 个: "
+                f"[ImageExtractor] {model} สกัดได้ {len(items)} รายการ: "
                 f"{[(i[0], i[1]) for i in items[:5]]}{'...' if len(items) > 5 else ''}"
             )
             return items, raw
@@ -394,9 +394,9 @@ def extract_stock_codes_from_image(
             last_error = e
             if attempt < 2:
                 delay = 2 ** attempt
-                logger.warning(f"[ImageExtractor] 尝试 {attempt + 1}/3 失败，{delay}s 后重试: {e}")
+                logger.warning(f"[ImageExtractor] พยายาม {attempt + 1}/3 ล้มเหลว รอ {delay}s ก่อนลองอีกครั้ง: {e}")
                 time.sleep(delay)
 
     raise ValueError(
-        f"Vision API 调用失败，请检查 API Key 与网络: {last_error}"
+        f"เรียก Vision API ไม่สำเร็จ กรุณาตรวจสอบ API Key และเครือข่าย: {last_error}"
     ) from last_error

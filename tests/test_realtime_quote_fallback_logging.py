@@ -202,9 +202,9 @@ def test_pipeline_warns_once_when_all_realtime_sources_fail(caplog):
     downgrade_logs = [
         record.message
         for record in caplog.records
-        if "历史收盘价继续分析" in record.message
+        if "ราคาปิดจากอดีต" in record.message
     ]
-    assert downgrade_logs == ["贵州茅台(600519) 所有实时行情数据源均不可用，已降级为历史收盘价继续分析"]
+    assert downgrade_logs == ["贵州茅台(600519) ทุกแหล่งข้อมูลราคาแบบเรียลไทม์ไม่สามารถใช้งานได้ จึงลดระดับเป็นราคาปิดจากอดีตเพื่อดำเนินการต่อ"]
 
 
 @patch("src.config.get_config")
@@ -232,7 +232,7 @@ def test_event_monitor_keeps_manager_failure_summary_for_direct_quote_call(mock_
         result = asyncio.run(monitor._check_price(rule))
 
     assert result is None
-    assert "[实时行情] 600519 所有数据源均失败: [efinance] 失败: efinance timeout" in caplog.text
+    assert "[ราคาเรียลไทม์] 600519 ล้มเหลวทุกแหล่งข้อมูล: [efinance] 失败: efinance timeout" in caplog.text
 
 
 def test_pipeline_logs_disabled_realtime_once_without_fetching_quote(caplog):
@@ -247,6 +247,6 @@ def test_pipeline_logs_disabled_realtime_once_without_fetching_quote(caplog):
     downgrade_logs = [
         record.message
         for record in caplog.records
-        if "历史收盘价继续分析" in record.message
+        if "ราคาปิดจากอดีต" in record.message
     ]
-    assert downgrade_logs == ["贵州茅台(600519) 实时行情已禁用，使用历史收盘价继续分析"]
+    assert downgrade_logs == ["贵州茅台(600519) การอัปเดตราคาแบบเรียลไทม์ถูกปิดใช้งาน จะใช้ราคาปิดจากอดีตต่อไป"]

@@ -2343,7 +2343,7 @@ class ScreeningOpportunitiesApiTestCase(unittest.TestCase):
         self.assertEqual(caught.exception.status_code, 424)
         self.assertEqual(caught.exception.detail["error"], "screening_unavailable")
         self.assertEqual(caught.exception.detail.get("diagnostics", {}).get("reason"), "unexpected_exception")
-        self.assertIn("选股功能初始化失败", caught.exception.detail["message"])
+        self.assertIn("เริ่มต้นฟีเจอร์คัดหุ้นไม่สำเร็จ", caught.exception.detail["message"])
 
     def test_start_screen_task_submits_background_work(self) -> None:
         config = self._config(enabled=True)
@@ -2388,7 +2388,7 @@ class ScreeningOpportunitiesApiTestCase(unittest.TestCase):
         fake_queue.update_task_progress.assert_any_call(
             "screen-task-1",
             20,
-            "正在执行选股，外部数据源较慢时会持续后台运行",
+            "กำลังคัดกรองหุ้น หากแหล่งข้อมูลภายนอกช้า งานจะทำต่อในเบื้องหลัง",
         )
         fake_queue.update_task_progress.assert_any_call(
             "screen-task-1",

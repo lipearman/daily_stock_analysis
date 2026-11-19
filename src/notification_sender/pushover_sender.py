@@ -68,7 +68,7 @@ class PushoverSender:
             是否发送成功
         """
         if not self._is_pushover_configured():
-            logger.warning("Pushover 配置不完整，跳过推送")
+            logger.warning("การตั้งค่า Pushover ไม่สมบูรณ์ จึงข้ามการแจ้งเตือน")
             return False
         
         user_key = self._pushover_config['user_key']
@@ -139,19 +139,19 @@ class PushoverSender:
             if response.status_code == 200:
                 result = response.json()
                 if result.get('status') == 1:
-                    logger.info("Pushover 消息发送成功")
+                    logger.info("ส่งข้อความ Pushover สำเร็จ")
                     return True
                 else:
                     errors = result.get('errors', ['未知错误'])
-                    logger.error(f"Pushover 返回错误: {errors}")
+                    logger.error(f"ข้อผิดพลาดจาก Pushover: {errors}")
                     return False
             else:
-                logger.error(f"Pushover 请求失败: HTTP {response.status_code}")
-                logger.debug(f"响应内容: {response.text}")
+                logger.error(f"การร้องขอ Pushover ล้มเหลว: HTTP {response.status_code}")
+                logger.debug(f"เนื้อหาคำตอบ: {response.text}")
                 return False
                 
         except Exception as e:
-            logger.error(f"发送 Pushover 消息失败: {e}")
+            logger.error(f"ส่งข้อความ Pushover ล้มเหลว: {e}")
             return False
     
     def _send_pushover_chunked(
@@ -210,7 +210,7 @@ class PushoverSender:
         total_chunks = len(chunks)
         success_count = 0
         
-        logger.info(f"Pushover 分批发送：共 {total_chunks} 批")
+        logger.info(f"ส่งข้อความ Pushover แบ่งเป็นชิ้นย่อยทั้งหมด {total_chunks} ชิ้น")
         
         for i, chunk in enumerate(chunks):
             # 添加分页标记到标题
@@ -225,9 +225,9 @@ class PushoverSender:
                 timeout_seconds=timeout_seconds,
             ):
                 success_count += 1
-                logger.info(f"Pushover 第 {i+1}/{total_chunks} 批发送成功")
+                logger.info(f"ส่งข้อความ Pushover ชิ้นที่ {i+1}/{total_chunks} สำเร็จ")
             else:
-                logger.error(f"Pushover 第 {i+1}/{total_chunks} 批发送失败")
+                logger.error(f"ส่งข้อความ Pushover ชิ้นที่ {i+1}/{total_chunks} ล้มเหลว")
             
             # 批次间隔，避免触发频率限制
             if i < total_chunks - 1:

@@ -52,10 +52,10 @@ def test_prepare_webui_frontend_assets_reuses_prebuilt_static_without_source(tmp
     with caplog.at_level(logging.INFO):
         assert webui_frontend.prepare_webui_frontend_assets() is True
 
-    assert "检测到可直接复用的前端静态产物" in caplog.text
-    assert "未找到前端项目，无法自动构建" not in caplog.text
+    assert "ตรวจพบผลิตภัณฑ์ส่วนหน้าที่สามารถใช้ซ้ำได้" in caplog.text
+    assert "ไม่พบโครงการส่วนหน้าเลย จึงไม่สามารถคอมไพล์อัตโนมัติได้" not in caplog.text
     assert "未检测到 npm，无法自动构建前端" not in caplog.text
-    assert "assets/ 目录不存在或无 CSS/JS 文件" not in caplog.text
+    assert "ไม่มีอยู่หรือไม่มีไฟล์ CSS/JS" not in caplog.text
 
 
 def test_prepare_webui_frontend_assets_fails_without_static_or_source(tmp_path, monkeypatch, caplog):
@@ -67,7 +67,7 @@ def test_prepare_webui_frontend_assets_fails_without_static_or_source(tmp_path, 
     with caplog.at_level(logging.WARNING):
         assert webui_frontend.prepare_webui_frontend_assets() is False
 
-    assert "未找到前端项目，无法自动构建" in caplog.text
+    assert "ไม่พบโครงการส่วนหน้าเลย จึงไม่สามารถคอมไพล์อัตโนมัติได้" in caplog.text
 
 
 def test_prepare_webui_frontend_assets_warns_when_assets_missing(tmp_path, monkeypatch, caplog):
@@ -86,8 +86,8 @@ def test_prepare_webui_frontend_assets_warns_when_assets_missing(tmp_path, monke
         result = webui_frontend.prepare_webui_frontend_assets()
 
     assert result is True  # function still returns True (index.html present)
-    assert "目录不存在或无 CSS/JS 文件" in caplog.text
-    assert "WebUI 将因缺少样式与脚本而显示异常" in caplog.text
+    assert "ไม่มีอยู่หรือไม่มีไฟล์ CSS/JS" in caplog.text
+    assert "WebUI จะแสดงผลผิดปกติเพราะขาดสไตล์และสคริปต์" in caplog.text
 
 
 def test_prepare_webui_frontend_assets_auto_build_disabled_warns_when_assets_missing(tmp_path, monkeypatch, caplog):
@@ -105,7 +105,7 @@ def test_prepare_webui_frontend_assets_auto_build_disabled_warns_when_assets_mis
         result = webui_frontend.prepare_webui_frontend_assets()
 
     assert result is True  # index.html present, still returns True
-    assert "目录不存在或无 CSS/JS 文件" in caplog.text
+    assert "ไม่มีอยู่หรือไม่มีไฟล์ CSS/JS" in caplog.text
 
 
 def test_needs_frontend_build_uses_content_fingerprint_when_mtime_is_preserved(tmp_path):
@@ -173,7 +173,7 @@ def test_source_input_discovery_errors_fall_back_without_aborting(tmp_path, monk
     with caplog.at_level(logging.WARNING):
         assert webui_frontend._calculate_source_fingerprint(frontend_dir) is None
 
-    assert "回退到文件时间检查" in caplog.text
+    assert "ย้อนกลับไปตรวจสอบตามเวลาไฟล์แทน" in caplog.text
 
 
 def test_undecodable_build_metadata_is_treated_as_stale(tmp_path, monkeypatch, caplog):
@@ -189,7 +189,7 @@ def test_undecodable_build_metadata_is_treated_as_stale(tmp_path, monkeypatch, c
     with caplog.at_level(logging.WARNING):
         assert webui_frontend.prepare_webui_frontend_assets() is True
 
-    assert "源码与现有静态产物不一致" in caplog.text
+    assert "ไม่ตรงกับผลิตภัณฑ์สถิติที่มีอยู่" in caplog.text
 
 
 def test_has_static_assets_returns_false_for_missing_dir(tmp_path):

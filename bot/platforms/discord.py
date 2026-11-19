@@ -57,7 +57,7 @@ class DiscordPlatform(BotPlatform):
             签名是否有效
         """
         if not self._interactions_public_key:
-            logger.warning("[Discord] 未配置 interactions public key，拒绝请求")
+            logger.warning("[Discord] ยังไม่ตั้งค่า public key สำหรับ interactions จึงปฏิเสธคำขอ")
             return False
 
         normalized_headers = {str(k).lower(): v for k, v in headers.items()}
@@ -65,20 +65,20 @@ class DiscordPlatform(BotPlatform):
         timestamp = normalized_headers.get("x-signature-timestamp", "")
 
         if not signature or not timestamp:
-            logger.warning("[Discord] 缺少签名头，拒绝请求")
+            logger.warning("[Discord] ขาดหัวข้อลายเซ็น จึงปฏิเสธคำขอ")
             return False
 
         # 校验 timestamp 格式与时效性，防止重放攻击
         try:
             ts_int = int(timestamp)
         except (TypeError, ValueError):
-            logger.warning("[Discord] 非法的 timestamp：必须为 Unix 秒整数，拒绝请求")
+            logger.warning("[Discord] เวลาสกัดไม่ถูกต้อง: ต้องเป็นจำนวนเต็มของวินาที Unix เท่านั้น จึงปฏิเสธคำขอ")
             return False
 
         try:
             now_ts = int(time.time())
         except Exception as exc:
-            logger.warning("[Discord] 获取当前时间失败: %s，拒绝请求", exc)
+            logger.warning("[Discord] ดึงเวลาปัจจุบันล้มเหลว: %s จึงปฏิเสธคำขอ", exc)
             return False
 
         # 允许的时间窗口：±5 分钟
@@ -94,19 +94,19 @@ class DiscordPlatform(BotPlatform):
             verify_key = VerifyKey(bytes.fromhex(self._interactions_public_key))
             signature_bytes = bytes.fromhex(signature)
         except ValueError:
-            logger.warning("[Discord] 公钥或签名不是合法十六进制，拒绝请求")
+            logger.warning("[Discord] public key หรือลายเซ็นไม่ใช่เลขฐานสิบหกทศนิยมที่ถูกต้อง จึงปฏิเสธคำขอ")
             return False
         except Exception as exc:
-            logger.warning("[Discord] 无法加载签名公钥: %s", exc)
+            logger.warning("[Discord] โหลด public key สำหรับลายเซ็นล้มเหลว: %s", exc)
             return False
 
         try:
             verify_key.verify(timestamp.encode("utf-8") + body, signature_bytes)
         except BadSignatureError:
-            logger.warning("[Discord] 签名验证失败")
+            logger.warning("[Discord] การตรวจสอบลายเซ็นล้มเหลว")
             return False
         except Exception as exc:
-            logger.warning("[Discord] 签名校验异常: %s", exc)
+            logger.warning("[Discord] การตรวจสอบลายเซ็นผิดพลาด: %s", exc)
             return False
 
         return True
@@ -252,7 +252,7 @@ class DiscordPlatform(BotPlatform):
                 content, self.DISCORD_MAX_CONTENT_LENGTH
             )
         except (ValueError, Exception) as exc:
-            logger.warning("[Discord] 消息分块失败: %s，尝试整段发送", exc)
+            logger.warning("[Discord] การแบ่งข้อความเป็นชิ้นย่อยล้มเหลว: %s จึงลองส่งทั้งหมดเป็นหนึ่งชิ้น", exc)
             chunks = [content]
 
         base_url = (
@@ -296,7 +296,7 @@ class DiscordPlatform(BotPlatform):
                 success = False
 
         if success:
-            logger.info("[Discord] follow-up 消息发送成功 (%d 块)", len(chunks))
+            logger.info("[Discord] ส่งข้อความติดตามสำเร็จ (%d ชิ้น)", len(chunks))
         return success
 
     def handle_challenge(self, data: Dict[str, Any]) -> Optional[WebhookResponse]:

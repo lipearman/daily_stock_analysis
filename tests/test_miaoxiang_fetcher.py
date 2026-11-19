@@ -588,9 +588,9 @@ class TestSupplementRuntimeContracts:
                 payload = {"stock_flow": {}, "errors": []}
                 DataFetcherManager(fetchers=[other])._supplement_capital_flow_from_fetchers("600330", payload, 0.2)
                 assert payload["stock_flow"] == {}
-                assert any("仍在执行" in error for error in payload["errors"])
+                assert any("ยังทำงานอยู่" in error for error in payload["errors"])
             else:
-                with pytest.raises(DataFetchError, match="仍在执行"):
+                with pytest.raises(DataFetchError, match="ยังทำงานอยู่"):
                     other.get_chip_distribution("600330")
             assert len(posts) == 1
         finally:

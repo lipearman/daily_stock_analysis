@@ -188,7 +188,7 @@ class AnalyzerNewsPromptTestCase(unittest.TestCase):
             news_strategy_profile="medium",  # 7 days
         )
         with patch("src.analyzer.get_config", return_value=fake_cfg):
-            prompt = analyzer._format_prompt(context, "贵州茅台", news_context="news")
+            prompt = analyzer._format_prompt(context, "贵州茅台", news_context="news", report_language='zh')
 
         self.assertIn("近7日的新闻搜索结果", prompt)
         self.assertIn("每一条都必须带具体日期（YYYY-MM-DD）", prompt)
@@ -224,7 +224,7 @@ class AnalyzerNewsPromptTestCase(unittest.TestCase):
             },
         }
 
-        prompt = analyzer._format_prompt(context, "恩捷股份", news_context=None)
+        prompt = analyzer._format_prompt(context, "恩捷股份", news_context=None, report_language='zh')
 
         self.assertIn("主力资金流向（操作建议过滤器）", prompt)
         self.assertIn("主力净流入", prompt)
@@ -248,7 +248,7 @@ class AnalyzerNewsPromptTestCase(unittest.TestCase):
             news_strategy_profile="long",  # 30 days if fallback is used
         )
         with patch("src.analyzer.get_config", return_value=fake_cfg):
-            prompt = analyzer._format_prompt(context, "贵州茅台", news_context="news")
+            prompt = analyzer._format_prompt(context, "贵州茅台", news_context="news", report_language='zh')
 
         self.assertIn("近1日的新闻搜索结果", prompt)
         self.assertIn("超出近1日窗口的新闻一律忽略", prompt)
@@ -273,12 +273,10 @@ class AnalyzerNewsPromptTestCase(unittest.TestCase):
             },
         }
 
-        prompt = analyzer._format_prompt(
-            context,
+        prompt = analyzer._format_prompt(context,
             "贵州茅台",
             news_context=None,
-            analysis_context_pack_summary="\n## 分析上下文包摘要\n- 数据块状态：行情 available\n",
-        )
+            analysis_context_pack_summary="\n## 分析上下文包摘要\n- 数据块状态：行情 available\n", report_language='zh')
 
         phase_index = prompt.index("市场阶段上下文")
         pack_index = prompt.index("分析上下文包摘要")
@@ -300,7 +298,7 @@ class AnalyzerNewsPromptTestCase(unittest.TestCase):
             "today": {},
         }
 
-        prompt = analyzer._format_prompt(context, "贵州茅台", news_context=None)
+        prompt = analyzer._format_prompt(context, "贵州茅台", news_context=None, report_language='zh')
 
         self.assertNotIn("市场阶段上下文", prompt)
         self.assertNotIn("分析上下文包摘要", prompt)
@@ -321,7 +319,7 @@ class AnalyzerNewsPromptTestCase(unittest.TestCase):
             },
         }
 
-        prompt = analyzer._format_prompt(context, "贵州茅台", news_context=None)
+        prompt = analyzer._format_prompt(context, "贵州茅台", news_context=None, report_language='zh')
 
         self.assertIn("### 最新行情", prompt)
         self.assertIn("| 盘中估算价 | 1880.0 元 |", prompt)
@@ -350,7 +348,7 @@ class AnalyzerNewsPromptTestCase(unittest.TestCase):
                 },
             }
 
-            prompt = analyzer._format_prompt(context, "贵州茅台", news_context=None)
+            prompt = analyzer._format_prompt(context, "贵州茅台", news_context=None, report_language='zh')
 
             self.assertIn("### 上一完整交易日行情", prompt)
             self.assertIn("| 上一完整交易日收盘价 | 1870.0 元 |", prompt)
@@ -388,7 +386,7 @@ class AnalyzerNewsPromptTestCase(unittest.TestCase):
                 },
             }
 
-            prompt = analyzer._format_prompt(context, "贵州茅台", news_context=None)
+            prompt = analyzer._format_prompt(context, "贵州茅台", news_context=None, report_language='zh')
 
             self.assertIn("### 最新行情", prompt)
             self.assertIn("| 实时估算价 | 1882.5 元 |", prompt)
@@ -427,7 +425,7 @@ class AnalyzerNewsPromptTestCase(unittest.TestCase):
             },
         }
 
-        prompt = analyzer._format_prompt(context, "贵州茅台", news_context=None)
+        prompt = analyzer._format_prompt(context, "贵州茅台", news_context=None, report_language='zh')
 
         self.assertIn("### 最新行情", prompt)
         self.assertIn("| 最新价 | 1882.5 元 |", prompt)
@@ -457,7 +455,7 @@ class AnalyzerNewsPromptTestCase(unittest.TestCase):
             if phase_context is not None:
                 context["market_phase_context"] = phase_context
 
-            prompt = analyzer._format_prompt(context, "贵州茅台", news_context=None)
+            prompt = analyzer._format_prompt(context, "贵州茅台", news_context=None, report_language='zh')
 
             self.assertIn("### 今日行情", prompt)
             self.assertIn("| 收盘价 | 1880.0 元 |", prompt)
@@ -489,7 +487,7 @@ class AnalyzerNewsPromptTestCase(unittest.TestCase):
                 "risk_factors": ["无背驰确认"],
             },
         }
-        prompt = analyzer._format_prompt(context, "贵州茅台", news_context=None)
+        prompt = analyzer._format_prompt(context, "贵州茅台", news_context=None, report_language='zh')
 
         self.assertIn("当前结构是否满足激活技能的关键触发条件", prompt)
         self.assertNotIn("是否满足 MA5>MA10>MA20 多头排列", prompt)
@@ -526,11 +524,9 @@ class AnalyzerNewsPromptTestCase(unittest.TestCase):
             },
         }
 
-        prompt = analyzer._format_prompt(
-            context,
+        prompt = analyzer._format_prompt(context,
             "药明康德",
-            news_context="2026-04-27 一季报超预期，订单增长。",
-        )
+            news_context="2026-04-27 一季报超预期，订单增长。", report_language='zh')
 
         self.assertIn("空头排列 MA5<MA10<MA20", prompt)
         self.assertNotIn("多头排列，持续上涨", prompt)
@@ -567,7 +563,7 @@ class AnalyzerNewsPromptTestCase(unittest.TestCase):
             },
         }
 
-        prompt = analyzer._format_prompt(context, "贵州茅台", news_context=None)
+        prompt = analyzer._format_prompt(context, "贵州茅台", news_context=None, report_language='zh')
 
         self.assertIn("多头排列 MA5>MA10>MA20", prompt)
         self.assertIn("财报披露前波动可能放大", prompt)
@@ -604,11 +600,9 @@ class AnalyzerNewsPromptTestCase(unittest.TestCase):
             },
         }
 
-        prompt = analyzer._format_prompt(
-            context,
+        prompt = analyzer._format_prompt(context,
             "宁德时代",
-            news_context="2026-04-27 新产品发布，市场情绪回暖。",
-        )
+            news_context="2026-04-27 新产品发布，市场情绪回暖。", report_language='zh')
 
         self.assertIn("弱势空头，MA5<MA10 但 MA10≥MA20", prompt)
         self.assertNotIn("弱势多头修复", prompt)

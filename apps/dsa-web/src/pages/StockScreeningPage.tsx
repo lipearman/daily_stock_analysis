@@ -494,7 +494,7 @@ const formatHotspotEmptyMessage = (language: UiLanguage, result: ScreeningHotspo
   const message = String(result.message || '').trim();
   const sourceErrors = result.sourceErrors || [];
   if (message && sourceErrors.includes(SCREENING_HOTSPOT_UNAVAILABLE_CODE)) {
-    return language === 'en' && message === '热点源连接中断，暂无可用缓存。'
+    return language === 'en' && message === 'การเชื่อมต่อแหล่งข่าวร้อนขัดข้อง ไม่มีแคชที่ใช้งานได้'
       ? SCREENING_TEXT.en.hotspotOffline : message;
   }
   if (message === SCREENING_HOTSPOT_NO_CACHE_HINT) {
@@ -866,7 +866,7 @@ const useScreeningMessage = (language: UiLanguage, initial?: ScreeningMessage) =
 };
 
 const formatScreeningApiError = (language: UiLanguage, error: unknown, fallback: string): string => {
-  if (language === 'zh') return toApiErrorMessage(error, fallback);
+  if (language === 'en') return toApiErrorMessage(error, fallback);
   const parsed = getParsedApiError(error);
   if (parsed.code === 'screening_screen_task_not_found') return SCREENING_TEXT[language].taskMissing;
   if (parsed.code === 'screening_unavailable') return SCREENING_TEXT[language].screeningNotReady;
@@ -880,20 +880,20 @@ const formatScreeningApiError = (language: UiLanguage, error: unknown, fallback:
 };
 
 const formatScreenTaskMessage = (language: UiLanguage, message: string | null | undefined, status: string) => {
-  if (language === 'zh') return message || '';
+  if (language === 'en') return message || '';
   // Built-in task progress strings have no language field in the API. Match only
   // known messages; provider-written messages remain untouched.
   const progress: Record<string, string> = {
-    '选股任务已提交': 'Screening task submitted',
-    '任务执行中': 'Screening is in progress',
-    '正在执行选股，外部数据源较慢时会持续后台运行': 'Screening will continue in the background while data sources respond',
-    '正在补充入选股票的新闻与事件': 'Loading news and events for selected stocks',
-    '任务执行完成': 'Task completed',
-    '正在读取全市场快照': 'Loading the market snapshot',
-    '正在补充候选行情与基本面': 'Enriching candidate quotes and fundamentals',
-    '正在执行 LLM 候选重排': 'Reranking candidates with the LLM',
-    '正在执行最终评分与风险校验': 'Applying final scores and risk checks',
-    '选股核心流程完成': 'Core screening completed',
+    'ส่งงานคัดเลือกหุ้นแล้ว': 'Screening task submitted',
+    'กำลังดำเนินงาน': 'Screening is in progress',
+    'กำลังเลือกหุ้น อาจทำงานพื้นหลังต่อเนื่องหากแหล่งข้อมูลภายนอกช้า': 'Screening will continue in the background while data sources respond',
+    'กำลังเติมข่าวสารและเหตุการณ์ของหุ้นที่ผ่านการคัดเลือก': 'Loading news and events for selected stocks',
+    'ดำเนินงานเสร็จสิ้น': 'Task completed',
+    'กำลังอ่านภาพรวมตลาดทั้งหมด': 'Loading the market snapshot',
+    'กำลังเติมข้อมูลราคาหุ้นและพื้นฐานของหุ้นที่เข้าชิง': 'Enriching candidate quotes and fundamentals',
+    'กำลังจัดเรียงหุ้นที่เข้าชิงด้วย LLM': 'Reranking candidates with the LLM',
+    'กำลังประเมินคะแนนและตรวจสอบความเสี่ยงสุดท้าย': 'Applying final scores and risk checks',
+    'เสร็จสิ้นกระบวนการหลักในการเลือกหุ้น': 'Core screening completed',
   };
   if (message && Object.hasOwn(progress, message)) return progress[message];
   const filtered = message?.match(/^快照筛选完成，保留 (\d+) 条候选$/);
@@ -1142,7 +1142,7 @@ const StockScreeningPage: React.FC = () => {
       }
     } catch (err) {
       setStrategies([]);
-      setStrategyLoadError((language) => language === 'zh' && err instanceof Error ? err.message : formatScreeningApiError(language, err, SCREENING_TEXT[language].strategiesFailed));
+      setStrategyLoadError((language) => language === 'en' && err instanceof Error ? err.message : formatScreeningApiError(language, err, SCREENING_TEXT[language].strategiesFailed));
     } finally {
       setLoadingStrategies(false);
     }
@@ -1468,7 +1468,7 @@ const StockScreeningPage: React.FC = () => {
         setStatusError((language) => formatScreeningApiError(language, statusErr, SCREENING_TEXT[language].statusFailed));
         setStatusState('error');
       }
-      setError((language) => language === 'zh' && err instanceof Error ? err.message : formatScreeningApiError(language, err, SCREENING_TEXT[language].enableFailed));
+      setError((language) => language === 'en' && err instanceof Error ? err.message : formatScreeningApiError(language, err, SCREENING_TEXT[language].enableFailed));
     } finally {
       setEnabling(false);
     }

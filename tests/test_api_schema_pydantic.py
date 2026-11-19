@@ -116,7 +116,7 @@ def test_schema_examples_remain_in_openapi_schema() -> None:
         "postmarket",
     ]
     assert history_schema["example"]["stock_code"] == "600519"
-    assert quote_schema["example"]["stock_name"] == "贵州茅台"
+    assert quote_schema["example"]["stock_name"] == "Guizhou Maotai"
 
 
 def test_analyze_request_supports_legacy_strategies_dict_input() -> None:
@@ -204,7 +204,7 @@ def test_market_review_request_openapi_exposes_only_region_override_name() -> No
     assert string_schema["minLength"] == 1
     assert region_schema["examples"] == ["cn", "tw", "cn,tw", "both"]
     description = region_schema["description"]
-    for contract_text in ("cn", "both 只能单独使用", "空 token", "整体返回 4xx", "64"):
+    for contract_text in ("cn", "both ใช้เดี่ยว ๆ เท่านั้น", "token ว่าง", "4xx ทั้งชุด", "64"):
         assert contract_text in description
     assert "market_review_region" not in schema["properties"]
 

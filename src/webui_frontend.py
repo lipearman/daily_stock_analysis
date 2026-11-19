@@ -100,7 +100,7 @@ def _calculate_dependency_fingerprint(frontend_dir: Path) -> str | None:
             digest.update(input_path.read_bytes())
             digest.update(b"\0")
     except OSError as exc:
-        logger.warning("读取 WebUI 依赖输入失败，将回退到文件时间检查: %s", exc)
+        logger.warning("ล้มเหลวในการอ่านข้อมูลขึ้นต้นของ WebUI จะย้อนกลับไปตรวจสอบเวลาไฟล์: %s", exc)
         return None
     return digest.hexdigest() if found_input else None
 
@@ -123,7 +123,7 @@ def _write_installed_dependency_fingerprint(frontend_dir: Path) -> None:
     try:
         marker_path.write_text(f"{fingerprint}\n", encoding="ascii")
     except OSError as exc:
-        logger.warning("无法记录 WebUI 依赖摘要，下次构建将重新安装依赖: %s", exc)
+        logger.warning("ไม่สามารถบันทึกสรุปข้อมูลขึ้นต้นของ WebUI ได้ จะต้องติดตั้งใหม่ในครั้งถัดไป: %s", exc)
 
 
 def _needs_dependency_install(frontend_dir: Path, package_json: Path, lock_file: Path, force_build: bool) -> bool:
@@ -175,7 +175,7 @@ def _calculate_source_fingerprint(frontend_dir: Path) -> str | None:
             digest.update(input_path.read_bytes())
             digest.update(b"\0")
     except OSError as exc:
-        logger.warning("读取 WebUI 构建输入失败，将回退到文件时间检查: %s", exc)
+        logger.warning("ไม่สามารถอ่านข้อมูลนำเข้าสำหรับ WebUI ได้ จะย้อนกลับไปตรวจสอบตามเวลาไฟล์แทน: %s", exc)
         return None
     return digest.hexdigest()
 
@@ -218,14 +218,14 @@ def _needs_frontend_build(frontend_dir: Path, force_build: bool) -> tuple[bool, 
 def _run_frontend_commands(commands: Sequence[Sequence[str]], frontend_dir: Path) -> bool:
     try:
         for command in commands:
-            logger.info("执行前端命令: %s", " ".join(command))
+            logger.info("ดำเนินการคำสั่งด้านหน้าเว็บ: %s", " ".join(command))
             subprocess.run(command, cwd=frontend_dir, check=True)
-        logger.info("前端静态资源构建完成")
+        logger.info("การสร้างทรัพยากรสถิติด้านหน้าเว็บเสร็จสมบูรณ์")
         return True
     except subprocess.CalledProcessError as exc:
         cmd_display = " ".join(exc.cmd) if isinstance(exc.cmd, (list, tuple)) else str(exc.cmd)
         logger.error(
-            "前端命令执行失败（exit_code=%s）: %s",
+            "รันคำสั่ง frontend ไม่สำเร็จ (exit_code=%s): %s",
             getattr(exc, "returncode", "N/A"),
             cmd_display,
         )
@@ -262,17 +262,17 @@ def _warn_if_assets_missing(artifact_index: Path, frontend_dir: Path) -> None:
     assets_dir = static_dir / "assets"
     if not _has_static_assets(static_dir):
         logger.warning(
-            "检测到 %s 但 %s 目录不存在或无 CSS/JS 文件，"
-            "WebUI 将因缺少样式与脚本而显示异常（元素过大、布局错乱）",
+            "พบ %s แต่ไดเรกทอรี %s ไม่มีอยู่หรือไม่มีไฟล์ CSS/JS "
+            "WebUI จะแสดงผลผิดปกติเพราะขาดสไตล์และสคริปต์ (องค์ประกอบใหญ่ผิด เลย์เอาต์เก้อ)",
             artifact_index,
             assets_dir,
         )
         logger.warning(
-            "请重新构建前端以修复此问题: %s",
+            "กรุณา build frontend ใหม่เพื่อแก้ปัญหานี้: %s",
             _manual_build_command(frontend_dir),
         )
         logger.warning(
-            "Docker 用户请执行: docker-compose -f ./docker/docker-compose.yml build --no-cache"
+            "ผู้ใช้ Docker กรุณารัน: docker-compose -f ./docker/docker-compose.yml build --no-cache"
         )
 
 
@@ -294,37 +294,37 @@ def prepare_webui_frontend_assets() -> bool:
 
     if not auto_build_enabled:
         if artifact_index.exists():
-            logger.info("WEBUI_AUTO_BUILD=false，检测到前端静态产物: %s", artifact_index)
+            logger.info("WEBUI_AUTO_BUILD=false ตรวจพบผลิตภัณฑ์สถิติด้านหน้าเว็บแล้ว: %s", artifact_index)
             _warn_if_assets_missing(artifact_index, frontend_dir)
             needs_build, _ = _needs_frontend_build(frontend_dir=frontend_dir, force_build=False)
             if needs_build:
-                logger.warning("检测到 WebUI 源码与现有静态产物不一致，但自动构建已关闭")
-                logger.warning("请重新构建前端: %s", _manual_build_command(frontend_dir))
+                logger.warning("ตรวจพบว่าโค้ดต้นฉบับของ WebUI ไม่ตรงกับผลิตภัณฑ์สถิติที่มีอยู่ แต่การสร้างอัตโนมัติถูกปิดใช้งานแล้ว")
+                logger.warning("กรุณาสร้างด้านหน้าเว็บใหม่: %s", _manual_build_command(frontend_dir))
             return True
-        logger.warning("未检测到 WebUI 前端静态产物: %s", artifact_index)
-        logger.warning("当前配置 WEBUI_AUTO_BUILD=false，不会在后端启动时自动编译前端")
-        logger.warning("请先手动构建前端: %s", _manual_build_command(frontend_dir))
-        logger.warning("如需启动时自动构建，可设置 WEBUI_AUTO_BUILD=true")
+        logger.warning("ไม่พบผลิตภัณฑ์ส่วนหน้า WebUI เรียบร้อยแล้ว: %s", artifact_index)
+        logger.warning("การตั้งค่าปัจจุบัน WEBUI_AUTO_BUILD=false จึงจะไม่ทำการคอมไพล์ส่วนหน้าอัตโนมัติเมื่อเริ่มต้นระบบหลังคา")
+        logger.warning("กรุณาคอมไพล์ส่วนหน้าด้วยตนเองก่อน: %s", _manual_build_command(frontend_dir))
+        logger.warning("หากต้องการคอมไพล์ส่วนหน้าอัตโนมัติเมื่อเริ่มต้นระบบ ให้ตั้งค่า WEBUI_AUTO_BUILD=true")
         return False
 
     force_build = _is_truthy_env("WEBUI_FORCE_BUILD", "false")
     needs_build, artifact_index = _needs_frontend_build(frontend_dir=frontend_dir, force_build=force_build)
 
     if not needs_build:
-        logger.info("检测到可直接复用的前端静态产物，跳过运行时自动构建: %s", artifact_index)
+        logger.info("ตรวจพบผลิตภัณฑ์ส่วนหน้าที่สามารถใช้ซ้ำได้ จึงข้ามการคอมไพล์อัตโนมัติในช่วงเวลาทำงาน: %s", artifact_index)
         _warn_if_assets_missing(artifact_index, frontend_dir)
         return True
 
     package_json = frontend_dir / "package.json"
     if not package_json.exists():
-        logger.warning("未找到前端项目，无法自动构建: %s", package_json)
-        logger.warning("可先手动检查前端目录或关闭 WEBUI_AUTO_BUILD")
+        logger.warning("ไม่พบโครงการส่วนหน้าเลย จึงไม่สามารถคอมไพล์อัตโนมัติได้: %s", package_json)
+        logger.warning("สามารถตรวจสอบได้ด้วยตนเองก่อนหรือปิด WEBUI_AUTO_BUILD")
         return False
 
     npm_path = shutil.which("npm")
     if not npm_path:
-        logger.warning("未检测到 npm，无法自动构建前端")
-        logger.warning("请先手动构建前端静态资源: %s", _manual_build_command(frontend_dir))
+        logger.warning("ไม่พบ npm จึงไม่สามารถสร้างด้านหน้าเว็บอัตโนมัติได้")
+        logger.warning("กรุณาสร้างทรัพยากรสถิติด้านหน้าเว็บด้วยตนเองก่อน: %s", _manual_build_command(frontend_dir))
         return False
 
     lock_file = frontend_dir / "package-lock.json"
@@ -343,7 +343,7 @@ def prepare_webui_frontend_assets() -> bool:
         commands.append([npm_path, "run", "build"])
 
     logger.info(
-        "前端构建检查结果: needs_install=%s, needs_build=%s, artifact=%s",
+        "ผลการตรวจ build frontend: needs_install=%s, needs_build=%s, artifact=%s",
         needs_install,
         needs_build,
         artifact_index,

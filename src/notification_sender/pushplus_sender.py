@@ -63,7 +63,7 @@ class PushplusSender:
             是否发送成功
         """
         if not self._pushplus_token:
-            logger.warning("PushPlus Token 未配置，跳过推送")
+            logger.warning("Token PushPlus ยังไม่ตั้งค่า ข้ามการส่งข้อความ")
             return False
 
         api_url = "http://www.pushplus.plus/send"
@@ -77,7 +77,7 @@ class PushplusSender:
             content_bytes = len(sanitized_content.encode('utf-8'))
             if content_bytes > self._pushplus_max_bytes:
                 logger.info(
-                    "PushPlus 消息内容超长(%s字节/%s字符)，将分批发送",
+                    "เนื้อหาข้อความ PushPlus ยาวเกิน (%s bytes/%s ตัวอักษร) จะส่งเป็นชุดย่อย",
                     content_bytes,
                     len(sanitized_content),
                 )
@@ -95,7 +95,7 @@ class PushplusSender:
                 timeout_seconds=timeout_seconds,
             )
         except Exception as e:
-            logger.error(f"发送 PushPlus 消息失败: {e}")
+            logger.error(f"ส่งข้อความ PushPlus ล้มเหลว: {e}")
             return False
 
     def _send_pushplus_message(
@@ -121,14 +121,14 @@ class PushplusSender:
         if response.status_code == 200:
             result = response.json()
             if result.get('code') == 200:
-                logger.info("PushPlus 消息发送成功")
+                logger.info("ส่งข้อความ PushPlus สำเร็จ")
                 return True
 
             error_msg = result.get('msg', '未知错误')
-            logger.error(f"PushPlus 返回错误: {error_msg}")
+            logger.error(f"ข้อผิดพลาดจาก PushPlus: {error_msg}")
             return False
 
-        logger.error(f"PushPlus 请求失败: HTTP {response.status_code}")
+        logger.error(f"การร้องขอ PushPlus ล้มเหลว: HTTP {response.status_code}")
         return False
 
     def _send_pushplus_chunked(self, api_url: str, content: str, title: str, max_bytes: int) -> bool:
@@ -138,15 +138,15 @@ class PushplusSender:
         total_chunks = len(chunks)
         success_count = 0
 
-        logger.info(f"PushPlus 分批发送：共 {total_chunks} 批")
+        logger.info(f"ส่งข้อความ PushPlus แบ่งเป็นชิ้นย่อยทั้งหมด {total_chunks} ชิ้น")
 
         for i, chunk in enumerate(chunks):
             chunk_title = f"{title} ({i+1}/{total_chunks})" if total_chunks > 1 else title
             if self._send_pushplus_message(api_url, chunk, chunk_title):
                 success_count += 1
-                logger.info(f"PushPlus 第 {i+1}/{total_chunks} 批发送成功")
+                logger.info(f"ส่งข้อความ PushPlus ชิ้นที่ {i+1}/{total_chunks} สำเร็จ")
             else:
-                logger.error(f"PushPlus 第 {i+1}/{total_chunks} 批发送失败")
+                logger.error(f"ส่งข้อความ PushPlus ชิ้นที่ {i+1}/{total_chunks} ล้มเหลว")
 
             if i < total_chunks - 1:
                 time.sleep(1)

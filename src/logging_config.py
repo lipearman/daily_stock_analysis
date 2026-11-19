@@ -185,12 +185,12 @@ def setup_logging(
     except ValueError:
         rel_debug_log_file = debug_log_file
 
-    logging.info(f"日志系统初始化完成，日志目录: {rel_log_path}")
-    logging.info(f"常规日志: {rel_log_file}")
-    logging.info(f"调试日志: {rel_debug_log_file}")
+    logging.info(f"เริ่มต้นระบบบันทึกเสร็จ ไดเรกทอรีบันทึก: {rel_log_path}")
+    logging.info(f"บันทึกปกติ: {rel_log_file}")
+    logging.info(f"บันทึกดีบัก: {rel_debug_log_file}")
     if invalid_litellm_level is not None:
         logging.warning(
-            "LITELLM_LOG_LEVEL=%r 无效，已回退为 %s；可选值：%s",
+            "LITELLM_LOG_LEVEL=%r ไม่ถูกต้อง ใช้ %s แทน; ค่าที่ใช้ได้: %s",
             invalid_litellm_level,
             _DEFAULT_LITELLM_LOG_LEVEL,
             ", ".join(_ALLOWED_LOG_LEVELS),

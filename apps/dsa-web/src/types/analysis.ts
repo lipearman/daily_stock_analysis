@@ -44,7 +44,7 @@ export interface MarketReviewAccepted {
 
 // ============ Report Types ============
 
-export type ReportLanguage = 'zh' | 'en' | 'ko';
+export type ReportLanguage = 'zh' | 'en' | 'ko' | 'th';
 
 export type MarketPhaseValue =
   | 'premarket'
@@ -89,11 +89,11 @@ export interface ReportMeta {
 
 /** Sentiment label */
 export type SentimentLabel =
-  | '极度悲观'
-  | '悲观'
-  | '中性'
-  | '乐观'
-  | '极度乐观'
+  | 'คาดการณ์ด้อยที่สุด'
+  | 'คาดการณ์ด้อย'
+  | 'เท่ากัน'
+  | 'คาดการณ์ดี'
+  | 'คาดการณ์ดีที่สุด'
   | 'Very Bearish'
   | 'Bearish'
   | 'Neutral'
@@ -643,11 +643,11 @@ export const getSentimentLabel = (score: number, language: ReportLanguage = 'zh'
     if (score <= 80) return '낙관';
     return '매우 낙관';
   }
-  if (score <= 20) return '极度悲观';
-  if (score <= 40) return '悲观';
-  if (score <= 60) return '中性';
-  if (score <= 80) return '乐观';
-  return '极度乐观';
+  if (score <= 20) return 'คาดการณ์ด้อยที่สุด';
+  if (score <= 40) return 'คาดการณ์ด้อย';
+  if (score <= 60) return 'เท่ากัน';
+  if (score <= 80) return 'คาดการณ์ดี';
+  return 'คาดการณ์ดีที่สุด';
 };
 
 /** Get sentiment color by score */

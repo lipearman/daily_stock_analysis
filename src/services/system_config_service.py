@@ -2378,7 +2378,7 @@ class SystemConfigService:
         """Parse raw `.env` text into update items without expanding app templates."""
         normalized_content = content.replace("\ufeff", "")
         if not normalized_content.strip():
-            raise ConfigImportError("未识别到有效 .env 配置")
+            raise ConfigImportError("ไม่พบการตั้งค่า .env ที่ใช้ได้")
 
         from dotenv import dotenv_values
 
@@ -2395,7 +2395,7 @@ class SystemConfigService:
             )
 
         if not updates:
-            raise ConfigImportError("未识别到有效 .env 配置")
+            raise ConfigImportError("ไม่พบการตั้งค่า .env ที่ใช้ได้")
 
         return updates
 

@@ -176,11 +176,11 @@ class TestAnalyzerGenerateText:
 
         assert result.success is True
         assert result.model_used == actual_model
-        returned = [record.message for record in caplog.records if "[LLM返回]" in record.message]
+        returned = [record.message for record in caplog.records if "[ผลตอบ LLM]" in record.message]
         assert len(returned) == 1
         assert actual_model in returned[0]
-        assert ("已回退" in returned[0]) is fallback
-        assert f"=== {actual_model} 完整响应" in caplog.text
+        assert ("สำรองกลับ" in returned[0]) is fallback
+        assert f"=== {actual_model} การตอบกลับเต็ม" in caplog.text
 
     def test_legacy_market_group_normalizes_supported_markets(self):
         from src.analyzer import _legacy_market_group
@@ -4382,7 +4382,7 @@ Index text.
         ma.region = "cn"
         long_snippet = (
             "复盘必读 2026-05-06 复盘的意义在于更清晰地把握市场脉搏，"
-            "综合描述 A 股三大指数今日集体反弹，成交额放大，科技成长方向领涨。"
+            "综合描述 A 股三大指数今日集体反弹，成交额放大，科技成长方向'领涨'。"
         )
 
         result = ma._build_news_block([
@@ -4457,7 +4457,7 @@ Index text.
             [
                 {
                     "title": "A股收评：指数放量反弹",
-                    "snippet": "科技成长方向领涨",
+                    "snippet": "科技成长方向'领涨'",
                     "source": "测试来源",
                     "published_date": "2026-05-06",
                     "url": long_url,

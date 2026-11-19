@@ -96,7 +96,7 @@ const overview = {
 
 function LanguageSwitch() {
   const { language, setLanguage } = useUiLanguage();
-  return <button onClick={() => setLanguage(language === 'zh' ? 'en' : 'zh')}>switch language</button>;
+  return <button onClick={() => setLanguage(language === 'en' ? 'th' : 'en')}>switch language</button>;
 }
 
 function deferred<T>() {

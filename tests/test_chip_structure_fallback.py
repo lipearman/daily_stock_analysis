@@ -166,7 +166,7 @@ class TestFillChipStructureIfNeeded(unittest.TestCase):
         self.assertEqual(cs["profit_ratio"], "67.0%")
         self.assertEqual(cs["avg_cost"], 1850.0)
         self.assertEqual(cs["concentration"], "11.00%")
-        self.assertEqual(cs["chip_health"], "健康")
+        self.assertEqual(cs["chip_health"], "แข็งแรง")
 
     def test_merge_fill_partial_placeholder(self) -> None:
         result = self._make_result(
@@ -182,7 +182,7 @@ class TestFillChipStructureIfNeeded(unittest.TestCase):
         self.assertEqual(cs["profit_ratio"], "65.0%")  # LLM value kept
         self.assertEqual(cs["avg_cost"], 1850.0)  # filled from chip
         self.assertEqual(cs["concentration"], "11.00%")  # filled from chip
-        self.assertEqual(cs["chip_health"], "健康")  # filled from chip
+        self.assertEqual(cs["chip_health"], "แข็งแรง")  # filled from chip
 
     def test_dashboard_none_initialized(self) -> None:
         result = self._make_result(dashboard=None)
@@ -191,7 +191,7 @@ class TestFillChipStructureIfNeeded(unittest.TestCase):
         self.assertIsNotNone(result.dashboard)
         cs = result.dashboard["data_perspective"]["chip_structure"]
         self.assertEqual(cs["profit_ratio"], "67.0%")
-        self.assertEqual(cs["chip_health"], "健康")
+        self.assertEqual(cs["chip_health"], "แข็งแรง")
 
     def test_no_overwrite_valid_llm_values(self) -> None:
         result = self._make_result(
@@ -266,7 +266,7 @@ class TestFillChipStructureIfNeeded(unittest.TestCase):
         self.assertEqual(cs["profit_ratio"], "67.0%")
         self.assertEqual(cs["avg_cost"], 1850.0)
         self.assertEqual(cs["concentration"], "11.00%")
-        self.assertEqual(cs["chip_health"], "健康")
+        self.assertEqual(cs["chip_health"], "แข็งแรง")
 
     def test_normalize_collapses_missing_chip_placeholders_to_one_reason(self) -> None:
         result = self._make_result(
@@ -286,7 +286,7 @@ class TestFillChipStructureIfNeeded(unittest.TestCase):
 
         dp = result.dashboard["data_perspective"]
         self.assertEqual(dp["chip_structure"], {})
-        self.assertEqual(dp["chip_unavailable_reason"], "筹码分布未启用或数据源暂不可用，未纳入筹码判断。")
+        self.assertEqual(dp["chip_unavailable_reason"], "ข้อมูลโครงสร้างการถือครองปิดใช้งานหรือแหล่งข้อมูลใช้ไม่ได้ชั่วคราว จึงไม่นำมาพิจารณา")
 
     def test_normalize_treats_zero_chip_metrics_as_unavailable(self) -> None:
         result = self._make_result(
@@ -298,7 +298,7 @@ class TestFillChipStructureIfNeeded(unittest.TestCase):
 
         dp = result.dashboard["data_perspective"]
         self.assertEqual(dp["chip_structure"], {})
-        self.assertEqual(dp["chip_unavailable_reason"], "筹码分布未启用或数据源暂不可用，未纳入筹码判断。")
+        self.assertEqual(dp["chip_unavailable_reason"], "ข้อมูลโครงสร้างการถือครองปิดใช้งานหรือแหล่งข้อมูลใช้ไม่ได้ชั่วคราว จึงไม่นำมาพิจารณา")
 
     def test_normalize_accepts_zero_concentration_when_avg_cost_present(self) -> None:
         result = self._make_result(

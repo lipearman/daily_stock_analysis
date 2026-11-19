@@ -54,7 +54,7 @@ class AstrbotSender:
         if self._astrbot_config['astrbot_url']:
             return self._send_astrbot(content, timeout_seconds=timeout_seconds)
 
-        logger.warning("AstrBot 配置不完整，跳过推送")
+        logger.warning("การตั้งค่า AstrBot ไม่สมบูรณ์ จึงข้ามการส่ง")
         return False
 
 
@@ -101,11 +101,11 @@ class AstrbotSender:
             )
 
             if response.status_code == 200:
-                logger.info("AstrBot 消息发送成功")
+                logger.info("การส่งข้อความ AstrBot สำเร็จ")
                 return True
             else:
-                logger.error(f"AstrBot 发送失败: {response.status_code} {response.text}")
+                logger.error(f"การส่งข้อความ AstrBot ล้มเหลว: {response.status_code} {response.text}")
                 return False
         except Exception as e:
-            logger.error(f"AstrBot 发送异常: {e}")
+            logger.error(f"มีข้อผิดพลาดในการส่ง AstrBot: {e}")
             return False

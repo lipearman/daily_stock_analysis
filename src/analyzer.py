@@ -118,9 +118,9 @@ def _describe_llm_result_model(
     """Describe the response identity; only a changed call route proves fallback."""
     actual_model = model_used or configured_model
     if route_model and route_model != configured_model:
-        return f"{actual_model}（配置模型 {configured_model}，已回退）"
+        return f"{actual_model} (โมเดลตั้งค่า {configured_model}, สำรองกลับ)"
     if actual_model != configured_model:
-        return f"{actual_model}（配置模型 {configured_model}）"
+        return f"{actual_model} (โมเดลตั้งค่า {configured_model})"
     return actual_model
 
 
@@ -1760,7 +1760,7 @@ def get_stock_name_multi_source(
             from data_provider.base import DataFetcherManager
             data_manager = DataFetcherManager()
         except Exception as e:
-            logger.debug(f"无法初始化 DataFetcherManager: {e}")
+            logger.debug(f"ไม่สามารถเริ่มต้น DataFetcherManager ได้: {e}")
 
     if data_manager:
         try:
@@ -1770,7 +1770,7 @@ def get_stock_name_multi_source(
                 STOCK_NAME_MAP[stock_code] = name
                 return name
         except Exception as e:
-            logger.debug(f"从数据源获取股票名称失败: {e}")
+            logger.debug(f"ล้มเหลวในการดึงชื่อหุ้นจากแหล่งข้อมูล: {e}")
 
     # 4. 返回默认名称
     return f'股票{stock_code}'
@@ -4138,7 +4138,7 @@ Output strictly in the following JSON format. This is a complete Decision Dashbo
         # 请求前增加延时（防止连续请求触发限流）
         request_delay = config.gemini_request_delay
         if request_delay > 0:
-            logger.debug(f"[LLM] 请求前等待 {request_delay:.1f} 秒...")
+            logger.debug(f"[LLM] เริ่มรอ {request_delay:.1f} วินาทีก่อนเรียก...")
             _emit_progress(65, f"{code}：LLM 请求前等待 {request_delay:.1f} 秒")
             time.sleep(request_delay)
         
@@ -4282,19 +4282,19 @@ Output strictly in the following JSON format. This is a complete Decision Dashbo
             if backend_id in LOCAL_CLI_GENERATION_BACKEND_IDS:
                 model_name = backend_id
                 legacy_audit_context["transport"] = backend_id
-            logger.info(f"========== AI 分析 {name}({code}) ==========")
-            logger.info(f"[LLM配置] 模型: {model_name}")
-            logger.info(f"[LLM配置] Prompt 长度: {len(prompt)} 字符")
-            logger.info(f"[LLM配置] 是否包含新闻: {'是' if news_context else '否'}")
+            logger.info(f"========== AI วิเคราะห์ {name}({code}) ==========")
+            logger.info(f"[LLM ตั้งค่า] โมเดล: {model_name}")
+            logger.info(f"[LLM ตั้งค่า] ความยาว Prompt: {len(prompt)} ตัวอักษร")
+            logger.info(f"[ตั้งค่า LLM] มีบริบทข่าว: {'ใช่' if news_context else 'ไม่ใช่'}")
 
             # 本地 CLI backend 是进程执行能力，不记录完整 prompt。
             if backend_id in LOCAL_CLI_GENERATION_BACKEND_IDS:
                 prompt_preview = redact_diagnostic_text(prompt, limit=500)
             else:
                 prompt_preview = prompt[:500] + "..." if len(prompt) > 500 else prompt
-            logger.info(f"[LLM Prompt 预览]\n{prompt_preview}")
+            logger.info(f"[LLM Prompt ตัวอย่าง]\\n{prompt_preview}")
             if backend_id not in LOCAL_CLI_GENERATION_BACKEND_IDS:
-                logger.debug(f"=== 完整 Prompt ({len(prompt)}字符) ===\n{prompt}\n=== End Prompt ===")
+                logger.debug(f"=== Prompt พื้นที่เต็ม ({len(prompt)}ตัวอักษร) ===\\n{prompt}\\n=== สิ้นสุด Prompt ===")
 
             # 设置生成配置
             generation_config = {
@@ -4302,7 +4302,7 @@ Output strictly in the following JSON format. This is a complete Decision Dashbo
                 "max_output_tokens": 8192,
             }
 
-            logger.info(f"[LLM调用] 开始调用 {model_name}...")
+            logger.info(f"[LL-Call] เริ่มเรียกใช้ {model_name}...")
             _emit_progress(68, f"{name}：LLM 已接收请求，等待响应")
 
             # 使用 litellm 调用（支持完整性校验重试）
@@ -4338,17 +4338,17 @@ Output strictly in the following JSON format. This is a complete Decision Dashbo
 
                 # 记录响应信息
                 logger.info(
-                    f"[LLM返回] {_describe_llm_result_model(model_name, model_used, llm_usage.get('route_model'))} 响应成功, "
-                    f"耗时 {elapsed:.2f}s, 响应长度 {len(response_text)} 字符"
+                    f"[ผลตอบ LLM] {_describe_llm_result_model(model_name, model_used, llm_usage.get('route_model'))} ตอบกลับสำเร็จ "
+                    f"ใช้เวลา {elapsed:.2f}s, ความยาวการตอบกลับ {len(response_text)} ตัวอักษร"
                 )
                 if backend_id in LOCAL_CLI_GENERATION_BACKEND_IDS:
                     response_preview = redact_diagnostic_text(response_text, limit=300)
                 else:
                     response_preview = response_text[:300] + "..." if len(response_text) > 300 else response_text
-                logger.info(f"[LLM返回 预览]\n{response_preview}")
+                logger.info(f"[LLM ตอบกลับ ตัวอย่าง]\\n{response_preview}")
                 if backend_id not in LOCAL_CLI_GENERATION_BACKEND_IDS:
                     logger.debug(
-                        f"=== {model_used or model_name} 完整响应 ({len(response_text)}字符) ===\n{response_text}\n=== End Response ==="
+                        f"=== {model_used or model_name} การตอบกลับเต็ม ({len(response_text)}ตัวอักษร) ===\n{response_text}\n=== End Response ==="
                     )
                 # Keep parser/retry progress monotonic so task progress/message never "goes backward".
                 parse_progress = min(99, 93 + retry_count * 2)
@@ -4382,7 +4382,7 @@ Output strictly in the following JSON format. This is a complete Decision Dashbo
                     )
                     retry_count += 1
                     logger.info(
-                        "[LLM完整性] 必填字段缺失 %s，第 %d 次补全重试",
+                        "[ความครบถ้วน LLM] ขาดฟิลด์จำเป็น %s ส่งซ้ำครั้งที่ %d",
                         missing_fields,
                         retry_count,
                     )
@@ -4394,7 +4394,7 @@ Output strictly in the following JSON format. This is a complete Decision Dashbo
                 else:
                     self._apply_placeholder_fill(result, missing_fields)
                     logger.warning(
-                        "[LLM完整性] 必填字段缺失 %s，已占位补全，不阻塞流程",
+                        "[ความครบถ้วน LLM] ขาดฟิลด์จำเป็น %s เติมช่องว่างแทน ไม่หยุดกระบวนการ",
                         missing_fields,
                     )
                     break
@@ -4402,13 +4402,13 @@ Output strictly in the following JSON format. This is a complete Decision Dashbo
             if should_persist_usage_telemetry(llm_usage):
                 persist_llm_usage(llm_usage, model_used, call_type="analysis", stock_code=code)
 
-            logger.info(f"[LLM解析] {name}({code}) 分析完成: {result.trend_prediction}, 评分 {result.sentiment_score}")
+            logger.info(f"[LLM วิเคราะห์] {name}({code}) วิเคราะห์เสร็จแล้ว: {result.trend_prediction}, คะแนน {result.sentiment_score}")
 
             return result
             
         except Exception as e:
             safe_error = self._sanitize_hermes_exception_text(e)
-            logger.error("AI 分析 %s(%s) 失败: %s", name, code, safe_error)
+            logger.error("AI วิเคราะห์ %s(%s) ล้มเหลว: %s", name, code, safe_error)
             return AnalysisResult(
                 code=code,
                 name=name,
@@ -5581,7 +5581,7 @@ Output the complete Decision Dashboard in JSON format."""
                 _json_str, data = self._extract_analysis_json_object(response_text)
                 self._validate_analysis_minimal_contract(data)
             except Exception as exc:
-                logger.warning("无法从响应中提取唯一有效 JSON，标记为解析失败: %s", exc)
+                logger.warning("ไม่สามารถดึง JSON ที่ถูกต้องได้จากคำตอบ จึงระบุว่าการวิเคราะห์ล้มเหลว: %s", exc)
                 return self._parse_text_response(response_text, code, name)
 
             # 提取 dashboard 数据
@@ -5663,7 +5663,7 @@ Output the complete Decision Dashboard in JSON format."""
             )
                 
         except json.JSONDecodeError as e:
-            logger.warning(f"JSON 解析失败: {e}，标记为解析失败")
+            logger.warning(f"JSON วิเคราะห์ล้มเหลว: {e} จึงระบุว่าการวิเคราะห์ล้มเหลว")
             return self._parse_text_response(response_text, code, name)
     
     def _fix_json_string(self, json_str: str) -> str:
@@ -5818,7 +5818,7 @@ Output the complete Decision Dashboard in JSON format."""
         
         for i, context in enumerate(contexts):
             if i > 0:
-                logger.debug(f"等待 {delay_between} 秒后继续...")
+                logger.debug(f"รอ {delay_between} วินาทีก่อนดำเนินการต่อ...")
                 time.sleep(delay_between)
             
             result = self.analyze(context)
@@ -5862,8 +5862,8 @@ if __name__ == "__main__":
     analyzer = GeminiAnalyzer()
     
     if analyzer.is_available():
-        print("=== AI 分析测试 ===")
+        print("=== การทดสอบ AI วิเคราะห์ ===")
         result = analyzer.analyze(test_context)
-        print(f"分析结果: {result.to_dict()}")
+        print(f"ผลการวิเคราะห์: {result.to_dict()}")
     else:
-        print("Gemini API 未配置，跳过测试")
+        print("Gemini API ยังไม่ตั้งค่า จึงข้ามการทดสอบ")

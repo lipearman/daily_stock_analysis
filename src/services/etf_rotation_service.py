@@ -87,7 +87,7 @@ def _close_series(code: str, df: Optional[pd.DataFrame], end_day: date) -> pd.Se
     closes = closes[~closes.index.duplicated(keep="last")].sort_index()
     kept = closes.loc[: pd.Timestamp(end_day)]
     if len(kept) < len(closes):
-        logger.info("[ETF轮动] %s 丢弃 %s 之后的 %d 根未收盘 K 线", code, end_day, len(closes) - len(kept))
+        logger.info("[ETF Rotation] %s เลือกข้าม %d เส้น K-line ที่ยังไม่ปิดทำการหลังจาก %s", code, end_day, len(closes) - len(kept))
     if not kept.notna().any():
         raise ValueError("no valid close prices")
     return kept
@@ -151,10 +151,10 @@ def load_closes(
             series[code] = close_series
         except Exception as exc:  # fetch errors and malformed frames alike
             failed[code] = str(exc) or type(exc).__name__
-            logger.warning("[ETF轮动] %s 日线不可用: %s", code, failed[code])
+            logger.warning("[ETF Rotation] กราฟรายวันของ %s ไม่สามารถใช้งานได้: %s", code, failed[code])
             continue
         sources[code] = source
-        logger.info("[ETF轮动] %s 获取 %d 条日线 (来源: %s)", code, len(series[code]), source)
+        logger.info("[ETF Rotation] ได้รับข้อมูลกราฟรายวัน %d เส้นสำหรับ %s (แหล่งที่มา: %s)", code, len(series[code]), source)
 
     frame = pd.DataFrame(series).sort_index() if series else pd.DataFrame()
     if not frame.empty:
@@ -212,7 +212,7 @@ def _resolve_names(fetcher_manager, codes: Sequence[str]) -> Dict[str, str]:
         try:
             name = fetcher_manager.get_stock_name(code, allow_realtime=False)
         except Exception as exc:
-            logger.debug("[ETF轮动] %s 名称获取失败: %s", code, exc)
+            logger.debug("[ETF Rotation] การดึงชื่อของ %s ล้มเหลว: %s", code, exc)
             name = None
         names[code] = name or code
     return names
@@ -421,25 +421,25 @@ def _deliver(report: RotationReport, send_notification: bool, notifier) -> None:
 
             notifier = NotificationService()
     except Exception as exc:
-        logger.warning("[ETF轮动] 通知服务初始化失败，报告未保存也未推送: %s\n%s", exc, report.markdown)
+        logger.warning("[ETF Rotation] การเริ่มต้นบริการแจ้งเตือนล้มเหลว รายงานไม่ได้บันทึกหรือส่ง: %s\\n%s", exc, report.markdown)
         return
 
     filename = f"etf_rotation_{report.as_of:%Y%m%d}.md"
     try:
         path = notifier.save_report_to_file(report.markdown, filename)
-        logger.info("[ETF轮动] 报告已保存: %s", path)
+        logger.info("[ETF Rotation] รายงานได้ถูกบันทึกไว้แล้ว: %s", path)
     except Exception as exc:
-        logger.warning("[ETF轮动] 报告保存失败: %s\n%s", exc, report.markdown)
+        logger.warning("[ETF Rotation] การบันทึกรายงานล้มเหลว: %s\\n%s", exc, report.markdown)
 
     if not send_notification:
         return
     try:
         if not notifier.is_available():
-            logger.info("[ETF轮动] 未配置通知渠道，跳过推送")
+            logger.info("[ETF Rotation] ยังไม่ได้ตั้งค่าช่องทางแจ้งเตือน จึงข้ามการส่ง")
         elif not notifier.send(report.markdown, route_type="report"):
-            logger.warning("[ETF轮动] 通知推送失败")
+            logger.warning("[ETF Rotation] การส่งข้อความแจ้งเตือนล้มเหลว")
     except Exception as exc:
-        logger.warning("[ETF轮动] 通知推送异常: %s", exc)
+        logger.warning("[ETF Rotation] มีข้อผิดพลาดในการส่งข้อความแจ้งเตือน: %s", exc)
 
 
 def run_etf_rotation(
@@ -459,7 +459,7 @@ def run_etf_rotation(
 
     pool = [c for c in config.etf_rotation_pool if c]
     if not pool:
-        raise ValueError("ETF_ROTATION_POOL 为空，请至少配置一只 ETF")
+        raise ValueError("ETF_ROTATION_POOL ว่างเปล่า กรุณาตั้งค่า ETF อย่างน้อยหนึ่งตัว")
     safe_asset = config.etf_rotation_safe_asset or None
     params = params_from_config(config)
 
@@ -477,12 +477,12 @@ def run_etf_rotation(
     loaded = load_closes(fetcher_manager, codes, config.etf_rotation_backtest_years, end=end_day)
     risk = [c for c in pool if c in loaded.closes.columns]
     if not risk:
-        raise RuntimeError(f"ETF 轮动池全部数据获取失败: {loaded.failed}")
+        raise RuntimeError(f"ดึงข้อมูลกลุ่มหมุนเวียน ETF ไม่สำเร็จทั้งหมด: {loaded.failed}")
 
     names = _resolve_names(fetcher_manager, codes)
     warnings = data_quality_warnings(loaded)
     for warning in warnings:
-        logger.warning("[ETF轮动] %s", warning)
+        logger.warning("[ETF Rotation] %s", warning)
     report = replace(
         build_report(loaded.closes, risk, safe_asset, params, names, warnings, next_session=next_session),
         failed_codes=dict(loaded.failed),

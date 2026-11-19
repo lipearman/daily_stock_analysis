@@ -301,13 +301,13 @@ export function useSystemConfig() {
     const resolvedChangedItems = explicitItems.length > 0 ? explicitItems : getChangedItems();
 
     if (!explicitItems.length && !hasDirty) {
-      setToast({ type: 'success', message: '当前没有可保存的修改。' });
-      return { success: true, message: '当前没有可保存的修改' };
+      setToast({ type: 'success', message: 'ปัจจุบันไม่มีการแก้ไขใด ๆ ที่สามารถบันทึกได้' });
+      return { success: true, message: 'ปัจจุบันไม่มีการแก้ไขใด ๆ ที่สามารถบันทึกได้' };
     }
 
     if (!resolvedChangedItems.length) {
-      setToast({ type: 'success', message: '当前没有可保存的修改。' });
-      return { success: true, message: '当前没有可保存的修改' };
+      setToast({ type: 'success', message: 'ปัจจุบันไม่มีการแก้ไขใด ๆ ที่สามารถบันทึกได้' });
+      return { success: true, message: 'ปัจจุบันไม่มีการแก้ไขใด ๆ ที่สามารถบันทึกได้' };
     }
 
     setIsSaving(true);
@@ -320,15 +320,15 @@ export function useSystemConfig() {
 
       if (!validateResult.valid) {
         setSaveError(createParsedApiError({
-          title: '配置校验未通过',
-          message: '请先修正表单错误后再保存。',
-          rawMessage: '配置校验未通过，请先修正表单错误。',
+          title: 'การตรวจสอบการกำหนดค่าไม่ผ่าน',
+          message: 'โปรดแก้ไขข้อผิดพลาดในฟอร์มก่อนบันทึก',
+          rawMessage: 'การตรวจสอบการกำหนดค่าไม่ผ่าน โปรดแก้ไขข้อผิดพลาดในฟอร์ม',
           category: 'http_error',
         }));
         setRetryAction('save');
         return {
           success: false,
-          message: '配置校验未通过',
+          message: 'การตรวจสอบการกำหนดค่าไม่ผ่าน',
           issues: validateResult.issues,
         };
       }
@@ -355,7 +355,7 @@ export function useSystemConfig() {
         setSaveError(error.parsedError);
       } else if (error instanceof SystemConfigConflictError) {
         setSaveError(createParsedApiError({
-          title: '配置版本冲突',
+          title: 'การกำหนดค่าเวอร์ชันขัดแย้งกัน',
           message: `${error.message}，请先重新加载配置。`,
           rawMessage: error.parsedError.rawMessage,
           status: error.parsedError.status,
@@ -367,7 +367,7 @@ export function useSystemConfig() {
 
       setToast({ type: 'error', error: getParsedApiError(error) });
       setRetryAction('save');
-      return { success: false, message: '保存失败' };
+      return { success: false, message: 'บันทึกไม่สำเร็จ' };
     } finally {
       setIsSaving(false);
     }

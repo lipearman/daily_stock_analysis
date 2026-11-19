@@ -50,10 +50,10 @@ const normalizeBoardType = (value?: string): 'sector' | 'concept' | null => {
   if (!normalized) {
     return null;
   }
-  if (['行业', '行业板块', 'industry', 'sector'].includes(normalized)) {
+  if (['อุตสาหกรรม', 'กลุ่มอุตสาหกรรม', 'industry', 'sector'].includes(normalized)) {
     return 'sector';
   }
-  if (['概念', '概念板块', '题材', 'concept', 'theme'].includes(normalized)) {
+  if (['แนวคิด', 'กลุ่มแนวคิด', 'หัวข้อ', 'concept', 'theme'].includes(normalized)) {
     return 'concept';
   }
   return null;

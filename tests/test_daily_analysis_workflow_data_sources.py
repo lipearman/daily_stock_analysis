@@ -15,7 +15,7 @@ WORKFLOW = Path(__file__).resolve().parents[1] / '.github/workflows/00-daily-ana
 
 def _apply_actions_env(monkeypatch, *, tickplus='', tushare='', explicit=''):
     workflow = yaml.safe_load(WORKFLOW.read_text(encoding='utf-8'))
-    step = next(s for s in workflow['jobs']['analyze']['steps'] if s.get('name') == '执行股票分析')
+    step = next(s for s in workflow['jobs']['analyze']['steps'] if s.get('name') == 'รันการวิเคราะห์หุ้น')
     env = step['env']
     assert env['TICKPLUS_API_KEY'] == '${{ secrets.TICKPLUS_API_KEY }}'
     # An unset Actions variable expands to ''. A literal nonempty fallback here

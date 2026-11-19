@@ -79,7 +79,7 @@ export function useWatchlist(): UseWatchlistReturn {
         showMessage(`已加入自选 ${stockCode}`);
       }
     } catch {
-      if (mountedRef.current) showMessage('操作失败');
+      if (mountedRef.current) showMessage('ดำเนินการไม่สำเร็จ');
     } finally {
       if (mountedRef.current) setIsActioning(false);
     }
@@ -95,7 +95,7 @@ export function useWatchlist(): UseWatchlistReturn {
         showMessage(`已从自选移除 ${stockCode}`);
       }
     } catch {
-      if (mountedRef.current) showMessage('操作失败');
+      if (mountedRef.current) showMessage('ดำเนินการไม่สำเร็จ');
     } finally {
       if (mountedRef.current) setIsActioning(false);
     }

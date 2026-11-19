@@ -91,8 +91,8 @@ def _resolve_tushare_http_url() -> Optional[str]:
         return None
     if not (url.startswith("http://") or url.startswith("https://")):
         raise ValueError(
-            "TUSHARE_HTTP_URL 必须以 http:// 或 https:// 开头，"
-            f"当前值为 {url!r}"
+            "TUSHARE_HTTP_URL ต้องขึ้นต้นด้วย http:// หรือ https:// "
+            f"ค่าปัจจุบันคือ {url!r}"
         )
     return url
 
@@ -391,14 +391,14 @@ class TushareFetcher(BaseFetcher):
         config = get_config()
 
         if not config.tushare_token:
-            logger.warning("Tushare Token 未配置，此数据源不可用")
+            logger.warning("Tushare Token ยังไม่ตั้งค่า แหล่งข้อมูลนี้ไม่สามารถใช้งานได้")
             return
 
         try:
             self._api = self._build_api_client(config.tushare_token)
-            logger.info("Tushare API 初始化成功")
+            logger.info("Tushare API เริ่มต้นการทำงานสำเร็จ")
         except Exception as e:
-            logger.error(f"Tushare API 初始化失败: {e}")
+            logger.error(f"Tushare API เริ่มต้นการทำงานล้มเหลว: {e}")
             self._api = None
 
     def _build_api_client(self, token: str) -> _TushareHttpClient:
@@ -414,7 +414,7 @@ class TushareFetcher(BaseFetcher):
         """
         api_url = _resolve_tushare_http_url()
         if api_url:
-            logger.info("Tushare 使用自定义接入地址: %s", api_url)
+            logger.info("Tushare ใช้ที่อยู่เชื่อมต่อแบบกำหนดเอง: %s", api_url)
             client = _TushareHttpClient(token=token, api_url=api_url)
         else:
             client = _TushareHttpClient(token=token)
@@ -437,7 +437,7 @@ class TushareFetcher(BaseFetcher):
 
         if config.tushare_token and self._api is not None:
             # Token 配置且 API 初始化成功，提升为最高优先级
-            logger.info("✅ 检测到 TUSHARE_TOKEN 且 API 初始化成功，Tushare 数据源优先级提升为最高 (Priority -1)")
+            logger.info("✅ ตรวจพบ TUSHARE_TOKEN และ API เริ่มต้นทำงานสำเร็จ แหล่งข้อมูล Tushare ได้รับความสำคัญสูงสุด (Priority -1)")
             return -1
 
         # Token 未配置或 API 初始化失败，保持默认优先级
@@ -520,12 +520,12 @@ class TushareFetcher(BaseFetcher):
     def _invoke_pro_api(self, method_name: str, **kwargs) -> pd.DataFrame:
         """Execute a Tushare Pro endpoint with pre-rate-limit permission circuit-breaking."""
         if self._api is None:
-            raise DataFetchError("Tushare API 未初始化，请检查 Token 配置")
+            raise DataFetchError("Tushare API ยังไม่ได้เริ่มต้น กรุณาตรวจสอบการตั้งค่า Token")
 
         denied_reason = self._get_api_denied_reason(method_name)
         if denied_reason is not None:
             logger.debug(
-                "[Tushare] 接口 %s 已因权限/积分不足处于熔断跳过状态，直接切换备用数据源: %s",
+                "[Tushare] อินเทอร์เฟซ %s ถูกตัดวงจรข้ามแล้วเพราะสิทธิ์/คะแนนไม่พอ สลับไปแหล่งข้อมูลสำรองทันที: %s",
                 method_name,
                 denied_reason,
             )
@@ -543,7 +543,7 @@ class TushareFetcher(BaseFetcher):
                 if newly_denied:
                     cooldown_min = max(int(round(self._permission_cooldown_seconds / 60.0)), 1)
                     logger.warning(
-                        "[Tushare] 接口 %s 无访问权限或积分不足，已自动熔断跳过并降级至备用数据源（冷却 %d 分钟）: %s",
+                        "[Tushare] อินเทอร์เฟซ %s ไม่มีสิทธิ์เข้าถึงหรือคะแนนไม่พอ ตัดวงจรข้ามอัตโนมัติและลดระดับไปแหล่งข้อมูลสำรอง (หน่วง %d นาที): %s",
                         method_name,
                         cooldown_min,
                         raw_msg,
@@ -576,7 +576,7 @@ class TushareFetcher(BaseFetcher):
             # 已经过了一分钟，重置计数器
             self._minute_start = current_time
             self._call_count = 0
-            logger.debug("速率限制计数器已重置")
+            logger.debug("ตัวนับขีดจำกัดอัตราการเรียกใช้งานได้รับการรีเซ็ตแล้ว")
         
         # 检查是否超过配额
         if self._call_count >= self.rate_limit_per_minute:
@@ -585,8 +585,8 @@ class TushareFetcher(BaseFetcher):
             sleep_time = max(0, 60 - elapsed) + 1  # +1 秒缓冲
             
             logger.warning(
-                f"Tushare 达到速率限制 ({self._call_count}/{self.rate_limit_per_minute} 次/分钟)，"
-                f"等待 {sleep_time:.1f} 秒..."
+                f"Tushare ถึงขีดจำกัดอัตรา ({self._call_count}/{self.rate_limit_per_minute} ครั้ง/นาที) "
+                f"รอ {sleep_time:.1f} วินาที..."
             )
             
             time.sleep(sleep_time)
@@ -597,7 +597,7 @@ class TushareFetcher(BaseFetcher):
         
         # 增加调用计数
         self._call_count += 1
-        logger.debug(f"Tushare 当前分钟调用次数: {self._call_count}/{self.rate_limit_per_minute}")
+        logger.debug(f"จำนวนการเรียกใช้งาน Tushare ในแต่ละนาที: {self._call_count}/{self.rate_limit_per_minute}")
 
     def _call_api_with_rate_limit(self, method_name: str, **kwargs) -> pd.DataFrame:
         """统一通过权限熔断与速率限制包装 Tushare API 调用。"""
@@ -630,7 +630,7 @@ class TushareFetcher(BaseFetcher):
             return []
 
         if df_cal is None or df_cal.empty or "cal_date" not in df_cal.columns:
-            logger.warning("[Tushare] trade_cal 返回为空，无法更新交易日历缓存")
+            logger.warning("[Tushare] trade_cal คืนค่าเป็นว่างเปล่า ไม่สามารถอัปเดตตารางการซื้อขายได้")
             self.date_list = []
             self._date_list_end = requested_end_date
             return self.date_list
@@ -714,7 +714,7 @@ class TushareFetcher(BaseFetcher):
             return ts_code
 
         if _is_us_code(raw_code):
-            raise DataFetchError(f"TushareFetcher 不支持美股 {raw_code}，请使用 AkshareFetcher 或 YfinanceFetcher")
+            raise DataFetchError(f"TushareFetcher ไม่รองรับหุ้น US {raw_code} กรุณาใช้ AkshareFetcher หรือ YfinanceFetcher")
 
         if _is_hk_market(raw_code):
             #raise DataFetchError(f"TushareFetcher 不支持港股 {raw_code}，请使用 AkshareFetcher")
@@ -748,7 +748,7 @@ class TushareFetcher(BaseFetcher):
         elif code.startswith(('000', '001', '002', '003', '300', '301')):
             return f"{code}.SZ"
         else:
-            logger.warning(f"无法确定股票 {code} 的市场，默认使用深市")
+            logger.warning(f"ไม่สามารถระบุตลาดของหุ้น {code} ได้ จึงใช้ตลาดเซี่ยงไฮ้เป็นค่าเริ่มต้น")
             return f"{code}.SZ"
 
     def _convert_hk_stock_code_for_tushare(self, stock_code: str) -> str:
@@ -768,7 +768,7 @@ class TushareFetcher(BaseFetcher):
                     return ts_code
             digits = re.sub(r"\D", "", raw_code)
             if not digits:
-                raise DataFetchError(f"无法识别港股代码 {raw_code}")
+                raise DataFetchError(f"จำแนกรหัสหุ้น HK {raw_code} ไม่ได้")
             code = digits[-5:].rjust(5, "0")
             return f"{code}.HK"
         return self._convert_stock_code(stock_code)
@@ -795,11 +795,11 @@ class TushareFetcher(BaseFetcher):
         5. 根据代码类型选择接口并调用
         """
         if self._api is None:
-            raise DataFetchError("Tushare API 未初始化，请检查 Token 配置")
+            raise DataFetchError("Tushare API ยังไม่ได้เริ่มต้น กรุณาตรวจสอบการตั้งค่า Token")
         
         # US stocks not supported
         if _is_us_code(stock_code):
-            raise DataFetchError(f"TushareFetcher 不支持美股 {stock_code}，请使用 AkshareFetcher 或 YfinanceFetcher")
+            raise DataFetchError(f"TushareFetcher ไม่รองรับหุ้น US {stock_code} กรุณาใช้ AkshareFetcher หรือ YfinanceFetcher")
         
         is_hk = _is_hk_market(stock_code)
          # 判断是否为 ETF / 港股，以选择不同接口
@@ -815,7 +815,7 @@ class TushareFetcher(BaseFetcher):
         ts_start = start_date.replace('-', '')
         ts_end = end_date.replace('-', '')
 
-        logger.debug(f"调用 Tushare {api_name}({ts_code}, {ts_start}, {ts_end})")
+        logger.debug(f"เรียกใช้ Tushare {api_name}({ts_code}, {ts_start}, {ts_end})")
         
         try:
             return self._invoke_pro_api(
@@ -828,10 +828,10 @@ class TushareFetcher(BaseFetcher):
             raise
         except Exception as e:
             if is_tushare_rate_limit_error(e):
-                logger.warning(f"Tushare 配额可能超限: {e}")
-                raise RateLimitError(f"Tushare 配额超限: {e}") from e
+                logger.warning(f"ข้อจำกัดของ Tushare อาจเกินขีดจำกัด: {e}")
+                raise RateLimitError(f"Tushare เกินโควตา: {e}") from e
 
-            raise DataFetchError(f"Tushare 获取数据失败: {e}") from e
+            raise DataFetchError(f"Tushare ดึงข้อมูลไม่สำเร็จ: {e}") from e
     
     def _normalize_data(self, df: pd.DataFrame, stock_code: str) -> pd.DataFrame:
         """
@@ -895,7 +895,7 @@ class TushareFetcher(BaseFetcher):
             股票名称，失败返回 None
         """
         if self._api is None:
-            logger.warning("Tushare API 未初始化，无法获取股票名称")
+            logger.warning("Tushare API ยังไม่ได้เริ่มต้นทำงาน ไม่สามารถดึงชื่อหุ้นได้")
             return None
 
         # 检查缓存
@@ -927,12 +927,12 @@ class TushareFetcher(BaseFetcher):
             if df is not None and not df.empty:
                 name = df.iloc[0]['name']
                 self._stock_name_cache[stock_code] = name
-                logger.debug(f"Tushare 获取股票名称成功: {stock_code} -> {name}")
+                logger.debug(f"Tushare ดึงชื่อหุ้นสำเร็จ: {stock_code} -> {name}")
                 return name
         except TusharePermissionError:
             return None
         except Exception as e:
-            logger.warning(f"Tushare 获取股票名称失败 {stock_code}: {e}")
+            logger.warning(f"Tushare ดึงชื่อหุ้นล้มเหลว {stock_code}: {e}")
         
         return None
     
@@ -946,7 +946,7 @@ class TushareFetcher(BaseFetcher):
             包含 code, name, industry, area, market 列的 DataFrame，失败返回 None
         """
         if self._api is None:
-            logger.warning("Tushare API 未初始化，无法获取股票列表")
+            logger.warning("Tushare API ยังไม่ได้เริ่มต้นทำงาน ไม่สามารถดึงรายการหุ้นได้")
             return None
         
         try:
@@ -968,12 +968,12 @@ class TushareFetcher(BaseFetcher):
             for _, row in df.iterrows():
                 self._stock_name_cache[row['code']] = row['name']
 
-            logger.info(f"Tushare 获取股票列表成功: {len(df)} 条")
+            logger.info(f"Tushare ดึงรายการหุ้นสำเร็จ: {len(df)} รายการ")
             return df[['code', 'name', 'industry', 'area', 'market']]
         except TusharePermissionError:
             return None
         except Exception as e:
-            logger.warning(f"Tushare 获取股票列表失败: {e}")
+            logger.warning(f"Tushare ดึงรายการหุ้นล้มเหลว: {e}")
 
         return None
     
@@ -996,7 +996,7 @@ class TushareFetcher(BaseFetcher):
 
         # HK stocks not supported by Tushare
         if _is_hk_market(stock_code):
-            logger.debug(f"TushareFetcher 跳过港股实时行情 {stock_code}")
+            logger.debug(f"TushareFetcher ข้ามข้อมูลราคาจริงหุ้นจีนฮ่องกง {stock_code}")
             return None
 
         normalized_code = normalize_stock_code(stock_code)
@@ -1013,7 +1013,7 @@ class TushareFetcher(BaseFetcher):
 
             if df is not None and not df.empty:
                 row = df.iloc[0]
-                logger.debug(f"Tushare Pro 实时行情获取成功: {stock_code}")
+                logger.debug(f"Tushare Pro ดึงข้อมูลราคาจริงสำเร็จ: {stock_code}")
 
                 return UnifiedRealtimeQuote(
                     code=normalized_code,
@@ -1035,7 +1035,7 @@ class TushareFetcher(BaseFetcher):
                 )
         except Exception as e:
             # 仅记录调试日志，不报错，继续尝试降级
-            logger.debug(f"Tushare Pro 实时行情不可用 (可能是积分不足): {e}")
+            logger.debug(f"Tushare Pro ไม่สามารถใช้งานได้ (อาจเพราะคะแนนไม่พอ): {e}")
 
         # 降级：尝试旧版接口
         try:
@@ -1078,7 +1078,7 @@ class TushareFetcher(BaseFetcher):
             )
 
         except Exception as e:
-            logger.warning(f"Tushare (旧版) 获取实时行情失败 {stock_code}: {e}")
+            logger.warning(f"Tushare (เวอร์ชันเก่า) ดึงข้อมูลราคาจริงล้มเหลว {stock_code}: {e}")
             return None
 
     def get_main_indices(self, region: str = "cn") -> Optional[List[dict]]:
@@ -1144,16 +1144,16 @@ class TushareFetcher(BaseFetcher):
                 except TusharePermissionError:
                     return None
                 except Exception as e:
-                    logger.debug(f"Tushare 获取指数 {name} 失败: {e}")
+                    logger.debug(f"Tushare ดึงข้อมูลดัชนี {name} ล้มเหลว: {e}")
                     continue
 
             if results:
                 return results
             else:
-                logger.warning("[Tushare] 未获取到指数行情数据")
+                logger.warning("[Tushare] ไม่สามารถดึงข้อมูลดัชนีได้")
 
         except Exception as e:
-            logger.error(f"[Tushare] 获取指数行情失败: {e}")
+            logger.error(f"[Tushare] ไม่สามารถดึงข้อมูลดัชนีได้: {e}")
 
         return None
 
@@ -1167,7 +1167,7 @@ class TushareFetcher(BaseFetcher):
             return None
 
         try:
-            logger.info("[Tushare] ts.pro_api() 获取市场统计...")
+            logger.info("[Tushare] ts.pro_api() ดึงข้อมูลสถิติตลาด...")
             
             # 获取当前中国时间，判断是否在交易时间内
             china_now = self._get_china_now()
@@ -1197,7 +1197,7 @@ class TushareFetcher(BaseFetcher):
                 except TusharePermissionError:
                     return None
                 except Exception as e:
-                    logger.error(f"[Tushare] ts.pro_api().rt_k 尝试获取实时数据失败: {e}")
+                    logger.error(f"[Tushare] ts.pro_api().rt_k ลองดึงข้อมูลจริงล้มเหลว: {e}")
                     return None
             else:
 
@@ -1234,12 +1234,12 @@ class TushareFetcher(BaseFetcher):
                 except TusharePermissionError:
                     return None
                 except Exception as e:
-                    logger.error(f"[Tushare] ts.pro_api().daily 获取数据失败: {e}")
+                    logger.error(f"[Tushare] ts.pro_api().daily ดึงข้อมูลล้มเหลว: {e}")
                     
 
             
         except Exception as e:
-            logger.error(f"[Tushare] 获取市场统计失败: {e}")
+            logger.error(f"[Tushare] ดึงข้อมูลสถิติตลาดล้มเหลว: {e}")
 
         return None
     
@@ -1365,7 +1365,7 @@ class TushareFetcher(BaseFetcher):
             return None
 
         if not use_today:
-            logger.info(f"[Tushare] 当前时间 {china_clock} 可能无法获取当天筹码分布，尝试获取前一个交易日的数据 {start_date}")
+            logger.info(f"[Tushare] เวลาปัจจุบัน {china_clock} อาจไม่สามารถดึงข้อมูลการกระจายหุ้นได้ ลองดึงข้อมูลจากวันซื้อขายก่อนหน้า {start_date}")
 
         return start_date
     
@@ -1408,7 +1408,7 @@ class TushareFetcher(BaseFetcher):
 
         # 优先同花顺接口
         if not self.is_api_denied("moneyflow_ind_ths"):
-            logger.info("[Tushare] ts.pro_api().moneyflow_ind_ths 获取板块排行(同花顺)...")
+            logger.info("[Tushare] ts.pro_api().moneyflow_ind_ths ดึงข้อมูลลำดับอุตสาหกรรม (Tonghuashang) ...")
             try:
                 df = self._call_api_with_rate_limit("moneyflow_ind_ths", trade_date=start_date)
                 if df is not None and not df.empty:
@@ -1419,11 +1419,11 @@ class TushareFetcher(BaseFetcher):
             except TusharePermissionError:
                 pass
             except Exception as e:
-                logger.warning(f"[Tushare] 获取同花顺行业板块涨跌榜失败: {e} 尝试东财接口")
+                logger.warning(f"[Tushare] ดึงข้อมูลอุตสาหกรรมและดัชนีจากหุ้นจีนล้มเหลว: {e} พยายามใช้ API จาก DongChai")
 
         # 同花顺接口失败，降级尝试东财接口
         if not self.is_api_denied("moneyflow_ind_dc"):
-            logger.info("[Tushare] ts.pro_api().moneyflow_ind_dc 获取板块排行(东财)...")
+            logger.info("[Tushare] ts.pro_api().moneyflow_ind_dc ดึงข้อมูลอันดับอุตสาหกรรมจาก DongChai...")
             try:
                 df = self._call_api_with_rate_limit("moneyflow_ind_dc", trade_date=start_date)
                 if df is not None and not df.empty:
@@ -1435,7 +1435,7 @@ class TushareFetcher(BaseFetcher):
             except TusharePermissionError:
                 return None
             except Exception as e:
-                logger.warning(f"[Tushare] 获取东财行业板块涨跌榜失败: {e}")
+                logger.warning(f"[Tushare] ดึงข้อมูลอุตสาหกรรมและดัชนีจาก DongChai ล้มเหลว: {e}")
                 return None
         
         # 获取为空或者接口调用失败，返回 None
@@ -1462,15 +1462,15 @@ class TushareFetcher(BaseFetcher):
 
         """
         if _is_us_code(stock_code):
-            logger.warning(f"[Tushare] TushareFetcher 不支持美股 {stock_code} 的筹码分布")
+            logger.warning(f"[Tushare] TushareFetcher ไม่รองรับข้อมูลการกระจายหุ้นสำหรับตลาดสหรัฐอเมริกา {stock_code}")
             return None
         
         if _is_etf_code(stock_code):
-            logger.warning(f"[Tushare] TushareFetcher 不支持 ETF {stock_code} 的筹码分布")
+            logger.warning(f"[Tushare] TushareFetcher ไม่รองรับข้อมูลการกระจายหุ้นสำหรับ ETF {stock_code}")
             return None
 
         if _is_hk_market(stock_code):
-            logger.warning(f"[Tushare] TushareFetcher 不支持港股 {stock_code} 的筹码分布")
+            logger.warning(f"[Tushare] TushareFetcher ไม่รองรับข้อมูลการกระจายหุ้นสำหรับตลาดฮ่องกง {stock_code}")
             return None
         
         if self._api is None or self.is_api_denied("cyq_chips"):
@@ -1515,14 +1515,14 @@ class TushareFetcher(BaseFetcher):
                     concentration_70=metrics['70集中度'],
                 )
                 
-                logger.info(f"[筹码分布] {stock_code} 日期={chip.date}: 获利比例={chip.profit_ratio:.1%}, "
-                        f"平均成本={chip.avg_cost}, 90%集中度={chip.concentration_90:.2%}, "
-                        f"70%集中度={chip.concentration_70:.2%}")
+                logger.info(f"[Volume distribution] {stock_code} date={chip.date}: profit ratio={chip.profit_ratio:.1%},"
+                        f"ต้นทุนเฉลี่ย={chip.avg_cost}, ความเข้มข้น 90%={chip.concentration_90:.2%}, "
+                        f"ความเข้มข้น 70%={chip.concentration_70:.2%}")
                 return chip
         except TusharePermissionError:
             return None
         except Exception as e:
-            logger.warning(f"[Tushare] 获取筹码分布失败 {stock_code}: {e}")
+            logger.warning(f"[Tushare] ล้มเหลวในการดึงข้อมูลการกระจายหุ้น {stock_code}: {e}")
             return None
 
     def compute_cyq_metrics(self, df: pd.DataFrame, current_price: float) -> dict:
@@ -1600,15 +1600,15 @@ if __name__ == "__main__":
     try:
         # 测试历史数据
         df = fetcher.get_daily_data('600519')  # 茅台
-        print(f"获取成功，共 {len(df)} 条数据")
+        print(f"ดึงข้อมูลสำเร็จ มีทั้งหมด {len(df)} รายการ")
         print(df.tail())
         
         # 测试股票名称
         name = fetcher.get_stock_name('600519')
-        print(f"股票名称: {name}")
+        print(f"ชื่อหุ้น: {name}")
         
     except Exception as e:
-        print(f"获取失败: {e}")
+        print(f"ดึงข้อมูลล้มเหลว: {e}")
 
     # 测试市场统计
     print("\n" + "=" * 50)
@@ -1621,7 +1621,7 @@ if __name__ == "__main__":
             print(f"Up: {stats['up_count']} (Limit Up: {stats['limit_up_count']})")
             print(f"Down: {stats['down_count']} (Limit Down: {stats['limit_down_count']})")
             print(f"Flat: {stats['flat_count']}")
-            print(f"Total Amount: {stats['total_amount']:.2f} 亿 (Yi)")
+            print(f"Total Amount: {stats['total_amount']:.2f} พันล้าน (Yi)")
         else:
             print("Failed to compute market stats.")
     except Exception as e:
@@ -1630,28 +1630,28 @@ if __name__ == "__main__":
 
     # 测试筹码分布数据
     print("\n" + "=" * 50)
-    print("测试筹码分布数据获取")
+    print("ทดสอบการดึงข้อมูลการกระจายตัวของหุ้น")
     print("=" * 50)
     try:
         chip = fetcher.get_chip_distribution('600519')  # 茅台
     except Exception as e:
-        print(f"[筹码分布] 获取失败: {e}")
+        print(f"[การกระจายตัวของหุ้น] ล้มเหลวในการดึงข้อมูล: {e}")
 
     # 测试行业板块排名
     print("\n" + "=" * 50)
-    print("测试行业板块排名获取")
+    print("ทดสอบการดึงข้อมูลลำดับอุตสาหกรรม")
     print("=" * 50)
     try:
         rankings = fetcher.get_sector_rankings(n=5)
         if rankings:
             top, bottom = rankings
-            print("涨幅榜 Top 5:")
+            print("รายการหุ้นที่เพิ่มขึ้นมากที่สุด Top 5:")
             for sector in top:
                 print(f"{sector['name']}: {sector['change_pct']}%")
-            print("\n跌幅榜 Top 5:")
+            print("\\nรายการหุ้นที่ลดลงมากที่สุด Top 5:")
             for sector in bottom:
                 print(f"{sector['name']}: {sector['change_pct']}%")
         else:
-            print("未获取到行业板块排名数据")
+            print("ไม่พบข้อมูลลำดับอุตสาหกรรม")
     except Exception as e:
-        print(f"[行业板块排名] 获取失败: {e}")
+        print(f"[ลำดับอุตสาหกรรม] ล้มเหลวในการดึงข้อมูล: {e}")

@@ -134,7 +134,7 @@ class CommandDispatcher:
             logger.warning(f"[Dispatcher] 命令 '{name}' 已存在，将被覆盖")
 
         self._commands[name] = command
-        logger.debug(f"[Dispatcher] 注册命令: {name}")
+        logger.debug(f"[Dispatcher] ลงทะเบียนคำสั่ง: {name}")
 
         # 注册别名
         for alias in command.aliases:
@@ -142,7 +142,7 @@ class CommandDispatcher:
             if alias_lower in self._aliases:
                 logger.warning(f"[Dispatcher] 别名 '{alias_lower}' 已存在，将被覆盖")
             self._aliases[alias_lower] = name
-            logger.debug(f"[Dispatcher] 注册别名: {alias_lower} -> {name}")
+            logger.debug(f"[Dispatcher] ลงทะเบียนชื่อเล่น: {alias_lower} -> {name}")
 
     def register_class(self, command_class: Type[BotCommand]) -> None:
         """
@@ -174,7 +174,7 @@ class CommandDispatcher:
         for alias in command.aliases:
             self._aliases.pop(alias.lower(), None)
 
-        logger.debug(f"[Dispatcher] 注销命令: {name}")
+        logger.debug(f"[Dispatcher] ลบคำสั่งออก: {name}")
         return True
 
     def get_command(self, name: str) -> Optional[BotCommand]:
@@ -270,7 +270,7 @@ class CommandDispatcher:
         if cmd_name is None:
             return None, args, None, None
 
-        logger.info(f"[Dispatcher] 收到命令: {cmd_name}, 参数: {args}, 用户: {message.user_name}")
+        logger.info(f"[Dispatcher] ได้รับคำสั่ง: {cmd_name}, พารามิเตอร์: {args}, ผู้ใช้: {message.user_name}")
 
         command = self.get_command(cmd_name)
         if command is None:
@@ -312,10 +312,10 @@ class CommandDispatcher:
 
         try:
             response = command.execute(message, args)
-            logger.info(f"[Dispatcher] 命令 {cmd_name} 执行成功")
+            logger.info(f"[Dispatcher] คำสั่ง {cmd_name} ดำเนินการสำเร็จ")
             return response
         except Exception as e:
-            logger.error(f"[Dispatcher] 命令 {cmd_name} 执行失败: {e}")
+            logger.error(f"[Dispatcher] คำสั่ง {cmd_name} ล้มเหลว: {e}")
             logger.exception(e)
             return BotResponse.error_response(f"命令执行失败: {str(e)[:100]}")
 
@@ -353,10 +353,10 @@ class CommandDispatcher:
         # 6. 执行命令
         try:
             response = await command.execute_async(message, args)
-            logger.info(f"[Dispatcher] 命令 {cmd_name} 执行成功")
+            logger.info(f"[Dispatcher] คำสั่ง {cmd_name} ดำเนินการสำเร็จ")
             return response
         except Exception as e:
-            logger.error(f"[Dispatcher] 命令 {cmd_name} 执行失败: {e}")
+            logger.error(f"[Dispatcher] คำสั่ง {cmd_name} ล้มเหลว: {e}")
             logger.exception(e)
             return BotResponse.error_response(f"命令执行失败: {str(e)[:100]}")
 
@@ -758,7 +758,7 @@ def get_dispatcher() -> CommandDispatcher:
         for command_class in ALL_COMMANDS:
             _dispatcher.register_class(command_class)
 
-        logger.info(f"[Dispatcher] 初始化完成，已注册 {len(_dispatcher._commands)} 个命令")
+        logger.info(f"[Dispatcher] เริ่มต้นการทำงานสำเร็จ ลงทะเบียนคำสั่งทั้งหมด {len(_dispatcher._commands)} คำสั่ง")
 
     return _dispatcher
 

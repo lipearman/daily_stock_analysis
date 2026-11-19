@@ -67,12 +67,12 @@ class GotifySender:
     ) -> bool:
         """Publish a notification to Gotify using JSON and header auth."""
         if not self._is_gotify_configured():
-            logger.warning("Gotify 配置不完整，跳过推送")
+            logger.warning("การตั้งค่า Gotify ไม่สมบูรณ์ จึงข้ามการแจ้งเตือน")
             return False
 
         endpoint = self._resolve_gotify_endpoint()
         if not endpoint:
-            logger.error("GOTIFY_URL 必须是 Gotify server base URL，不包含 /message")
+            logger.error("GOTIFY_URL ต้องเป็น URL ฐานของเซิร์ฟเวอร์ Gotify โดยไม่รวม /message")
             return False
 
         if title is None:
@@ -104,20 +104,20 @@ class GotifySender:
                 verify=self._webhook_verify_ssl,
             )
             if 200 <= response.status_code < 300:
-                logger.info("Gotify 消息发送成功")
+                logger.info("ส่งข้อความ Gotify สำเร็จ")
                 return True
 
-            logger.error("Gotify 请求失败: HTTP %s", response.status_code)
-            logger.debug("Gotify 响应内容: %s", response.text)
+            logger.error("การขอข้อมูล Gotify ล้มเหลว: HTTP %s", response.status_code)
+            logger.debug("เนื้อหาตอบกลับจาก Gotify: %s", response.text)
             return False
         except requests.exceptions.Timeout:
-            logger.error("发送 Gotify 消息失败: 请求超时")
+            logger.error("ส่งข้อความ Gotify ล้มเหลว: เวลาหมด")
             return False
         except requests.exceptions.RequestException as exc:
-            logger.error("发送 Gotify 消息失败: 网络请求异常")
-            logger.debug("Gotify 请求异常类型: %s", type(exc).__name__)
+            logger.error("ส่งข้อความ Gotify ล้มเหลว: เกิดข้อผิดพลาดในการเชื่อมต่อเครือข่าย")
+            logger.debug("ประเภทข้อผิดพลาดในการขอข้อมูล Gotify: %s", type(exc).__name__)
             return False
         except Exception as exc:
-            logger.error("发送 Gotify 消息失败: 未知异常")
-            logger.debug("Gotify 未知异常类型: %s", type(exc).__name__)
+            logger.error("ส่งข้อความ Gotify ล้มเหลว: เกิดข้อผิดพลาดไม่ทราบสาเหตุ")
+            logger.debug("ประเภทข้อผิดพลาดไม่ทราบสาเหตุจาก Gotify: %s", type(exc).__name__)
             return False

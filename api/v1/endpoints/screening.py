@@ -106,7 +106,7 @@ def _screening_task_not_found(task_id: str) -> HTTPException:
     return api_error(
         404,
         "screening_screen_task_not_found",
-        f"选股任务 {task_id} 不存在或已过期",
+        f"งานเลือกหุ้น {task_id} ไม่มีอยู่หรือหมดอายุแล้ว",
     )
 
 
@@ -205,7 +205,7 @@ def screening_start_screen_task(
         task_queue.update_task_progress(
             task_id,
             20,
-            "正在执行选股，外部数据源较慢时会持续后台运行",
+            "กำลังคัดกรองหุ้น หากแหล่งข้อมูลภายนอกช้า งานจะทำต่อในเบื้องหลัง",
         )
 
         def report_progress(progress: int, message: str) -> None:
@@ -221,7 +221,7 @@ def screening_start_screen_task(
         task_queue.update_task_progress(
             task_id,
             98,
-            f"选股已完成，正在整理 {result.get('candidate_count', 0)} 条候选",
+            f"คัดหุ้นเสร็จแล้ว กำลังจัดระเบียบ {result.get('candidate_count', 0)} รายการ",
         )
         return result
 
@@ -230,7 +230,7 @@ def screening_start_screen_task(
         stock_code="screening_screen",
         stock_name=f"{request.strategy} / {request.market}",
         report_type="screening_screen",
-        message="选股任务已提交",
+        message="ส่งงานคัดกรองหุ้นแล้ว",
         task_id=task_id,
         trace_id=task_id,
     )
@@ -238,7 +238,7 @@ def screening_start_screen_task(
         task_id=task.task_id,
         trace_id=task.trace_id or task.task_id,
         status=task.status.value if isinstance(task.status, QueueTaskStatus) else str(task.status),
-        message=task.message or "选股任务已提交",
+        message=task.message or "ส่งงานคัดกรองหุ้นแล้ว",
         strategy=request.strategy,
         market=request.market,
         max_results=request.max_results,

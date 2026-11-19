@@ -307,8 +307,8 @@ class AnalysisApiContractTestCase(unittest.TestCase):
         args, kwargs = task_queue.submit_background_task.call_args
         self.assertTrue(callable(args[0]))
         self.assertEqual(kwargs["stock_code"], "market_review")
-        self.assertEqual(kwargs["stock_name"], "大盘复盘")
-        self.assertEqual(kwargs["message"], "大盘复盘任务已提交")
+        self.assertEqual(kwargs["stock_name"], "รีวิวตลาด")
+        self.assertEqual(kwargs["message"], "ส่งงานรีวิวตลาดแล้ว")
         self.assertEqual(kwargs["region"], "cn")
 
     def test_trigger_market_review_accepts_request_level_report_language(self) -> None:
@@ -831,7 +831,7 @@ class AnalysisApiContractTestCase(unittest.TestCase):
         )
         self.assertEqual(status.result.report["summary"]["operation_advice"], "不建议买入")
         self.assertEqual(status.result.report["summary"]["action"], "avoid")
-        self.assertEqual(status.result.report["summary"]["action_label"], "回避")
+        self.assertEqual(status.result.report["summary"]["action_label"], "หลีกเลี่ยง")
 
     def test_get_analysis_status_prefers_raw_result_action_over_summary_action(self) -> None:
         if get_analysis_status is None or analysis_endpoint_module is None:
@@ -1192,7 +1192,7 @@ class AnalysisApiContractTestCase(unittest.TestCase):
             "_build_market_review_runtime",
             return_value=(runtime_notifier, runtime_analyzer, runtime_search),
         ), patch("src.core.market_review.run_market_review", return_value=None):
-            with self.assertRaisesRegex(RuntimeError, "大盘复盘未返回可持久化报告"):
+            with self.assertRaisesRegex(RuntimeError, "รีวิวตลาดไม่ได้ส่งรายงานที่บันทึกได้"):
                 analysis_endpoint_module._run_market_review_background(
                     send_notification=False,
                     effective_region="cn",
@@ -1771,7 +1771,7 @@ class AnalysisApiContractTestCase(unittest.TestCase):
         self.assertEqual(news_component["status"], "unknown")
         self.assertEqual(
             result["report"]["details"]["empty_news_disclosure"],
-            "⚠️ 未配置搜索渠道，本次分析未纳入新闻面证据。",
+            "⚠️ ยังไม่ได้ตั้งค่าช่องทางค้นหาข่าว จึงไม่ได้นำหลักฐานจากข่าวมาใช้ในการวิเคราะห์ครั้งนี้",
         )
 
     def test_build_analysis_response_includes_market_phase_summary_from_result_snapshot(self) -> None:
@@ -2957,7 +2957,7 @@ class AnalysisApiContractTestCase(unittest.TestCase):
         self.assertEqual(ctx.exception.status_code, 400)
         self.assertEqual(
             ctx.exception.detail["message"],
-            "股票代码不能为空或仅包含空白字符",
+            "Stock code cannot be empty or contain only whitespace",
         )
 
     def test_trigger_analysis_rejects_obviously_invalid_mixed_input_before_resolution(self) -> None:
@@ -2979,7 +2979,7 @@ class AnalysisApiContractTestCase(unittest.TestCase):
                 )
 
         self.assertEqual(ctx.exception.status_code, 400)
-        self.assertEqual(ctx.exception.detail["message"], "请输入有效的股票代码或股票名称")
+        self.assertEqual(ctx.exception.detail["message"], "กรุณาป้อนรหัสหุ้นหรือชื่อหุ้นที่ถูกต้อง")
         resolve_mock.assert_not_called()
 
     def test_trigger_analysis_rejects_unresolvable_alpha_garbage(self) -> None:
@@ -3002,7 +3002,7 @@ class AnalysisApiContractTestCase(unittest.TestCase):
                 )
 
         self.assertEqual(ctx.exception.status_code, 400)
-        self.assertEqual(ctx.exception.detail["message"], "请输入有效的股票代码或股票名称")
+        self.assertEqual(ctx.exception.detail["message"], "กรุณาป้อนรหัสหุ้นหรือชื่อหุ้นที่ถูกต้อง")
         queue_mock.assert_not_called()
 
     def test_trigger_analysis_accepts_us_suffix_code(self) -> None:
@@ -3258,7 +3258,7 @@ class AnalysisApiContractTestCase(unittest.TestCase):
                 )
 
         self.assertEqual(ctx.exception.status_code, 400)
-        self.assertIn("最多支持 50", ctx.exception.detail["message"])
+        self.assertIn("up to 50", ctx.exception.detail["message"])
         queue.submit_tasks_batch.assert_not_called()
 
     def test_trigger_analysis_exactly_fifty_raw_tokens_is_accepted(self) -> None:
@@ -4577,7 +4577,7 @@ class BatchTaskQueueContractTestCase(unittest.TestCase):
         queue = AnalysisTaskQueue(max_workers=1)
         queue._executor = type("ExecutorStub", (), {"submit": lambda self, *args, **kwargs: Future()})()
 
-        with self.assertRaisesRegex(ValueError, "股票代码不能为空或仅包含空白字符"):
+        with self.assertRaisesRegex(ValueError, "รหัสหุ้นต้องไม่ว่างเปล่าหรือมีเฉพาะช่องว่าง"):
             queue.submit_task("   ", report_type="detailed")
 
         self.assertEqual(queue._tasks, {})

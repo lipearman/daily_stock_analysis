@@ -7,13 +7,19 @@ import type {
 import { normalizeReportLanguage } from './reportLanguage';
 
 const REQUEST_PHASE_LABELS: Record<ReportLanguage, Record<AnalysisPhase, string>> = {
-  zh: {
-    auto: '自动阶段',
-    premarket: '盘前',
-    intraday: '盘中',
-    postmarket: '盘后',
+  th: {
+    auto: 'ช่วงอัตโนมัติ',
+    premarket: 'ก่อนเปิดตลาด',
+    intraday: 'ระหว่างตลาดเปิด',
+    postmarket: 'หลังตลาดปิด',
   },
   en: {
+    auto: 'Auto',
+    premarket: 'Pre-market',
+    intraday: 'Intraday',
+    postmarket: 'Post-market',
+  },
+  zh: {
     auto: 'Auto',
     premarket: 'Pre-market',
     intraday: 'Intraday',
@@ -28,16 +34,25 @@ const REQUEST_PHASE_LABELS: Record<ReportLanguage, Record<AnalysisPhase, string>
 };
 
 const MARKET_PHASE_LABELS: Record<ReportLanguage, Record<MarketPhaseValue, string>> = {
-  zh: {
-    premarket: '盘前',
-    intraday: '盘中',
-    lunch_break: '午间休市',
-    closing_auction: '临近收盘',
-    postmarket: '盘后',
-    non_trading: '非交易日',
-    unknown: '阶段未知',
+  th: {
+    premarket: 'ก่อนเปิดตลาด',
+    intraday: 'ระหว่างตลาดเปิด',
+    lunch_break: 'หยุดตลาดกลางวัน',
+    closing_auction: 'ใกล้ปิดตลาด',
+    postmarket: 'หลังตลาดปิด',
+    non_trading: 'วันที่ไม่มีการซื้อขาย',
+    unknown: 'ช่วงไม่ทราบ',
   },
   en: {
+    premarket: 'Pre-market',
+    intraday: 'Intraday',
+    lunch_break: 'Lunch break',
+    closing_auction: 'Near close',
+    postmarket: 'Post-market',
+    non_trading: 'Non-trading',
+    unknown: 'Unknown phase',
+  },
+  zh: {
     premarket: 'Pre-market',
     intraday: 'Intraday',
     lunch_break: 'Lunch break',
@@ -58,12 +73,17 @@ const MARKET_PHASE_LABELS: Record<ReportLanguage, Record<MarketPhaseValue, strin
 };
 
 const TEXT = {
-  zh: {
-    requestPrefix: '请求阶段',
-    finalPrefix: '市场阶段',
-    partialBar: '日线未完成',
+  th: {
+    requestPrefix: 'กำลังขอช่วงเวลา',
+    finalPrefix: 'ช่วงเวลาตลาด',
+    partialBar: 'ไม่ได้สร้างเส้นรายวัน',
   },
   en: {
+    requestPrefix: 'Requested phase',
+    finalPrefix: 'Market phase',
+    partialBar: 'Partial bar',
+  },
+  zh: {
     requestPrefix: 'Requested phase',
     finalPrefix: 'Market phase',
     partialBar: 'Partial bar',
@@ -84,12 +104,12 @@ export const getRequestedPhaseLabel = (
   }
 
   const reportLanguage = normalizeReportLanguage(language);
-  const label = REQUEST_PHASE_LABELS[reportLanguage][phase];
+  const label = REQUEST_PHASE_LABELS[reportLanguage === 'zh' ? 'th' : reportLanguage][phase];
   if (!label) {
     return null;
   }
 
-  return `${TEXT[reportLanguage].requestPrefix}: ${label}`;
+  return `${TEXT[reportLanguage === 'zh' ? 'th' : reportLanguage].requestPrefix}: ${label}`;
 };
 
 export const getMarketPhaseSummaryLabel = (
@@ -101,14 +121,14 @@ export const getMarketPhaseSummaryLabel = (
   }
 
   const reportLanguage = normalizeReportLanguage(language);
-  const phaseLabel = MARKET_PHASE_LABELS[reportLanguage][summary.phase];
+  const phaseLabel = MARKET_PHASE_LABELS[reportLanguage === 'zh' ? 'th' : reportLanguage][summary.phase];
   if (!phaseLabel) {
     return null;
   }
 
   const market = (summary.market || '').trim().toUpperCase();
   const value = market ? `${market} · ${phaseLabel}` : phaseLabel;
-  return `${TEXT[reportLanguage].finalPrefix}: ${value}`;
+  return `${TEXT[reportLanguage === 'zh' ? 'th' : reportLanguage].finalPrefix}: ${value}`;
 };
 
 export const getPartialBarLabel = (language?: ReportLanguage | null): string =>

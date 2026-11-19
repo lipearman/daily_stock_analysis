@@ -14,14 +14,14 @@ export function formatSessionAsMarkdown(messages: Message[]): string {
   });
 
   const lines: string[] = [
-    '# 问股会话',
+    '# การสนทนาถามหุ้น',
     '',
     `生成时间: ${timeStr}`,
     '',
   ];
 
   for (const msg of messages) {
-    const heading = msg.role === 'user' ? '## 用户' : '## AI';
+    const heading = msg.role === 'user' ? '## ผู้ใช้' : '## AI';
     if (msg.role === 'assistant' && msg.skillName) {
       lines.push(`${heading} (${msg.skillName})`);
     } else {

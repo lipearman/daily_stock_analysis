@@ -56,8 +56,8 @@ try:
     FEISHU_SDK_AVAILABLE = True
 except ImportError:
     FEISHU_SDK_AVAILABLE = False
-    logger.warning("[Feishu Stream] lark-oapi SDK 未安装，Stream 模式不可用")
-    logger.warning("[Feishu Stream] 请运行: pip install lark-oapi")
+    logger.warning("[Feishu Stream] SDK lark-oapi ยังไม่ติดตั้ง จึงไม่สามารถใช้งานโหมด Stream ได้")
+    logger.warning("[Feishu Stream] กรุณาดำเนินการ: pip install lark-oapi")
 
 from bot.models import BotMessage, BotResponse, ChatType
 from src.formatters import format_feishu_markdown, chunk_content_by_max_bytes
@@ -192,11 +192,11 @@ class FeishuReplyClient:
                 )
                 return False
 
-            logger.debug("[Feishu Stream] 发送交互卡片成功")
+            logger.debug("[Feishu Stream] ส่งบัตรโต้ตอบสำเร็จ")
             return True
 
         except Exception as e:
-            logger.error(f"[Feishu Stream] 发送交互卡片异常: {e}")
+            logger.error(f"[Feishu Stream] ส่งบัตรโต้ตอบผิดพลาด: {e}")
             return False
 
     def reply_text(self, message_id: str, text: str, at_user: bool = False,
@@ -288,7 +288,7 @@ class FeishuReplyClient:
             if send_func(chunk):
                 success_count += 1
             else:
-                logger.error(f"[Feishu Stream] 发送消息失败: {chunk}")
+                logger.error(f"[Feishu Stream] ส่งข้อความล้มเหลว: {chunk}")
             if i < len(chunks) - 1:
                 time.sleep(1)
         return success_count == len(chunks)
@@ -354,7 +354,7 @@ class FeishuStreamHandler:
                 with self._queue_lock:
                     self._active_conversations.discard(conversation_key)
                     self._pending_messages.pop(conversation_key, None)
-                self._logger.error("[Feishu Stream] 无法启动消息处理线程: %s", exc)
+                self._logger.error("[Feishu Stream] ไม่สามารถเริ่มต้นเส้นทางการประมวลผลข้อความได้: %s", exc)
 
     def _drain_conversation(self, conversation_key: str) -> None:
         """Drain one conversation queue in FIFO order."""
@@ -382,7 +382,7 @@ class FeishuStreamHandler:
                     user_id=bot_message.user_id if response.at_user else None,
                 )
         except Exception as e:
-            self._logger.error(f"[Feishu Stream] 异步处理消息失败: {e}")
+            self._logger.error(f"[Feishu Stream] การประมวลผลข้อความแบบอะซิงโครนัสล้มเหลว: {e}")
             self._logger.exception(e)
 
     @staticmethod
@@ -426,7 +426,7 @@ class FeishuStreamHandler:
             self._enqueue_message(bot_message)
 
         except Exception as e:
-            self._logger.error(f"[Feishu Stream] 处理消息失败: {e}")
+            self._logger.error(f"[Feishu Stream] การประมวลผลข้อความล้มเหลว: {e}")
             self._logger.exception(e)
 
     def _parse_event_message(self, event: 'P2ImMessageReceiveV1') -> Optional[BotMessage]:
@@ -450,7 +450,7 @@ class FeishuStreamHandler:
             # 只处理文本消息
             message_type = message_data.message_type or ""
             if message_type != "text":
-                self._logger.debug(f"[Feishu Stream] 忽略非文本消息: {message_type}")
+                self._logger.debug(f"[Feishu Stream] ข้ามข้อความที่ไม่ใช่ข้อความข้อความ: {message_type}")
                 return None
 
             # 解析消息内容
@@ -522,7 +522,7 @@ class FeishuStreamHandler:
             )
 
         except Exception as e:
-            self._logger.error(f"[Feishu Stream] 解析消息失败: {e}")
+            self._logger.error(f"[Feishu Stream] การวิเคราะห์ข้อความล้มเหลว: {e}")
             return None
 
     def _extract_command(self, text: str, mentions: list) -> str:
@@ -665,7 +665,7 @@ class FeishuStreamClient:
 
         此方法会阻塞当前线程，直到客户端停止。
         """
-        logger.info("[Feishu Stream] 正在启动...")
+        logger.info("[Feishu Stream] กำลังเริ่มต้น...")
 
         # 创建事件处理器
         event_handler = self._create_event_handler()
@@ -681,7 +681,7 @@ class FeishuStreamClient:
         )
 
         self._running = True
-        logger.info("[Feishu Stream] 客户端已启动，等待消息...")
+        logger.info("[Feishu Stream] เครื่องมือลูกค้าเริ่มต้นแล้ว รอข้อความ...")
 
         # 启动（阻塞）
         self._ws_client.start()
@@ -693,7 +693,7 @@ class FeishuStreamClient:
         适用于与其他服务（如 WebUI）同时运行的场景。
         """
         if self._background_thread and self._background_thread.is_alive():
-            logger.warning("[Feishu Stream] 客户端已在运行")
+            logger.warning("[Feishu Stream] เครื่องมือลูกค้าอยู่ในระหว่างทำงานแล้ว")
             return
 
         self._running = True
@@ -703,7 +703,7 @@ class FeishuStreamClient:
             name="FeishuStreamClient"
         )
         self._background_thread.start()
-        logger.info("[Feishu Stream] 后台客户端已启动")
+        logger.info("[Feishu Stream] เครื่องมือลูกค้าในพื้นหลังเริ่มต้นแล้ว")
 
     def _run_in_background(self) -> None:
         """后台运行（处理异常和重连）"""
@@ -713,9 +713,9 @@ class FeishuStreamClient:
             try:
                 self.start()
             except Exception as e:
-                logger.error(f"[Feishu Stream] 运行异常: {e}")
+                logger.error(f"[Feishu Stream] เกิดข้อผิดพลาดในการทำงาน: {e}")
                 if self._running:
-                    logger.info("[Feishu Stream] 5 秒后重连...")
+                    logger.info("[Feishu Stream] ต่อเชื่อมอีกครั้งภายใน 5 วินาที...")
                     time.sleep(5)
 
     def stop(self) -> None:
@@ -723,7 +723,7 @@ class FeishuStreamClient:
         self._running = False
         if self._message_handler is not None:
             self._message_handler.shutdown(wait=False)
-        logger.info("[Feishu Stream] 客户端已停止")
+        logger.info("[Feishu Stream] เครื่องมือลูกค้าถูกหยุดแล้ว")
 
     @property
     def is_running(self) -> bool:
@@ -743,7 +743,7 @@ def get_feishu_stream_client() -> Optional[FeishuStreamClient]:
         try:
             _stream_client = FeishuStreamClient()
         except (ImportError, ValueError) as e:
-            logger.warning(f"[Feishu Stream] 无法创建客户端: {e}")
+            logger.warning(f"[Feishu Stream] ไม่สามารถสร้างเครื่องมือลูกค้าได้: {e}")
             return None
 
     return _stream_client

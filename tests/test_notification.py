@@ -1106,13 +1106,14 @@ class TestNotificationServiceReportGeneration(unittest.TestCase):
 
         out = service.generate_brief_report([result], report_date="2026-02-01")
 
-        self.assertIn("*分析模型: gemini/gemini-2.5-flash*", out)
+        self.assertIn("*โมเดลวิเคราะห์: gemini/gemini-2.5-flash*", out)
 
     @mock.patch("src.notification.get_config")
     def test_generate_dashboard_report_shows_model_by_default(self, mock_get_config: mock.MagicMock):
         mock_get_config.return_value = _make_config(report_renderer_enabled=False)
         service = NotificationService()
         result = AnalysisResult(
+            report_language="th",
             code="600519",
             name="贵州茅台",
             sentiment_score=72,
@@ -1124,7 +1125,7 @@ class TestNotificationServiceReportGeneration(unittest.TestCase):
 
         out = service.generate_dashboard_report([result], report_date="2026-02-01")
 
-        self.assertIn("*分析模型：gemini/gemini-2.5-flash*", out)
+        self.assertIn("*โมเดลวิเคราะห์：gemini/gemini-2.5-flash*", out)
 
     @mock.patch("src.notification.get_config")
     def test_generate_dashboard_report_shows_phase_decision_in_default_renderer(
@@ -1154,7 +1155,7 @@ class TestNotificationServiceReportGeneration(unittest.TestCase):
 
         out = service.generate_dashboard_report([result], report_date="2026-02-01")
 
-        self.assertIn("盘中决策护栏", out)
+        self.assertIn("กันชนการตัดสินใจระหว่างวัน", out)
         self.assertIn("盘中跟踪", out)
         self.assertIn("等待确认", out)
         self.assertIn("放量突破", out)
@@ -1185,7 +1186,7 @@ class TestNotificationServiceReportGeneration(unittest.TestCase):
 
         out = service.generate_dashboard_report([result], report_date="2026-02-01")
 
-        self.assertNotIn("盘中决策护栏", out)
+        self.assertNotIn("กันชนการตัดสินใจระหว่างวัน", out)
 
     @mock.patch("src.notification.get_config")
     def test_generate_dashboard_report_omits_decision_signal_excerpt_fallback(
@@ -1376,7 +1377,7 @@ class TestNotificationServiceReportGeneration(unittest.TestCase):
 
         out = service.generate_brief_report([result], report_date="2026-02-01")
 
-        self.assertIn("市场状态：A股 · 盘中", out)
+        self.assertIn("สถานะตลาด: จีน A-share · ช่วงซื้อขาย", out)
         self.assertNotIn("阶段：intraday", out)
         self.assertNotIn("触发来源：portfolio", out)
         self.assertNotIn("盘中数据提示", out)
@@ -1392,6 +1393,7 @@ class TestNotificationServiceReportGeneration(unittest.TestCase):
         mock_get_config.return_value = _make_config(report_renderer_enabled=True)
         service = NotificationService()
         result = AnalysisResult(
+            report_language="th",
             code="600519",
             name="贵州茅台",
             sentiment_score=72,
@@ -1413,8 +1415,8 @@ class TestNotificationServiceReportGeneration(unittest.TestCase):
 
         out = service.generate_dashboard_report([result], report_date="2026-02-01")
 
-        self.assertIn("市场状态：A股 · 盘后", out)
-        self.assertEqual(out.count("市场状态："), 1)
+        self.assertIn("สถานะตลาด: จีน A-share · หลังปิดตลาด", out)
+        self.assertEqual(out.count("สถานะตลาด:"), 1)
         self.assertNotIn("阶段：postmarket", out)
         self.assertNotIn("触发来源：cli", out)
         self.assertNotIn("数据质量: good", out)
@@ -1463,7 +1465,7 @@ class TestNotificationServiceReportGeneration(unittest.TestCase):
 
         out = service.generate_dashboard_report([result], report_date="2026-02-01")
 
-        self.assertIn("**筹码**: 筹码分布未启用或数据源暂不可用，未纳入筹码判断。", out)
+        self.assertIn("**โครงสร้างการถือครอง**: ข้อมูลโครงสร้างการถือครองปิดใช้งานหรือแหล่งข้อมูลใช้ไม่ได้ชั่วคราว จึงไม่นำมาพิจารณา", out)
         self.assertEqual(out.count("数据缺失，无法判断"), 0)
 
     @mock.patch("src.notification.get_config")
@@ -1486,9 +1488,9 @@ class TestNotificationServiceReportGeneration(unittest.TestCase):
         dashboard = service.generate_dashboard_report([result], report_date="2026-02-01")
         single = service.generate_single_stock_report(result)
 
-        self.assertNotIn("分析模型", dashboard)
+        self.assertNotIn("โมเดลวิเคราะห์", dashboard)
         self.assertNotIn("gemini/gemini-2.5-flash", dashboard)
-        self.assertNotIn("分析模型", single)
+        self.assertNotIn("โมเดลวิเคราะห์", single)
         self.assertNotIn("gemini/gemini-2.5-flash", single)
 
     @mock.patch("src.notification.get_config")
@@ -1598,6 +1600,7 @@ class TestNotificationServiceReportGeneration(unittest.TestCase):
         mock_get_config.return_value = _make_config(report_renderer_enabled=False)
         service = NotificationService()
         result = AnalysisResult(
+            report_language="th",
             code="600519",
             name="贵州茅台",
             sentiment_score=72,
@@ -1620,8 +1623,8 @@ class TestNotificationServiceReportGeneration(unittest.TestCase):
         html = build_share_image_html(markdown, generated_on=date(2026, 7, 31))
 
         self.assertIn('class="signal-trend positive"', html)
-        self.assertIn(">看多<", html)
-        self.assertIn("个股决策卡", html)
+        self.assertIn(">ขาขึ้น<", html)
+        self.assertIn("การ์ดตัดสินใจหุ้น", html)
 
     @mock.patch("src.notification.get_config")
     def test_dashboard_share_image_reads_chinese_volume_line_from_generated_report(
@@ -1630,6 +1633,7 @@ class TestNotificationServiceReportGeneration(unittest.TestCase):
         mock_get_config.return_value = _make_config(report_renderer_enabled=False)
         service = NotificationService()
         result = AnalysisResult(
+            report_language="th",
             code="600519",
             name="贵州茅台",
             sentiment_score=72,
@@ -1674,8 +1678,8 @@ class TestNotificationServiceReportGeneration(unittest.TestCase):
         markdown = service.generate_dashboard_report([result], report_date="2026-07-31")
         html = build_share_image_html(markdown, generated_on=date(2026, 7, 31))
 
-        self.assertIn("技术参考", html)
-        self.assertIn(">量能<", html)
+        self.assertIn("อ้างอิงเทคนิค", html)
+        self.assertIn(">วอลุ่ม<", html)
         self.assertIn("1.35", html)
         self.assertIn("0.82%", html)
 
@@ -1749,6 +1753,7 @@ class TestNotificationServiceReportGeneration(unittest.TestCase):
         mock_get_config.return_value = _make_config(report_renderer_enabled=False)
         service = NotificationService()
         result = AnalysisResult(
+            report_language="th",
             code="600519",
             name="贵州茅台",
             sentiment_score=72,
@@ -1760,26 +1765,26 @@ class TestNotificationServiceReportGeneration(unittest.TestCase):
 
         out = service.generate_single_stock_report(result)
 
-        # 财务摘要
-        self.assertIn("财务摘要", out)
+        # 'สรุปการเงิน'
+        self.assertIn("สรุปการเงิน", out)
         self.assertIn("2024-09-30", out)
         self.assertIn("12360.00 亿元", out)
         self.assertIn("22.45%", out)
         self.assertIn("15.23%", out)
         self.assertIn("91.55%", out)
-        # 股东回报
-        self.assertIn("股东回报", out)
+        # 'ผลตอบแทนผู้ถือหุ้น'
+        self.assertIn("ผลตอบแทนผู้ถือหุ้น", out)
         self.assertIn("30.8760 元", out)
         self.assertIn("1.85%", out)
         self.assertIn("2024-06-26", out)
-        # 关联板块（白酒带行业信号；MSCI中国 带概念信号）
-        self.assertIn("关联板块", out)
+        # 'กลุ่มที่เกี่ยวข้อง'（白酒带行业信号；MSCI中国 带概念信号）
+        self.assertIn("กลุ่มที่เกี่ยวข้อง", out)
         self.assertIn("白酒", out)
-        self.assertIn("领涨", out)
+        self.assertIn("กลุ่มนำขึ้น", out)
         self.assertIn("+3.42%", out)
         self.assertIn("MSCI中国", out)
-        self.assertIn("- 白酒 (行业板块 领涨 +3.42%)", out)
-        self.assertIn("- MSCI中国 (概念板块 领涨 +1.23%)", out)
+        self.assertIn("- 白酒 (กลุ่มอุตสาหกรรม กลุ่มนำขึ้น +3.42%)", out)
+        self.assertIn("- MSCI中国 (กลุ่มธีม กลุ่มนำขึ้น +1.23%)", out)
         self.assertIn("+1.23%", out)
         self.assertNotIn("| 板块 | 类型 | 板块表现 | 板块涨跌幅 |", out)
 
@@ -1790,6 +1795,7 @@ class TestNotificationServiceReportGeneration(unittest.TestCase):
         mock_get_config.return_value = _make_config(report_renderer_enabled=False)
         service = NotificationService()
         result = AnalysisResult(
+            report_language="th",
             code="600519",
             name="贵州茅台",
             sentiment_score=72,
@@ -1811,8 +1817,8 @@ class TestNotificationServiceReportGeneration(unittest.TestCase):
 
         out = service.generate_single_stock_report(result)
 
-        self.assertIn("关联板块", out)
-        self.assertIn("- 白酒 (概念板块 领跌 -3.20%)", out)
+        self.assertIn("กลุ่มที่เกี่ยวข้อง", out)
+        self.assertIn("- 白酒 (กลุ่มธีม กลุ่มนำลง -3.20%)", out)
         self.assertNotIn("| 白酒 | 概念 |", out)
         self.assertNotIn("+2.31%", out)
 
@@ -1833,9 +1839,9 @@ class TestNotificationServiceReportGeneration(unittest.TestCase):
 
         out = service.generate_single_stock_report(result)
 
-        self.assertNotIn("财务摘要", out)
-        self.assertNotIn("股东回报", out)
-        self.assertNotIn("关联板块", out)
+        self.assertNotIn("สรุปการเงิน", out)
+        self.assertNotIn("ผลตอบแทนผู้ถือหุ้น", out)
+        self.assertNotIn("กลุ่มที่เกี่ยวข้อง", out)
 
     @mock.patch("src.notification.get_config")
     def test_generate_single_stock_report_handles_partial_fundamental_context(
@@ -1867,10 +1873,10 @@ class TestNotificationServiceReportGeneration(unittest.TestCase):
 
         out = service.generate_single_stock_report(result)
 
-        self.assertNotIn("财务摘要", out)
-        self.assertIn("股东回报", out)
+        self.assertNotIn("สรุปการเงิน", out)
+        self.assertIn("ผลตอบแทนผู้ถือหุ้น", out)
         self.assertIn("0.5000 元", out)
-        self.assertNotIn("关联板块", out)
+        self.assertNotIn("กลุ่มที่เกี่ยวข้อง", out)
 
     @mock.patch("src.notification.get_config")
     def test_generate_single_stock_report_uses_currency_for_us(
@@ -1921,7 +1927,7 @@ class TestNotificationServiceReportGeneration(unittest.TestCase):
 
         out = service.generate_single_stock_report(result)
 
-        self.assertIn("财务摘要", out)
+        self.assertIn("สรุปการเงิน", out)
         self.assertIn("亿美元", out)
         self.assertNotIn("12360.00 亿元", out)
         # Sample expected formatted values
@@ -1965,7 +1971,7 @@ class TestNotificationServiceReportGeneration(unittest.TestCase):
 
         out = service.generate_single_stock_report(result)
 
-        self.assertIn("关联板块", out)
+        self.assertIn("กลุ่มที่เกี่ยวข้อง", out)
         self.assertIn("Technology / Consumer Electronics", out)
         self.assertIn("Technology", out)
         self.assertIn("Consumer Electronics", out)
@@ -2004,7 +2010,7 @@ class TestNotificationServiceReportGeneration(unittest.TestCase):
 
         out = service.generate_single_stock_report(result)
 
-        self.assertIn("关联板块", out)
+        self.assertIn("กลุ่มที่เกี่ยวข้อง", out)
         self.assertIn("白酒Ⅲ / 白酒Ⅱ / 食品饮料 / 贵州板块 / 酿酒概念", out)
         self.assertNotIn("| 板块 | 类型 |", out)
         self.assertNotIn("| 白酒Ⅲ | N/A |", out)
@@ -2017,6 +2023,7 @@ class TestNotificationServiceReportGeneration(unittest.TestCase):
         mock_get_config.return_value = _make_config(report_renderer_enabled=False)
         service = NotificationService()
         result = AnalysisResult(
+            report_language="th",
             code="600519",
             name="贵州茅台",
             sentiment_score=72,
@@ -2041,9 +2048,9 @@ class TestNotificationServiceReportGeneration(unittest.TestCase):
 
         self.assertNotIn("板块表现", out)
         self.assertNotIn("板块涨跌幅", out)
-        self.assertIn("领涨", out)
+        self.assertIn("กลุ่มนำขึ้น", out)
         self.assertIn("+3.42%", out)
-        self.assertIn("- 白酒 (行业板块 领涨 +3.42%)", out)
+        self.assertIn("- 白酒 (กลุ่มอุตสาหกรรม กลุ่มนำขึ้น +3.42%)", out)
         self.assertIn("MSCI中国", out)
         self.assertIn("- MSCI中国", out)
         self.assertNotIn("- MSCI中国 (", out)
@@ -2077,10 +2084,10 @@ class TestNotificationServiceReportGeneration(unittest.TestCase):
 
         out = service.generate_single_stock_report(result)
 
-        self.assertIn("关联板块", out)
+        self.assertIn("กลุ่มที่เกี่ยวข้อง", out)
         self.assertIn("白酒", out)
         self.assertNotIn("| 白酒 | 行业 |", out)
-        self.assertNotIn("领涨", out)
+        self.assertNotIn("กลุ่มนำขึ้น", out)
         self.assertNotIn("板块涨跌幅", out)
 
     @mock.patch("src.notification.get_config")
@@ -2187,6 +2194,7 @@ class TestNotificationServiceReportGeneration(unittest.TestCase):
         mock_get_config.return_value = _make_config(report_renderer_enabled=False)
         service = NotificationService()
         result = AnalysisResult(
+            report_language="th",
             code="600519",
             name="贵州茅台",
             sentiment_score=72,
@@ -2208,11 +2216,11 @@ class TestNotificationServiceReportGeneration(unittest.TestCase):
 
         out = service.generate_dashboard_report([result], report_date="2026-05-20")
 
-        self.assertIn("财务摘要", out)
-        self.assertIn("股东回报", out)
-        self.assertIn("关联板块", out)
+        self.assertIn("สรุปการเงิน", out)
+        self.assertIn("ผลตอบแทนผู้ถือหุ้น", out)
+        self.assertIn("กลุ่มที่เกี่ยวข้อง", out)
         self.assertIn("白酒", out)
-        self.assertIn("领涨", out)
+        self.assertIn("กลุ่มนำขึ้น", out)
 
     @mock.patch("src.notification.get_config")
     def test_history_compare_context_uses_cache(self, mock_get_config: mock.MagicMock):

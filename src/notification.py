@@ -336,11 +336,11 @@ class NotificationService(
             self._context_channels.append("飞书会话")
 
         if not self._available_channels and not self._context_channels:
-            logger.warning("未配置有效的通知渠道，将不发送推送通知")
+            logger.warning("ไม่ได้ตั้งค่าช่องทางแจ้งเตือนที่เหมาะสม จะไม่ส่งการแจ้งเตือน")
         else:
             channel_names = [ChannelDetector.get_channel_name(ch) for ch in self._available_channels]
             channel_names.extend(self._context_channels)
-            logger.info(f"已配置 {len(channel_names)} 个通知渠道：{', '.join(channel_names)}")
+            logger.info(f"ตั้งค่าช่องทางแจ้งเตือนแล้ว {len(channel_names)} ช่องทาง: {', '.join(channel_names)}")
 
     def _normalize_report_type(self, report_type: Any) -> ReportType:
         """Normalize string/enum input into ReportType."""
@@ -600,7 +600,7 @@ class NotificationService(
 
         route_config = get_notification_route_config(route_type)
         if route_config is None:
-            logger.warning("未知通知路由类型 %s，沿用全部已配置渠道", route_type)
+            logger.warning("ประเภทเส้นทางการแจ้งเตือนที่ไม่ทราบ %s ใช้ช่องทางที่กำหนดไว้ทั้งหมด", route_type)
             return target_channels
 
         configured_route_channels = getattr(self._config, route_config["config_attr"], []) or []
@@ -610,7 +610,7 @@ class NotificationService(
         valid_channels, invalid_channels = split_notification_route_channels(configured_route_channels)
         if invalid_channels:
             logger.warning(
-                "%s 包含未知通知渠道，将忽略: %s",
+                "%s มีช่องทางแจ้งเตือนที่ไม่รู้จัก จะละเว้น: %s",
                 route_config["env_key"],
                 ", ".join(invalid_channels),
             )
@@ -749,12 +749,12 @@ class NotificationService(
         if session_webhook:
             try:
                 if self._send_dingtalk_chunked(session_webhook, content, max_bytes=20000):
-                    logger.info("已通过钉钉会话（Stream）推送报告")
+                    logger.info("ส่งรายงานผ่านช่องทางแชท DingTalk (Stream) แล้ว")
                     success = True
                 else:
-                    logger.error("钉钉会话（Stream）推送失败")
+                    logger.error("การส่งรายงานผ่านช่องทางแชท DingTalk (Stream) ล้มเหลว")
             except Exception as e:
-                logger.error(f"钉钉会话（Stream）推送异常: {e}")
+                logger.error(f"ข้อผิดพลาดในการส่งรายงานผ่านช่องทางแชท DingTalk (Stream): {e}")
 
         # 尝试飞书会话
         feishu_info = self._extract_feishu_reply_info()
@@ -762,24 +762,24 @@ class NotificationService(
             try:
                 sanitized_content = strip_hidden_markdown_metadata(content).strip()
                 if self._send_feishu_stream_reply(feishu_info["chat_id"], sanitized_content):
-                    logger.info("已通过飞书会话（Stream）推送报告")
+                    logger.info("ส่งรายงานผ่านช่องทางแชท Feishu (Stream) แล้ว")
                     success = True
                 else:
-                    logger.error("飞书会话（Stream）推送失败")
+                    logger.error("การส่งรายงานผ่านช่องทางแชท Feishu (Stream) ล้มเหลว")
             except Exception as e:
-                logger.error(f"飞书会话（Stream）推送异常: {e}")
+                logger.error(f"การแจ้งเตือนผ่านเฟิร์สบุ๊กสตรีมเกิดข้อผิดพลาด: {e}")
 
         # 尝试 Telegram 会话上下文（按来源 chat_id 回执）
         telegram_chat_id = self._extract_telegram_context_chat_id()
         if telegram_chat_id:
             try:
                 if self.send_to_telegram(content, chat_id=telegram_chat_id):
-                    logger.info("已通过 Telegram 上下文会话推送报告")
+                    logger.info("ส่งรายงานผ่านช่องทางแชท Telegram (Context) แล้ว")
                     success = True
                 else:
-                    logger.error("Telegram 上下文会话推送失败")
+                    logger.error("การส่งรายงานผ่านช่องทางแชท Telegram (Context) ล้มเหลว")
             except Exception as e:
-                logger.error(f"Telegram 上下文会话推送异常: {e}")
+                logger.error(f"ข้อผิดพลาดในการส่งรายงานผ่านช่องทางแชท Telegram (Context): {e}")
 
         return success
 
@@ -797,7 +797,7 @@ class NotificationService(
         try:
             from bot.platforms.feishu_stream import FeishuReplyClient, FEISHU_SDK_AVAILABLE
             if not FEISHU_SDK_AVAILABLE:
-                logger.warning("飞书 SDK 不可用，无法发送 Stream 回复")
+                logger.warning("SDK ของ Feishu ไม่สามารถใช้งานได้ จึงไม่สามารถส่งข้อความ Stream กลับไปได้")
                 return False
 
             from src.config import get_config
@@ -807,7 +807,7 @@ class NotificationService(
             app_secret = getattr(config, 'feishu_app_secret', None)
 
             if not app_id or not app_secret:
-                logger.warning("飞书 APP_ID 或 APP_SECRET 未配置")
+                logger.warning("ยังไม่ได้ตั้งค่า APP_ID หรือ APP_SECRET ของ Feishu")
                 return False
 
             # 创建回复客户端
@@ -824,10 +824,10 @@ class NotificationService(
             return reply_client.send_to_chat(chat_id, content)
 
         except ImportError as e:
-            logger.error(f"导入飞书 Stream 模块失败: {e}")
+            logger.error(f"การนำเข้าโมดูล Stream ของ Feishu ล้มเหลว: {e}")
             return False
         except Exception as e:
-            logger.error(f"飞书 Stream 回复异常: {e}")
+            logger.error(f"ข้อความตอบกลับ Stream จาก Feishu มีปัญหา: {e}")
             return False
 
     def _send_feishu_stream_chunked(
@@ -895,7 +895,7 @@ class NotificationService(
 
             if not reply_client.send_to_chat(chat_id, chunk):
                 success = False
-                logger.error(f"飞书 Stream 分块 {i+1}/{len(chunks)} 发送失败")
+                logger.error(f"การส่งชิ้นส่วน Stream ของ Feish-Book {i+1}/{len(chunks)} เกิดข้อผิดพลาด")
 
         return success
 
@@ -2605,7 +2605,7 @@ class NotificationService(
             return False
         if channel == NotificationChannel.WECHAT and len(image_bytes) > WECHAT_IMAGE_MAX_BYTES:
             logger.warning(
-                "企业微信图片超限 (%d bytes)，回退为 Markdown 文本发送",
+                "รูปภาพ WeCom เกินขีดจำกัด (%d bytes) ส่ง Markdown ข้อความแทน",
                 len(image_bytes),
             )
             return False
@@ -2679,7 +2679,7 @@ class NotificationService(
             return self.send_to_slack(content)
         if channel == NotificationChannel.ASTRBOT:
             return self.send_to_astrbot(sanitized_content)
-        logger.warning(f"不支持的通知渠道: {channel}")
+        logger.warning(f"ช่องทางแจ้งเตือนที่ไม่รองรับ: {channel}")
         return False
 
     def send_with_results(
@@ -2720,14 +2720,14 @@ class NotificationService(
         context_success = self.send_to_context(content)
         if not self.should_broadcast_static_channels():
             if context_success:
-                logger.info("已通过上下文会话完成推送，跳过静态通知渠道")
+                logger.info("การส่งข้อความเสร็จสิ้นผ่านบริบทการสนทนาแล้ว จึงข้ามช่องทางแจ้งเตือนแบบคงที่")
                 return NotificationDispatchResult(
                     dispatched=True,
                     success=True,
                     status="sent",
                     channel_results=[ChannelAttemptResult(channel="__context__", success=True)],
                 )
-            logger.warning("交互式上下文推送失败，已跳过静态通知渠道")
+            logger.warning("การส่งข้อความแบบโต้ตอบผ่านบริบทล้มเหลวแล้ว จึงข้ามช่องทางแจ้งเตือนแบบคงที่")
             return NotificationDispatchResult(
                 dispatched=True,
                 success=False,
@@ -2745,14 +2745,14 @@ class NotificationService(
 
         if not self._available_channels:
             if context_success:
-                logger.info("已通过消息上下文渠道完成推送（无其他通知渠道）")
+                logger.info("การส่งข้อความเสร็จสิ้นผ่านช่องทางบริบทข้อความ (ไม่มีช่องทางแจ้งเตือนอื่น)")
                 return NotificationDispatchResult(
                     dispatched=True,
                     success=True,
                     status="sent",
                     channel_results=[ChannelAttemptResult(channel="__context__", success=True)],
                 )
-            logger.warning("通知服务不可用，跳过推送")
+            logger.warning("บริการแจ้งเตือนไม่สามารถใช้งานได้ จึงข้ามการส่งข้อความ")
             return NotificationDispatchResult(
                 dispatched=False,
                 success=False,
@@ -2763,14 +2763,14 @@ class NotificationService(
         target_channels = self.get_channels_for_route(route_type)
         if not target_channels:
             if context_success:
-                logger.info("已通过消息上下文渠道完成推送（路由后无其他通知渠道）")
+                logger.info("ส่งข้อความผ่านช่องทางบริบทเสร็จสิ้นแล้ว (หลังการจัดส่งไม่มีช่องทางอื่นที่ต้องแจ้งเตือน)")
                 return NotificationDispatchResult(
                     dispatched=True,
                     success=True,
                     status="sent",
                     channel_results=[ChannelAttemptResult(channel="__context__", success=True)],
                 )
-            logger.warning("通知路由 %s 未命中任何已配置渠道，跳过静态通知渠道", route_type)
+            logger.warning("การจัดส่งข้อมูลไปยังช่องทาง %s ไม่ตรงกับช่องทางที่ตั้งค่าไว้ จึงข้ามการแจ้งเตือนแบบสถิติ", route_type)
             return NotificationDispatchResult(
                 dispatched=False,
                 success=False,
@@ -2813,7 +2813,7 @@ class NotificationService(
                 structured_payload=structured_payload,
             )
             if image_bytes:
-                logger.info("Markdown 已转换为图片，将向 %s 发送图片",
+                logger.info("Markdown ถูกแปลงเป็นรูปภาพแล้ว จะส่งไปยัง %s",
                             [ch.value for ch in channels_needing_image])
             elif channels_needing_image:
                 try:
@@ -2826,12 +2826,12 @@ class NotificationService(
                     else "wkhtmltopdf (apt install wkhtmltopdf / brew install wkhtmltopdf)"
                 )
                 logger.warning(
-                    "Markdown 转图片失败，将回退为文本发送。请检查 MARKDOWN_TO_IMAGE_CHANNELS 配置并安装 %s",
+                    "แปลง Markdown เป็นรูปภาพไม่สำเร็จ จะส่งข้อความแทน กรุณาตรวจสอบการตั้งค่า MARKDOWN_TO_IMAGE_CHANNELS และติดตั้ง %s",
                     hint,
                 )
 
         channel_names = ', '.join(ChannelDetector.get_channel_name(ch) for ch in target_channels)
-        logger.info(f"正在向 {len(target_channels)} 个渠道发送通知：{channel_names}")
+        logger.info(f"กำลังส่งการแจ้งเตือนไปยังช่องทาง {len(target_channels)} ช่องทาง: {channel_names}")
 
         success_count = 0
         fail_count = 0
@@ -2866,7 +2866,7 @@ class NotificationService(
                 )
 
             except Exception as e:
-                logger.error(f"{channel_name} 发送失败: {e}")
+                logger.error(f"{channel_name} ส่งข้อความล้มเหลว: {e}")
                 fail_count += 1
                 channel_results.append(
                     ChannelAttemptResult(
@@ -2879,7 +2879,7 @@ class NotificationService(
                     )
                 )
 
-        logger.info(f"通知发送完成：成功 {success_count} 个，失败 {fail_count} 个")
+        logger.info(f"การส่งการแจ้งเตือนเสร็จสิ้น: เรียบร้อย {success_count} รายการ, ล้มเหลว {fail_count} รายการ")
         if success_count > 0:
             self.record_noise_control(noise_decision)
         else:
@@ -2959,7 +2959,7 @@ class NotificationService(
         with open(filepath, 'w', encoding='utf-8') as f:
             f.write(content)
 
-        logger.info(f"日报已保存到: {filepath}")
+        logger.info(f"รายงานรายวันถูกบันทึกไว้ที่: {filepath}")
         return str(filepath)
 
     def save_and_send_feishu_file(
@@ -2984,7 +2984,7 @@ class NotificationService(
             strip_hidden_markdown_metadata(content).strip(),
             filename=filename,
         )
-        logger.info("将上传文件到飞书: %s", filepath)
+        logger.info("จะอัปโหลดไฟล์ไปยังเฟิร์สบุ๊ก: %s", filepath)
         return self.send_feishu_file(filepath)
 
 
@@ -3131,25 +3131,25 @@ if __name__ == "__main__":
     service = NotificationService()
 
     # 显示检测到的渠道
-    print("=== 通知渠道检测 ===")
-    print(f"当前渠道: {service.get_channel_names()}")
-    print(f"渠道列表: {service.get_available_channels()}")
-    print(f"服务可用: {service.is_available()}")
+    print("=== การตรวจสอบช่องทางแจ้งเตือน ===")
+    print(f"ช่องทางปัจจุบัน: {service.get_channel_names()}")
+    print(f"รายการช่องทาง: {service.get_available_channels()}")
+    print(f"บริการใช้งานได้: {service.is_available()}")
 
     # 生成日报
-    print("\n=== 生成日报测试 ===")
+    print("\\n=== การทดสอบสร้างรายงานรายวัน ===")
     report = service.generate_daily_report(test_results)
     print(report)
 
     # 保存到文件
-    print("\n=== 保存日报 ===")
+    print("\\n=== การบันทึกรายงานรายวัน ===")
     filepath = service.save_report_to_file(report)
-    print(f"保存成功: {filepath}")
+    print(f"บันทึกสำเร็จ: {filepath}")
 
     # 推送测试
     if service.is_available():
-        print(f"\n=== 推送测试（{service.get_channel_names()}）===")
+        print(f"\\n=== การทดสอบส่งข้อความ ( {service.get_channel_names()} ) ===")
         success = service.send(report)
-        print(f"推送结果: {'成功' if success else '失败'}")
+        print(f"ผลการส่ง: {'สำเร็จ' if success else 'ล้มเหลว'}")
     else:
-        print("\n通知渠道未配置，跳过推送测试")
+        print("\\nช่องทางแจ้งเตือนยังไม่ตั้งค่า ข้ามการทดสอบการส่งข้อความ")

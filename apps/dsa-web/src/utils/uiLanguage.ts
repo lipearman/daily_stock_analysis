@@ -3,7 +3,7 @@ import type { UiLanguage } from '../i18n/uiText';
 export const UI_LANGUAGE_STORAGE_KEY = 'dsa.uiLanguage';
 
 export function normalizeUiLanguage(value?: string | null): UiLanguage | null {
-  if (value === 'zh' || value === 'en') {
+  if (value === 'en' || value === 'th') {
     return value;
   }
   return null;
@@ -53,15 +53,13 @@ function getBrowserUiLanguage(navigatorLike?: Pick<Navigator, 'language' | 'lang
 
   for (const candidate of languageCandidates) {
     const normalized = candidate.toLowerCase();
-    if (normalized.startsWith('zh')) {
-      return 'zh';
-    }
     if (normalized.startsWith('en')) {
       return 'en';
     }
   }
 
-  return 'zh';
+  // Thai is the default UI language for every other browser language.
+  return 'th';
 }
 
 export function resolveInitialUiLanguage({
@@ -81,7 +79,7 @@ export function resolveInitialUiLanguage({
 
 export function getRuntimeInitialLanguage(): UiLanguage {
   if (typeof window === 'undefined') {
-    return 'zh';
+    return 'th';
   }
 
   return resolveInitialUiLanguage({

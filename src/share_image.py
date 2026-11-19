@@ -1006,11 +1006,12 @@ def _stock_data(markdown_text: str, generated_on: date) -> StockPoster:
                 name = _plain(first_title[: match.start()] if match else first_title)
             name = re.sub(r"(?:分析报告|analysis report)$", "", name, flags=re.IGNORECASE).strip()
 
-    score_match = re.search(r"(?:评分|score)\s*[:：]?\s*\*{0,2}(\d{1,3})", markdown_text, re.IGNORECASE)
-    core = _section(markdown_text, "核心结论", "core conclusion", "核心判断")
+    score_match = re.search(r"(?:评分|score|คะแนน)\s*[:：]?\s*\*{0,2}(\d{1,3})", markdown_text, re.IGNORECASE)
+    core = _section(markdown_text, "核心结论", "core conclusion", "核心判断", "บทสรุปหลัก")
     action_terms = (
         "买入", "加仓", "持有", "观望", "减仓", "卖出", "回避", "警戒",
         "buy", "add", "hold", "watch", "reduce", "sell", "avoid", "alert",
+        "ซื้อ", "ถือ", "รอจังหวะ", "เฝ้าดู", "ลดสัดส่วน", "ขาย",
     )
     action_value = next(
         (
@@ -1028,12 +1029,12 @@ def _stock_data(markdown_text: str, generated_on: date) -> StockPoster:
         "",
     )
     quote_trend_match = re.search(
-        r"^\s*>\s+.*?(?:评分|score)\s*[:：]?\s*\*{0,2}\d{1,3}\*{0,2}\s*\|\s*([^\n|]+)",
+        r"^\s*>\s+.*?(?:评分|score|คะแนน)\s*[:：]?\s*\*{0,2}\d{1,3}\*{0,2}\s*\|\s*([^\n|]+)",
         markdown_text,
         re.IGNORECASE | re.MULTILINE,
     )
     trend_match = re.search(r"\*\*[^\n]+?\*\*\s*\|\s*([^\n]+)", core)
-    conclusion = _labeled_value(core, "一句话决策", "One-line Decision", limit=110)
+    conclusion = _labeled_value(core, "一句话决策", "One-line Decision", "ตัดสินใจในหนึ่งบรรทัด", limit=110)
     if not conclusion:
         match = re.search(r"\*\*[^\n]+?\*\*\s*[:：]\s*(.+)", core)
         conclusion = _clean_value(match.group(1), limit=110) if match else ""
@@ -1053,7 +1054,7 @@ def _stock_data(markdown_text: str, generated_on: date) -> StockPoster:
         conclusion=conclusion,
     )
 
-    snapshot_section = _section(markdown_text, "市场快照", "当日行情", "market snapshot", "시세 스냅샷")
+    snapshot_section = _section(markdown_text, "市场快照", "当日行情", "market snapshot", "시세 스냅샷", "ภาพตลาดวันนี้")
     snapshot_map: dict[str, str] = {}
     for table in _parse_tables(snapshot_section):
         if len(table.rows) == 1:
@@ -1061,12 +1062,12 @@ def _stock_data(markdown_text: str, generated_on: date) -> StockPoster:
                 {_plain(header).lower(): _clean_value(value) for header, value in zip(table.headers, table.rows[0])}
             )
         snapshot_map.update(_table_map(table))
-    current = _mapped_value(snapshot_map, "当前价", "current price", "price") or _mapped_value(
-        snapshot_map, "收盘价", "收盘", "close"
+    current = _mapped_value(snapshot_map, "当前价", "current price", "price", "ราคาปัจจุบัน") or _mapped_value(
+        snapshot_map, "收盘价", "收盘", "close", "ราคาปิด"
     )
-    change = _mapped_value(snapshot_map, "涨跌幅", "change %", "change pct")
-    ratio = _mapped_value(snapshot_map, "量比", "volume ratio")
-    turnover = _mapped_value(snapshot_map, "换手率", "turnover rate")
+    change = _mapped_value(snapshot_map, "涨跌幅", "change %", "change pct", "%เปลี่ยนแปลง")
+    ratio = _mapped_value(snapshot_map, "量比", "volume ratio", "อัตราวอลุ่ม")
+    turnover = _mapped_value(snapshot_map, "换手率", "turnover rate", "อัตราหมุนเวียน")
     for label, value, tone in (
         ("当前/收盘", current, "primary"),
         ("涨跌幅", change, "up" if not change.startswith("-") else "down"),
@@ -1075,17 +1076,17 @@ def _stock_data(markdown_text: str, generated_on: date) -> StockPoster:
     ):
         if value:
             poster.snapshot.append((label, value, tone))
-    poster.data_source = _mapped_value(snapshot_map, "数据源", "行情来源", "source")
+    poster.data_source = _mapped_value(snapshot_map, "数据源", "行情来源", "source", "แหล่งข้อมูลราคา")
 
-    data_section = _section(markdown_text, "数据透视", "data view", "技术面", "technicals")
+    data_section = _section(markdown_text, "数据透视", "data view", "技术面", "technicals", "มุมมองข้อมูล")
     data_map: dict[str, str] = {}
     for table in _parse_tables(data_section):
         data_map.update(_table_map(table))
-    ma = _labeled_value(data_section, "均线排列", "MA Alignment", limit=42)
+    ma = _labeled_value(data_section, "均线排列", "MA Alignment", "การจัดเรียง MA", limit=42)
     ma = next((label for label in ("多头排列", "空头排列") if label in ma), _compact_text(ma, limit=16))
-    volume_ratio = _labeled_line(data_section, "量能", "成交量", "Volume", limit=64)
-    support = _mapped_value(data_map, "支撑位", "support")
-    resistance = _mapped_value(data_map, "压力位", "resistance")
+    volume_ratio = _labeled_line(data_section, "量能", "成交量", "Volume", "ปริมาณซื้อขาย", limit=64)
+    support = _mapped_value(data_map, "支撑位", "support", "แนวรับ")
+    resistance = _mapped_value(data_map, "压力位", "resistance", "แนวต้าน")
     for label, value, tone in (
         ("均线", ma, "positive" if "多头" in ma.lower() or "bull" in ma.lower() else "neutral"),
         ("量能", volume_ratio, "neutral"),
@@ -1095,7 +1096,7 @@ def _stock_data(markdown_text: str, generated_on: date) -> StockPoster:
         if value:
             poster.technical.append((label, value, tone))
 
-    battle = _section(markdown_text, "作战计划", "battle plan", "操作计划", "操作点位", "action levels")
+    battle = _section(markdown_text, "作战计划", "battle plan", "操作计划", "操作点位", "action levels", "แผนปฏิบัติการ")
     sniper_table = _find_table(battle, "理想") or _find_table(battle, "ideal")
     sniper_values: dict[str, str] = {}
     if sniper_table:
@@ -1123,7 +1124,7 @@ def _stock_data(markdown_text: str, generated_on: date) -> StockPoster:
         if value:
             poster.sniper.append(("确认买入" if display == "次优买入" else display, value, tone))
 
-    info = _section(markdown_text, "重要信息", "key updates", "消息面", "news flow")
+    info = _section(markdown_text, "重要信息", "key updates", "消息面", "news flow", "ข้อมูลสำคัญด่วน")
     poster.catalysts = [
         _compact_text(item, limit=36)
         for item in _list_after_label(info, "利好催化", "positive catalysts")[:2]
@@ -1136,7 +1137,7 @@ def _stock_data(markdown_text: str, generated_on: date) -> StockPoster:
         poster.risks = [
             _compact_text(item, limit=36)
             for item in _section_items(
-                _section(markdown_text, "风险提示", "risk warning", "risk alerts"), limit=2
+                _section(markdown_text, "风险提示", "risk warning", "risk alerts", "เตือนความเสี่ยง"), limit=2
             )
         ]
 
@@ -1145,7 +1146,7 @@ def _stock_data(markdown_text: str, generated_on: date) -> StockPoster:
         position_map = _table_map(position_table)
         poster.no_position = _mapped_value(position_map, "空仓", "no position")
         poster.has_position = _mapped_value(position_map, "持仓者", "holding")
-    position_section = _section(markdown_text, "持仓建议", "position advice")
+    position_section = _section(markdown_text, "持仓建议", "position advice", "คำแนะนำสถานะ")
     if not poster.no_position:
         poster.no_position = _labeled_value(position_section, "空仓者", "no position", limit=90)
     if not poster.has_position:
@@ -1802,9 +1803,9 @@ def _tone_for_score(score: str) -> str:
 
 def _tone_for_trend(trend: str) -> str:
     normalized = (trend or "").lower()
-    if any(term in normalized for term in ("看多", "bull", "uptrend")):
+    if any(term in normalized for term in ("看多", "bull", "uptrend", "ขาขึ้น", "ขึ้นต่อเนื่อง")):
         return "positive"
-    if any(term in normalized for term in ("看空", "bear", "downtrend")):
+    if any(term in normalized for term in ("看空", "bear", "downtrend", "ขาลง", "ลงต่อเนื่อง")):
         return "negative"
     return "primary"
 

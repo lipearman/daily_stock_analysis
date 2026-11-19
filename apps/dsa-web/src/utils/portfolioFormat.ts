@@ -54,33 +54,33 @@ export function formatPositionMoney(value: number, row: PortfolioPositionItem): 
 }
 
 export function getPositionPriceLabel(row: PortfolioPositionItem): string {
-  if (!hasPositionPrice(row)) return '缺价';
+  if (!hasPositionPrice(row)) return 'ราคาขาดหายไป';
   if (row.priceSource === 'realtime_quote') {
-    return row.priceProvider ? `实时价 · ${row.priceProvider}` : '实时价';
+    return row.priceProvider ? `实时价 · ${row.priceProvider}` : 'ราคาที่แท้จริง';
   }
   if (row.priceSource === 'history_close') {
-    return row.priceStale && row.priceDate ? `收盘价 · ${row.priceDate}` : '收盘价';
+    return row.priceStale && row.priceDate ? `收盘价 · ${row.priceDate}` : 'ราคาปิด';
   }
-  return row.priceSource || '未知来源';
+  return row.priceSource || 'แหล่งที่มาไม่ทราบ';
 }
 
 export function formatSideLabel(value: PortfolioSide): string {
-  return value === 'buy' ? '买入' : '卖出';
+  return value === 'buy' ? 'ซื้อ' : 'ขาย';
 }
 
 export function formatCashDirectionLabel(value: PortfolioCashDirection): string {
-  return value === 'in' ? '流入' : '流出';
+  return value === 'in' ? 'ไหลเข้า' : 'การไหลออก';
 }
 
 export function formatCorporateActionLabel(value: PortfolioCorporateActionType): string {
-  return value === 'cash_dividend' ? '现金分红' : '拆并股调整';
+  return value === 'cash_dividend' ? 'เงินปันผล' : 'การปรับสถานะหุ้น';
 }
 
 export function formatBrokerLabel(value: string, displayName?: string): string {
   if (displayName && displayName.trim()) return `${value}（${displayName.trim()}）`;
   if (value === 'huatai') return 'huatai（华泰）';
   if (value === 'citic') return 'citic（中信）';
-  if (value === 'cmb') return 'cmb（招商）';
+  if (value === 'cmb') return 'cmb (ซานจาง)';
   return value;
 }
 
@@ -88,14 +88,14 @@ export function buildFxRefreshFeedback(data: PortfolioFxRefreshResponse): FxRefr
   if (data.refreshEnabled === false) {
     return {
       tone: 'neutral',
-      text: '汇率在线刷新已被禁用。',
+      text: 'การรีเฟรชอัตราแลกเปลี่ยนออนไลน์ถูกปิดใช้งานแล้ว',
     };
   }
 
   if (data.pairCount === 0) {
     return {
       tone: 'neutral',
-      text: '当前范围无可刷新的汇率对。',
+      text: 'ไม่มีคู่อัตราแลกเปลี่ยนที่สามารถรีเฟรชได้ในช่วงนี้',
     };
   }
 

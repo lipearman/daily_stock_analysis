@@ -225,13 +225,13 @@ def _try_load_disk_cache_locked() -> None:
             if name_map:
                 _akshare_cache = (float(ts), name_map)
                 logger.info(
-                    "[NameResolver] AkShare 磁盘缓存已加载: "
-                    f"{len(name_map)} 条, age={time.time() - float(ts):.0f}s"
+                    "[NameResolver] โหลดแคชดิสก์ AkShare แล้ว: "
+                    f"{len(name_map)} รายการ, อายุ={time.time() - float(ts):.0f}s"
                 )
     except FileNotFoundError:
         pass
     except Exception as e:
-        logger.debug(f"[NameResolver] AkShare 磁盘缓存不可用，忽略: {e}")
+        logger.debug(f"[NameResolver] AkShare ไม่สามารถใช้แคชดิสก์ได้ จึงข้าม: {e}")
 
 
 def _persist_akshare_map(name_map: Dict[str, str]) -> None:
@@ -250,7 +250,7 @@ def _persist_akshare_map(name_map: Dict[str, str]) -> None:
         )
         os.replace(tmp, path)
     except Exception as e:
-        logger.debug(f"[NameResolver] AkShare 磁盘缓存写入失败（非致命）: {e}")
+        logger.debug(f"[NameResolver] การเขียนแคชดิสก์ของ AkShare ล้มเหลว (ไม่ร้ายแรง): {e}")
 
 
 def _spawn_refresh_locked() -> concurrent.futures.Future:
@@ -308,7 +308,7 @@ def _spawn_refresh_locked() -> concurrent.futures.Future:
         # 线程启动失败（如进程线程数耗尽）：归还句柄并唤醒等待者
         _akshare_inflight = None
         fut.set_result(None)
-        logger.warning(f"[NameResolver] AkShare 刷新线程启动失败: {e}")
+        logger.warning(f"[NameResolver] การเริ่มต้นเส้นทางอัปเดต AkShare ล้มเหลว: {e}")
     return fut
 
 
@@ -346,13 +346,13 @@ def _get_akshare_name_to_code() -> Optional[Dict[str, str]]:
         # 正常情况下不可能到达：拉取被封顶、worker 在 finally 中必然
         # resolve。到达即 worker 违约（如子进程 kill 本身挂死）。
         logger.warning(
-            "[NameResolver] 在途 AkShare 拉取超过死线未 resolve"
-            f"（{_AKSHARE_WAIT_COLD_START:g}s），本轮退化为本地库解析"
+            "[NameResolver] การดึง AkShare ที่กำลังทำเกินเส้นตายโดยยังไม่ resolve"
+            f"({_AKSHARE_WAIT_COLD_START:g}s) รอบนี้จะใช้การแก้จากฐานข้อมูลท้องถิ่นแทน"
         )
         return None
     except Exception as e:
         # worker 以 result=None 表达失败，这里只可能是 Future 内部异常
-        logger.warning(f"[NameResolver] 等待在途 AkShare 拉取异常: {e}")
+        logger.warning(f"[NameResolver] เกิดข้อผิดพลาดขณะรอการดึงข้อมูลจาก AkShare:")
         return None
     return result
 
@@ -369,7 +369,7 @@ def warmup_akshare_cache() -> None:
         try:
             _get_akshare_name_to_code()
         except Exception as e:  # noqa: BLE001 - 预热必须 best-effort
-            logger.warning(f"[NameResolver] AkShare 预热失败: {e}")
+            logger.warning(f"[NameResolver] การเตรียมความพร้อมของ AkShare ล้มเหลว: {e}")
 
     threading.Thread(target=_warm, name="akshare-warmup", daemon=True).start()
 
@@ -767,7 +767,7 @@ def resolve_name_to_code(name: str) -> Optional[str]:
     if s in local_reverse:
         return local_reverse[s]
     if s in _LOCAL_AMBIGUOUS_NAMES:
-        logger.debug(f"[NameResolver] 命中本地歧义名称，快速返回 None: {s}")
+        logger.debug(f"[NameResolver] พบชื่อที่คลุมเครือในระบบภายใน ตอบกลับ None เร็วๆ: {s}")
         return None
 
     # 3. Pinyin match (exact)
@@ -793,7 +793,7 @@ def resolve_name_to_code(name: str) -> Optional[str]:
     # 4. AkShare fallback
     akshare_map = _get_akshare_name_to_code()
     if akshare_map and s in akshare_map:
-        logger.debug(f"[NameResolver] 命中 AkShare 映射: {s} -> {akshare_map[s]}")
+        logger.debug(f"[NameResolver] พบการแมป AkShare: {s} -> {akshare_map[s]}")
         return akshare_map[s]
 
     # 5. Fuzzy match (local + akshare, local takes precedence)
@@ -807,7 +807,7 @@ def resolve_name_to_code(name: str) -> Optional[str]:
         names = list(all_name_to_code.keys())
         matches = difflib.get_close_matches(s, names, n=1, cutoff=0.8)
         if matches:
-            logger.debug(f"[NameResolver] 命中模糊匹配: input={s}, matched={matches[0]}")
+            logger.debug(f"[NameResolver] พบการจับคู่ที่คลุมเครือ: input={s}, matched={matches[0]}")
             return all_name_to_code[matches[0]]
 
         # Conservative fallback for one-character typo in medium/long names.
@@ -815,8 +815,8 @@ def resolve_name_to_code(name: str) -> Optional[str]:
         # such as "贵州茅苔" -> "贵州茅台".
         typo_matches = difflib.get_close_matches(s, names, n=1, cutoff=0.7)
         if typo_matches and _is_single_char_typo(s, typo_matches[0]):
-            logger.debug(f"[NameResolver] 命中单字误写兜底: input={s}, matched={typo_matches[0]}")
+            logger.debug(f"[NameResolver] พบการแก้ไขคำผิดตัวเดียว: input={s}, matched={typo_matches[0]}")
             return all_name_to_code[typo_matches[0]]
 
-    logger.debug(f"[NameResolver] 解析失败: {s}")
+    logger.debug(f"[NameResolver] การแยกข้อมูลล้มเหลว: {s}")
     return None

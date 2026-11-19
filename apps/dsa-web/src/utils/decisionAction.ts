@@ -14,14 +14,14 @@ export type DecisionActionLabelTextKey =
 export type DecisionActionLabelTranslator = (key: DecisionActionLabelTextKey) => string;
 
 export const DEFAULT_DECISION_ACTION_LABELS: DecisionActionLabelMap = {
-  buy: '买入',
-  add: '加仓',
-  hold: '持有',
-  reduce: '减仓',
-  sell: '卖出',
-  watch: '观望',
-  avoid: '回避',
-  alert: '预警',
+  buy: 'ซื้อ',
+  add: 'เพิ่มสถานะ',
+  hold: 'ถือครอง',
+  reduce: 'ลดตำแหน่ง',
+  sell: 'ขาย',
+  watch: 'คอยดู',
+  avoid: 'หลีกเลี่ยง',
+  alert: 'เตือนล่วงหน้า',
 };
 
 const resolveActionLabels = (labels?: Partial<DecisionActionLabelMap>): DecisionActionLabelMap => ({
@@ -102,26 +102,26 @@ export const getLegacyDecisionAction = (advice?: string | null): DecisionAction 
 
   if (
     includesAny(normalized, [
-      '暂不买入',
-      '不要买入',
-      '不宜买入',
-      '先不买入',
-      '无需买入',
-      '无须买入',
-      '不建议建仓',
-      '暂不建仓',
-      '不要建仓',
-      '不宜建仓',
-      '先不建仓',
-      '无需建仓',
-      '无须建仓',
-      '不建议布局',
-      '暂不布局',
-      '不要布局',
-      '不宜布局',
-      '先不布局',
-      '无需布局',
-      '无须布局',
+      'ยังไม่ซื้อ',
+      'อย่าซื้อ',
+      'ไม่ควรซื้อ',
+      'อย่าซื้อก่อน',
+      'ไม่จำเป็นต้องซื้อ',
+      'ไม่จำเป็นต้องซื้อ',
+      'ไม่แนะนำให้เปิดตำแหน่ง',
+      'ยังไม่เปิดตำแหน่ง',
+      'อย่าเปิดตำแหน่ง',
+      'ไม่ควรเปิดตำแหน่ง',
+      'อย่าเปิดตำแหน่งก่อน',
+      'ไม่จำเป็นต้องเปิดตำแหน่ง',
+      'ไม่จำเป็นต้องเปิดตำแหน่ง',
+      'ไม่แนะนำให้วางแผน',
+      'ยังไม่วางแผน',
+      'ไม่ควรวางแผน',
+      'ไม่เหมาะสมที่จะวางแผน',
+      'ควรหยุดวางแผนก่อน',
+      'ไม่จำเป็นต้องวางแผน',
+      'ไม่จำเป็นต้องวางแผน',
     ]) ||
     matchesEnglishNegatedAction(lower, ['buy'])
   ) {
@@ -129,36 +129,36 @@ export const getLegacyDecisionAction = (advice?: string | null): DecisionAction 
   }
   if (
     includesAny(normalized, [
-      '不建议加仓',
-      '无需加仓',
-      '无须加仓',
-      '不要加仓',
-      '不宜加仓',
-      '暂不加仓',
-      '不建议增持',
-      '无需增持',
-      '无须增持',
-      '不要增持',
-      '不宜增持',
-      '暂不增持',
-      '不建议卖出',
-      '无需卖出',
-      '无须卖出',
-      '不要卖出',
-      '不宜卖出',
-      '暂不卖出',
-      '不建议减仓',
-      '无需减仓',
-      '无须减仓',
-      '不要减仓',
-      '不宜减仓',
-      '暂不减仓',
-      '不建议清仓',
-      '无需清仓',
-      '无须清仓',
-      '不要清仓',
-      '不宜清仓',
-      '暂不清仓',
+      'ไม่แนะนำให้เพิ่มตำแหน่ง',
+      'ไม่จำเป็นต้องเพิ่มตำแหน่ง',
+      'ไม่จำเป็นต้องเพิ่มตำแหน่ง',
+      'ไม่ควรเพิ่มตำแหน่ง',
+      'ไม่เหมาะสมที่จะเพิ่มตำแหน่ง',
+      'ควรหยุดเพิ่มตำแหน่งก่อน',
+      'ไม่แนะนำให้เพิ่มสินทรัพย์',
+      'ไม่จำเป็นต้องเพิ่มสินทรัพย์',
+      'ไม่จำเป็นต้องเพิ่มสินทรัพย์',
+      'ไม่ควรเพิ่มสินทรัพย์',
+      'ไม่เหมาะสมที่จะเพิ่มสินทรัพย์',
+      'ควรหยุดเพิ่มสินทรัพย์ก่อน',
+      'ไม่แนะนำให้ขาย',
+      'ไม่จำเป็นต้องขาย',
+      'ไม่จำเป็นต้องขาย',
+      'ไม่ควรขาย',
+      'ไม่เหมาะสมที่จะขาย',
+      'ควรหยุดขายก่อน',
+      'ไม่แนะนำให้ลดตำแหน่ง',
+      'ไม่จำเป็นต้องลดตำแหน่ง',
+      'ไม่จำเป็นต้องลดตำแหน่ง',
+      'ไม่ควรลดตำแหน่ง',
+      'ไม่เหมาะสมที่จะลดตำแหน่ง',
+      'ควรหยุดลดตำแหน่งก่อน',
+      'ไม่แนะนำให้ขายทั้งหมด',
+      'ไม่จำเป็นต้องขายทั้งหมด',
+      'ไม่จำเป็นต้องขายทั้งหมด',
+      'ไม่ควรขายทั้งหมด',
+      'ไม่เหมาะสมที่จะขายทั้งหมด',
+      'ควรหยุดขายทั้งหมดก่อน',
     ]) ||
     hasEnglishAvoidedHoldAction(lower) ||
     matchesEnglishNegatedAction(lower, ['add', 'accumulate', 'sell', 'reduce', 'trim'])
@@ -167,18 +167,18 @@ export const getLegacyDecisionAction = (advice?: string | null): DecisionAction 
   }
   const guardMatches = new Set<DecisionAction>();
   if (
-    normalized.includes('不建议买入') ||
-    normalized.includes('避免买入') ||
-    normalized.includes('回避') ||
-    normalized.includes('规避') ||
+    normalized.includes('ไม่แนะนำให้ซื้อ') ||
+    normalized.includes('ควรหลีกเลี่ยงการซื้อ') ||
+    normalized.includes('หลีกเลี่ยง') ||
+    normalized.includes('หลีกเลี่ยง') ||
     matchesEnglishTerm(lower, ['avoid'])
   ) {
     guardMatches.add('avoid');
   }
   if (
-    normalized.includes('风险预警') ||
-    normalized.includes('触发告警') ||
-    normalized.includes('警惕') ||
+    normalized.includes('คำเตือนเกี่ยวกับความเสี่ยง') ||
+    normalized.includes('การแจ้งเตือน') ||
+    normalized.includes('ระวัง') ||
     lower.includes('risk alert') ||
     matchesEnglishTerm(lower, ['alert'])
   ) {
@@ -192,22 +192,22 @@ export const getLegacyDecisionAction = (advice?: string | null): DecisionAction 
   }
 
   const matches = new Set<DecisionAction>();
-  if (normalized.includes('加仓') || normalized.includes('增持') || matchesEnglishTerm(lower, ['add', 'accumulate'])) {
+  if (normalized.includes('เพิ่มสถานะ') || normalized.includes('เพิ่มสินทรัพย์') || matchesEnglishTerm(lower, ['add', 'accumulate'])) {
     matches.add('add');
   }
-  if (normalized.includes('减仓') || matchesEnglishTerm(lower, ['reduce', 'trim'])) {
+  if (normalized.includes('ลดตำแหน่ง') || matchesEnglishTerm(lower, ['reduce', 'trim'])) {
     matches.add('reduce');
   }
-  if (normalized.includes('强烈卖出') || normalized.includes('卖出') || normalized.includes('清仓') || matchesEnglishTerm(lower, ['sell'])) {
+  if (normalized.includes('ขายทันที') || normalized.includes('ขาย') || normalized.includes('ขายทั้งหมด') || matchesEnglishTerm(lower, ['sell'])) {
     matches.add('sell');
   }
-  if (normalized.includes('持有') || normalized.includes('洗盘观察') || matchesEnglishTerm(lower, ['hold'])) {
+  if (normalized.includes('ถือครอง') || normalized.includes('ติดตามการซื้อขาย') || matchesEnglishTerm(lower, ['hold'])) {
     matches.add('hold');
   }
-  if (normalized.includes('观望') || normalized.includes('等待') || matchesEnglishTerm(lower, ['watch', 'wait'])) {
+  if (normalized.includes('คอยดู') || normalized.includes('รอคอย') || matchesEnglishTerm(lower, ['watch', 'wait'])) {
     matches.add('watch');
   }
-  if (normalized.includes('强烈买入') || normalized.includes('买入') || normalized.includes('布局') || normalized.includes('建仓') || matchesEnglishTerm(lower, ['buy'])) {
+  if (normalized.includes('ซื้อทันที') || normalized.includes('ซื้อ') || normalized.includes('วางแผน') || normalized.includes('สร้างตำแหน่ง') || matchesEnglishTerm(lower, ['buy'])) {
     matches.add('buy');
   }
 
@@ -221,7 +221,7 @@ export const getDecisionActionLabel = (
   action?: DecisionAction | null,
   actionLabel?: string | null,
   legacyAdvice?: string | null,
-  emptyLabel: string | null = '建议',
+  emptyLabel: string | null = 'แนะนำ',
   labels?: Partial<DecisionActionLabelMap>,
 ): string | null => {
   const actionLabels = resolveActionLabels(labels);
@@ -241,9 +241,9 @@ export const getDecisionActionTone = (
   const label = actionLabel?.trim() || '';
   if (label) {
     const lowerLabel = normalizeEnglishAdvice(label);
-    if (label.includes('买') || label.includes('加仓') || label.includes('持有')) return 'success';
-    if (label.includes('卖') || label.includes('减仓') || label.includes('清仓')) return 'danger';
-    if (label.includes('观望') || label.includes('等待') || label.includes('回避') || label.includes('预警')) {
+    if (label.includes('ซื้อ') || label.includes('เพิ่มสถานะ') || label.includes('ถือครอง')) return 'success';
+    if (label.includes('ขาย') || label.includes('ลดตำแหน่ง') || label.includes('ขายทั้งหมด')) return 'danger';
+    if (label.includes('คอยดู') || label.includes('รอคอย') || label.includes('หลีกเลี่ยง') || label.includes('เตือนล่วงหน้า')) {
       return 'warning';
     }
     if (matchesEnglishTerm(lowerLabel, ['buy', 'add', 'hold'])) return 'success';

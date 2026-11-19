@@ -67,7 +67,7 @@ class CustomWebhookSender:
             是否至少有一个 Webhook 发送成功
         """
         if not self._custom_webhook_urls:
-            logger.warning("未配置自定义 Webhook，跳过推送")
+            logger.warning("ยังไม่ตั้งค่า Webhook แบบกำหนดเอง จึงข้ามการส่ง")
             return False
         
         success_count = 0
@@ -84,32 +84,32 @@ class CustomWebhookSender:
                     templated_payload = self._build_custom_webhook_template_payload(content)
                     if templated_payload is not None:
                         if self._post_custom_webhook(url, templated_payload, timeout=30):
-                            logger.info(f"自定义 Webhook {i+1}（钉钉模板）推送成功")
+                            logger.info(f"การส่ง Webhook แบบกำหนดเอง {i+1} (แบบเทมเพลต DingTalk) สำเร็จ")
                             success_count += 1
                         elif self._send_dingtalk_chunked(url, content, max_bytes=20000):
-                            logger.info(f"自定义 Webhook {i+1}（钉钉模板失败，回退分批）推送成功")
+                            logger.info(f"การส่ง Webhook แบบกำหนดเอง {i+1} (ล้มเหลวแบบเทมเพลต DingTalk แล้วย้อนกลับส่งแบบแบ่งชิ้นส่วน) สำเร็จ")
                             success_count += 1
                         else:
-                            logger.error(f"自定义 Webhook {i+1}（钉钉模板）推送失败")
+                            logger.error(f"การส่ง Webhook แบบกำหนดเอง {i+1} (แบบเทมเพลต DingTalk) ล้มเหลว")
                     elif self._send_dingtalk_chunked(url, content, max_bytes=20000):
-                        logger.info(f"自定义 Webhook {i+1}（钉钉）推送成功")
+                        logger.info(f"การส่ง Webhook แบบกำหนดเอง {i+1} (DingTalk) สำเร็จ")
                         success_count += 1
                     else:
-                        logger.error(f"自定义 Webhook {i+1}（钉钉）推送失败")
+                        logger.error(f"การส่ง Webhook แบบกำหนดเอง {i+1} (DingTalk) ล้มเหลว")
                     continue
 
                 # 其他 Webhook：单次发送
                 payload = self._build_custom_webhook_payload(url, content)
                 if self._post_custom_webhook(url, payload, timeout=30):
-                    logger.info(f"自定义 Webhook {i+1} 推送成功")
+                    logger.info(f"การส่ง Webhook แบบกำหนดเอง {i+1} สำเร็จ")
                     success_count += 1
                 else:
-                    logger.error(f"自定义 Webhook {i+1} 推送失败")
+                    logger.error(f"การส่ง Webhook แบบกำหนดเอง {i+1} ล้มเหลว")
                     
             except Exception as e:
-                logger.error(f"自定义 Webhook {i+1} 推送异常: {e}")
+                logger.error(f"การแจ้งเตือน Webhook แบบกำหนดเอง {i+1} เกิดข้อผิดพลาด: {e}")
         
-        logger.info(f"自定义 Webhook 推送完成：成功 {success_count}/{len(self._custom_webhook_urls)}")
+        logger.info(f"การแจ้งเตือน Webhook แบบกำหนดเองเสร็จสิ้น: เรียบร้อยแล้ว {success_count}/{len(self._custom_webhook_urls)}")
         return success_count > 0
 
     
@@ -135,11 +135,11 @@ class CustomWebhookSender:
                         verify=self._webhook_verify_ssl
                     )
                     if response.status_code in (200, 204):
-                        logger.info("自定义 Webhook %d（Discord 图片）推送成功", i + 1)
+                        logger.info("การแจ้งเตือน Webhook แบบกำหนดเอง %d (รูปภาพ Discord) ส่งสำเร็จ", i + 1)
                         success_count += 1
                     else:
                         logger.error(
-                            "自定义 Webhook %d（Discord 图片）推送失败: HTTP %s",
+                            "ส่ง Webhook กำหนดเอง %d (รูปภาพ Discord) ไม่สำเร็จ: HTTP %s",
                             i + 1, response.status_code,
                         )
                 else:
@@ -147,15 +147,15 @@ class CustomWebhookSender:
                         payload = self._build_custom_webhook_payload(url, fallback_content)
                         if self._post_custom_webhook(url, payload, timeout=30):
                             logger.info(
-                                "自定义 Webhook %d（图片不支持，回退文本）推送成功", i + 1
+                                "ส่ง Webhook กำหนดเอง %d (ไม่รองรับรูปภาพ ส่งข้อความแทน) สำเร็จ", i + 1
                             )
                             success_count += 1
                     else:
                         logger.warning(
-                            "自定义 Webhook %d 不支持图片，且无回退内容，跳过", i + 1
+                            "Webhook กำหนดเอง %d ไม่รองรับรูปภาพและไม่มีเนื้อหาสำรอง ข้าม", i + 1
                         )
             except Exception as e:
-                logger.error("自定义 Webhook %d 图片推送异常: %s", i + 1, e)
+                logger.error("การส่งรูปภาพ Webhook แบบกำหนดเอง %d เกิดข้อผิดพลาด: %s", i + 1, e)
         return success_count > 0
 
     def _post_custom_webhook(self, url: str, payload: dict, timeout: int = 30) -> bool:
@@ -170,8 +170,8 @@ class CustomWebhookSender:
         response = requests.post(url, data=body, headers=headers, timeout=timeout, verify=self._webhook_verify_ssl)
         if response.status_code == 200:
             return True
-        logger.error(f"自定义 Webhook 推送失败: HTTP {response.status_code}")
-        logger.debug(f"响应内容: {response.text[:200]}")
+        logger.error(f"การส่ง Webhook แบบกำหนดเองล้มเหลว: HTTP {response.status_code}")
+        logger.debug(f"เนื้อหาคำตอบ: {response.text[:200]}")
         return False
 
     def test_custom_webhooks(self, content: str, *, timeout_seconds: float = 20.0) -> List[Dict[str, Any]]:
@@ -363,13 +363,13 @@ class CustomWebhookSender:
             payload: Any = json.loads(rendered)
         except json.JSONDecodeError as exc:
             logger.error(
-                "CUSTOM_WEBHOOK_BODY_TEMPLATE 不是有效 JSON，已回退为默认 Webhook payload: %s",
+                "CUSTOM_WEBHOOK_BODY_TEMPLATE ไม่ใช่ JSON ที่ถูกต้อง ใช้ Webhook payload เริ่มต้นแทน: %s",
                 exc,
             )
             return None
         if not isinstance(payload, dict):
             logger.error(
-                "CUSTOM_WEBHOOK_BODY_TEMPLATE 必须渲染为 JSON object，已回退为默认 Webhook payload"
+                "CUSTOM_WEBHOOK_BODY_TEMPLATE ต้องเรนเดอร์เป็น JSON object ใช้ Webhook payload เริ่มต้นแทน"
             )
             return None
         return payload
@@ -406,7 +406,7 @@ class CustomWebhookSender:
             if self._post_custom_webhook(url, payload, timeout=30):
                 ok += 1
             else:
-                logger.error(f"钉钉分批发送失败: 第 {idx+1}/{total} 批")
+                logger.error(f"การส่งข้อความในแต่ละช่วงของ DingTalk เกิดข้อผิดพลาด: ช่วงที่ {idx+1}/{total}")
 
             if idx < total - 1:
                 _time.sleep(1)

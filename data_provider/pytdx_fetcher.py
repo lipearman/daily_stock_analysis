@@ -160,7 +160,7 @@ class PytdxFetcher(BaseFetcher):
         self._unavailable_until = time.time() + _PYTDX_CONNECTION_COOLDOWN_SECONDS
         self._last_unavailable_reason = str(reason or "").strip()
         logger.info(
-            "Pytdx 连接失败，进入冷却 %.0fs: %s",
+            "Pytdx เชื่อมต่อไม่สำเร็จ เข้าสู่ช่วงหน่วง %.0fs: %s",
             _PYTDX_CONNECTION_COOLDOWN_SECONDS,
             self._last_unavailable_reason or "unknown",
         )
@@ -178,7 +178,7 @@ class PytdxFetcher(BaseFetcher):
             from pytdx.hq import TdxHq_API
             return TdxHq_API
         except ImportError:
-            logger.warning("pytdx 未安装，请运行: pip install pytdx")
+            logger.warning("pytdx not installed, please run: pip install pytdx")
             return None
     
     @contextmanager
@@ -202,7 +202,7 @@ class PytdxFetcher(BaseFetcher):
 
         TdxHq_API = self._get_pytdx()
         if TdxHq_API is None:
-            raise DataFetchError("pytdx 库未安装")
+            raise DataFetchError("ยังไม่ได้ติดตั้งไลบรารี pytdx")
         
         api = TdxHq_API()
         connected = False
@@ -217,15 +217,15 @@ class PytdxFetcher(BaseFetcher):
                     if api.connect(host, port, time_out=5):
                         connected = True
                         self._current_host_idx = host_idx
-                        logger.debug(f"Pytdx 连接成功: {host}:{port}")
+                        logger.debug(f"Pytdx connected successfully: {host}:{port}")
                         break
                 except Exception as e:
-                    logger.debug(f"Pytdx 连接 {host}:{port} 失败: {e}")
+                    logger.debug(f"Pytdx failed to connect {host}:{port}: {e}")
                     continue
             
             if not connected:
                 self._mark_connection_cooldown("Pytdx 无法连接任何服务器")
-                raise DataFetchError("Pytdx 无法连接任何服务器")
+                raise DataFetchError("Pytdx เชื่อมต่อเซิร์ฟเวอร์ไม่ได้เลย")
             
             yield api
             
@@ -233,9 +233,9 @@ class PytdxFetcher(BaseFetcher):
             # 确保断开连接
             try:
                 api.disconnect()
-                logger.debug("Pytdx 连接已断开")
+                logger.debug("Pytdx connection disconnected")
             except Exception as e:
-                logger.warning(f"Pytdx 断开连接时出错: {e}")
+                logger.warning(f"Error occurred while disconnecting Pytdx: {e}")
     
     def _get_market_code(self, stock_code: str) -> Tuple[int, str]:
         """
@@ -321,16 +321,16 @@ class PytdxFetcher(BaseFetcher):
         """
         # 美股不支持，抛出异常让 DataFetcherManager 切换到其他数据源
         if _is_us_code(stock_code):
-            raise DataFetchError(f"PytdxFetcher 不支持美股 {stock_code}，请使用 AkshareFetcher 或 YfinanceFetcher")
+            raise DataFetchError(f"PytdxFetcher ไม่รองรับหุ้น US {stock_code} กรุณาใช้ AkshareFetcher หรือ YfinanceFetcher")
 
         # 港股不支持，抛出异常让 DataFetcherManager 切换到其他数据源
         if _is_hk_market(stock_code):
-            raise DataFetchError(f"PytdxFetcher 不支持港股 {stock_code}，请使用 AkshareFetcher")
+            raise DataFetchError(f"PytdxFetcher ไม่รองรับหุ้น HK {stock_code} กรุณาใช้ AkshareFetcher")
 
         # 北交所不支持，抛出异常让 DataFetcherManager 切换到其他数据源
         if is_bse_code(stock_code):
             raise DataFetchError(
-                f"PytdxFetcher 不支持北交所 {stock_code}，将自动切换其他数据源"
+                f"PytdxFetcher ไม่รองรับตลาด BSE {stock_code} จะสลับไปใช้แหล่งข้อมูลอื่นอัตโนมัติ"
             )
         
         market, code = self._get_market_code(stock_code)
@@ -342,7 +342,7 @@ class PytdxFetcher(BaseFetcher):
         days = (end_dt - start_dt).days
         count = min(max(days * 5 // 7 + 10, 30), 800)  # 估算交易日，最大 800 条
         
-        logger.debug(f"调用 Pytdx get_security_bars(market={market}, code={code}, count={count})")
+        logger.debug(f"Calling Pytdx get_security_bars(market={market}, code={code}, count={count})")
         
         with self._pytdx_session() as api:
             try:
@@ -357,7 +357,7 @@ class PytdxFetcher(BaseFetcher):
                 )
                 
                 if data is None or len(data) == 0:
-                    raise DataFetchError(f"Pytdx 未查询到 {stock_code} 的数据")
+                    raise DataFetchError(f"Pytdx ไม่พบข้อมูลของ {stock_code}")
                 
                 # 转换为 DataFrame
                 df = api.to_df(data)
@@ -371,7 +371,7 @@ class PytdxFetcher(BaseFetcher):
             except Exception as e:
                 if isinstance(e, DataFetchError):
                     raise
-                raise DataFetchError(f"Pytdx 获取数据失败: {e}") from e
+                raise DataFetchError(f"Pytdx ดึงข้อมูลไม่สำเร็จ: {e}") from e
     
     def _normalize_data(self, df: pd.DataFrame, stock_code: str) -> pd.DataFrame:
         """
@@ -448,7 +448,7 @@ class PytdxFetcher(BaseFetcher):
                     return name
                 
         except Exception as e:
-            logger.debug(f"Pytdx 获取股票名称失败 {stock_code}: {e}")
+            logger.debug(f"Pytdx failed to retrieve stock name {stock_code}: {e}")
         
         return None
     
@@ -464,7 +464,7 @@ class PytdxFetcher(BaseFetcher):
         """
         if is_bse_code(stock_code):
             raise DataFetchError(
-                f"PytdxFetcher 不支持北交所 {stock_code}，将自动切换其他数据源"
+                f"PytdxFetcher ไม่รองรับตลาด BSE {stock_code} จะสลับไปใช้แหล่งข้อมูลอื่นอัตโนมัติ"
             )
         try:
             market, code = self._get_market_code(stock_code)
@@ -488,7 +488,7 @@ class PytdxFetcher(BaseFetcher):
                         'ask_prices': [quote.get(f'ask{i}', 0) for i in range(1, 6)],
                     }
         except Exception as e:
-            logger.warning(f"Pytdx 获取实时行情失败 {stock_code}: {e}")
+            logger.warning(f"Pytdx failed to retrieve real-time market data {stock_code}: {e}")
         
         return None
 
@@ -502,16 +502,16 @@ if __name__ == "__main__":
     try:
         # 测试历史数据
         df = fetcher.get_daily_data('600519')  # 茅台
-        print(f"获取成功，共 {len(df)} 条数据")
+        print(f"ดึงข้อมูลสำเร็จ มีทั้งหมด {len(df)} รายการ")
         print(df.tail())
         
         # 测试股票名称
         name = fetcher.get_stock_name('600519')
-        print(f"股票名称: {name}")
+        print(f"ชื่อหุ้น: {name}")
         
         # 测试实时行情
         quote = fetcher.get_realtime_quote('600519')
-        print(f"实时行情: {quote}")
+        print(f"ข้อมูลแบบเรียลไทม์: {quote}")
         
     except Exception as e:
-        print(f"获取失败: {e}")
+        print(f"ดึงข้อมูลล้มเหลว: {e}")

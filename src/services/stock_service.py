@@ -47,7 +47,7 @@ class StockService:
             quote = manager.get_realtime_quote(stock_code)
             
             if quote is None:
-                logger.warning(f"获取 {stock_code} 实时行情失败")
+                logger.warning(f"การดึงข้อมูลราคาจริงของ {stock_code} ล้มเหลว")
                 return None
             
             # UnifiedRealtimeQuote 是 dataclass，使用 getattr 安全访问字段
@@ -79,10 +79,10 @@ class StockService:
             }
             
         except ImportError:
-            logger.warning("DataFetcherManager 未找到，使用占位数据")
+            logger.warning("ไม่พบ DataFetcherManager จึงใช้ข้อมูลสำรองแทน")
             return self._get_placeholder_quote(stock_code)
         except Exception as e:
-            logger.error(f"获取实时行情失败: {e}", exc_info=True)
+            logger.error(f"การดึงข้อมูลราคาจริงล้มเหลว: {e}", exc_info=True)
             return None
     
     def get_history_data(
@@ -108,8 +108,8 @@ class StockService:
         # 验证 period 参数，只支持 daily
         if period != "daily":
             raise ValueError(
-                f"暂不支持 '{period}' 周期，目前仅支持 'daily'。"
-                "weekly/monthly 聚合功能将在后续版本实现。"
+                f"ยังไม่รองรับ '{period}' ปัจจุบันรองรับเฉพาะ 'daily' "
+                "การรวม weekly/monthly จะมาในเวอร์ชันถัดไป"
             )
         
         try:
@@ -120,7 +120,7 @@ class StockService:
             df, source = manager.get_daily_data(stock_code, days=days)
             
             if df is None or df.empty:
-                logger.warning(f"获取 {stock_code} 历史数据失败")
+                logger.warning(f"การดึงข้อมูลประวัติของ {stock_code} ล้มเหลว")
                 return {"stock_code": stock_code, "period": period, "data": []}
             
             # 获取股票名称
@@ -154,10 +154,10 @@ class StockService:
             }
             
         except ImportError:
-            logger.warning("DataFetcherManager 未找到，返回空数据")
+            logger.warning("ไม่พบ DataFetcherManager จึงคืนข้อมูลว่าง")
             return {"stock_code": stock_code, "period": period, "data": []}
         except Exception as e:
-            logger.error(f"获取历史数据失败: {e}", exc_info=True)
+            logger.error(f"การดึงข้อมูลประวัติล้มเหลว: {e}", exc_info=True)
             return {"stock_code": stock_code, "period": period, "data": []}
     
     def _get_placeholder_quote(self, stock_code: str) -> Dict[str, Any]:

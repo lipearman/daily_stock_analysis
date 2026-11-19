@@ -119,7 +119,7 @@ def _parse_dataframe(df: pd.DataFrame) -> List[Tuple[Optional[str], Optional[str
         if not code and name_val:
             code = resolve_name_to_code(name_val)
             if not code:
-                logger.debug(f"[ImportParser] 名称解析失败: {name_val}")
+                logger.debug(f"[ImportParser] การแยกชื่อล้มเหลว: {name_val}")
 
         result.append((code, name_val if name_val else None, "medium"))
     return result
@@ -140,12 +140,12 @@ def parse_import_from_bytes(data: bytes, filename: Optional[str] = None) -> List
         ValueError: On parse error or unsupported format.
     """
     if len(data) > MAX_FILE_BYTES:
-        raise ValueError(f"文件超过 {MAX_FILE_BYTES // (1024 * 1024)}MB 限制")
+        raise ValueError(f"ไฟล์เกินขีดจำกัด {MAX_FILE_BYTES // (1024 * 1024)}MB")
 
     ext = ""
     if filename:
         ext = "." + filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
-    logger.debug(f"[ImportParser] 开始解析文件: filename={filename or '-'}, ext={ext or '-'}, bytes={len(data)}")
+    logger.debug(f"[ImportParser] เริ่มแยกวิเคราะห์ไฟล์: filename={filename or '-'}, ext={ext or '-'}, bytes={len(data)}")
 
     looks_like_zip = len(data) >= 4 and data[:4] == b"PK\x03\x04"
 
@@ -170,13 +170,13 @@ def parse_import_from_bytes(data: bytes, filename: Optional[str] = None) -> List
                     "请确认：(1) 文件为 .xlsx 格式；(2) 工作表不为空；(3) 文件未损坏。"
                     "若为 .xls 格式，请另存为 .xlsx 后重试。"
                 )
-                raise ValueError(f"Excel 解析失败: {e}。{hint}") from e
+                raise ValueError(f"แยกวิเคราะห์ Excel ไม่สำเร็จ: {e} {hint}") from e
             # For extension-only mismatch (e.g. csv named .xlsx), fallback to text parsing.
-            logger.warning(f"扩展名为 .xlsx 但未解析为 Excel，将回退文本解析: {e}")
+            logger.warning(f"มีนามสกุล .xlsx แต่ไม่สามารถแยกเป็น Excel จึงย้อนกลับไปใช้การแยกข้อความ: {e}")
 
     # .xls not supported
     if ext == ".xls":
-        raise ValueError("仅支持 .xlsx 格式，请将 .xls 另存为 .xlsx 后重试")
+        raise ValueError("รองรับเฉพาะรูปแบบ .xlsx กรุณาบันทึก .xls เป็น .xlsx แล้วลองใหม่")
 
     # CSV / text
     for encoding in ("utf-8-sig", "gbk"):
@@ -186,7 +186,7 @@ def parse_import_from_bytes(data: bytes, filename: Optional[str] = None) -> List
         except UnicodeDecodeError:
             continue
     else:
-        raise ValueError("无法识别文件编码，请使用 UTF-8 或 GBK")
+        raise ValueError("จำแนกการเข้ารหัสไฟล์ไม่ได้ กรุณาใช้ UTF-8 หรือ GBK")
 
     # Single-column (one value per line): bypass pandas to avoid sep=None inference issues
     # e.g. "00700\n600519" or "code\n00700" - pandas with sep=None can produce wrong results
@@ -212,8 +212,8 @@ def parse_import_from_bytes(data: bytes, filename: Optional[str] = None) -> List
             return _parse_dataframe(df)
     except pd.errors.ParserError as e:
         raise ValueError(
-            f"CSV 解析失败：请检查分隔符是否一致、列数是否匹配。"
-            f"常见原因：引号未闭合、某行列数与其他行不一致。原始错误: {e}"
+            f"แยกวิเคราะห์ CSV ไม่สำเร็จ กรุณาตรวจสอบว่าตัวคั่นสม่ำเสมอและจำนวนคอลัมน์ตรงกัน "
+            f"สาเหตุที่พบบ่อย: เครื่องหมายคำพูดไม่ปิด จำนวนคอลัมน์ของบางแถวไม่ตรงกับแถวอื่น ข้อผิดพลาดเดิม: {e}"
         ) from e
     except Exception:
         pass
@@ -245,8 +245,8 @@ def parse_import_from_text(text: str) -> List[Tuple[Optional[str], Optional[str]
         List of (code, name, confidence).
     """
     if len(text.encode("utf-8")) > MAX_TEXT_BYTES:
-        raise ValueError(f"文本超过 {MAX_TEXT_BYTES // 1024}KB 限制")
+        raise ValueError(f"ข้อความเกินขีดจำกัด {MAX_TEXT_BYTES // 1024}KB")
 
-    logger.debug(f"[ImportParser] 开始解析粘贴文本: bytes={len(text.encode('utf-8'))}")
+    logger.debug(f"[ImportParser] เริ่มแยกวิเคราะห์ข้อความที่วาง: bytes={len(text.encode('utf-8'))}")
     data = text.encode("utf-8")
     return parse_import_from_bytes(data, filename="paste.txt")

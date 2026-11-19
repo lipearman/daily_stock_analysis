@@ -1833,7 +1833,7 @@ class Config:
                 invalid_searxng_urls.append(u)
         if invalid_searxng_urls:
             logger.warning(
-                "SEARXNG_BASE_URLS 中存在无效 URL，已忽略: %s",
+                "พบ URL ไม่ถูกต้องใน SEARXNG_BASE_URLS ข้ามแล้ว: %s",
                 ", ".join(invalid_searxng_urls[:3]),
             )
         searxng_public_instances_enabled = parse_env_bool(
@@ -3104,7 +3104,7 @@ class Config:
             return normalized
 
         logging.getLogger(__name__).warning(
-            f"MARKET_REVIEW_REGION 配置值 '{value}' 无效，已回退为默认值 'cn'（合法值：cn / hk / us / jp / kr / tw / both；支持逗号分隔有效值）"
+            f"ค่าตั้งค่า MARKET_REVIEW_REGION '{value}' ไม่ถูกต้อง ใช้ค่าเริ่มต้น 'cn' (ค่าที่ใช้ได้: cn / hk / us / jp / kr / tw / both; รองรับคั่นด้วยจุลภาค)"
         )
         return 'cn'
 
@@ -3116,7 +3116,7 @@ class Config:
         if v in ('green_up', 'red_up'):
             return v
         logging.getLogger(__name__).warning(
-            "MARKET_REVIEW_COLOR_SCHEME 配置值 '%s' 无效，已回退为默认值 'green_up'（合法值：green_up / red_up）",
+            "ค่าตั้งค่า MARKET_REVIEW_COLOR_SCHEME '%s' ไม่ถูกต้อง ใช้ค่าเริ่มต้น 'green_up' (ค่าที่ใช้ได้: green_up / red_up)",
             value,
         )
         return 'green_up'
@@ -3931,15 +3931,15 @@ def extra_litellm_params(model: str, config: Config) -> Dict[str, Any]:
 if __name__ == "__main__":
     # 测试配置加载
     config = get_config()
-    print("=== 配置加载测试 ===")
-    print(f"自选股列表: {config.stock_list}")
-    print(f"数据库路径: {config.database_path}")
-    print(f"最大并发数: {config.max_workers}")
-    print(f"调试模式: {config.debug}")
+    print("=== การทดสอบการโหลดตั้งค่า ===")
+    print(f"รายการหุ้นที่เลือกเอง: {config.stock_list}")
+    print(f"เส้นทางฐานข้อมูล: {config.database_path}")
+    print(f"จำนวนการประมวลผลพร้อมกันสูงสุด: {config.max_workers}")
+    print(f"โหมดดีบัก: {config.debug}")
     
     # 验证配置
     warnings = config.validate()
     if warnings:
-        print("\n配置验证结果:")
+        print("\\nผลการตรวจสอบตั้งค่า:")
         for w in warnings:
             print(f"  - {w}")

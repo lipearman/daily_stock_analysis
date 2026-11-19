@@ -61,7 +61,7 @@ const TEXT = {
       unknown: '未知',
     },
   },
-  en: {
+    en: {
     eyebrow: 'MARKET POSITION',
     title: 'Themes and Stock Position',
     marketLayer: 'Market Theme Layer',
@@ -95,6 +95,41 @@ const TEXT = {
       unknown: 'Unknown',
     },
   },
+
+  th: {
+    eyebrow: 'ตำแหน่งตลาด',
+    title: 'แนวหลักของหัวข้อและตำแหน่งหุ้น',
+    marketLayer: 'ชั้นหัวข้อตลาดหุ้น',
+    stockLayer: 'ชั้นตำแหน่งหุ้น',
+    activeThemes: 'หัวข้อที่คึกคัก',
+    leadingConcepts: 'แนวคิดนำการเติบโต',
+    leadingIndustries: 'อุตสาหกรรมนำการเติบโต',
+    primaryTheme: 'หัวข้อหลักที่เกี่ยวข้อง',
+    themePhase: 'ขั้นตอนของหัวข้อ',
+    stockRole: 'ตำแหน่งหุ้น',
+    riskTags: 'ป้ายชื่อความเสี่ยง',
+    dataQuality: 'คุณภาพข้อมูล',
+    missingFields: 'ข้อมูลที่ขาดหายไป',
+    empty: 'ไม่มี',
+    status: {
+      ok: 'พร้อมใช้งาน',
+      partial: 'บางส่วนพร้อมใช้งาน',
+      unknown: 'ไม่ทราบ',
+      not_supported: 'Unsupported',
+    },
+    phase: {
+      warming: 'ร้อนขึ้น',
+      accelerating: 'เร่งความเร็ว',
+      cooling: 'เย็นขึ้น',
+      unknown: 'ไม่ทราบ',
+    },
+    role: {
+      leader: 'หุ้นที่นำ',
+      follower: 'ติดตาม',
+      edge: 'เกี่ยวข้องรอบนอก',
+      unknown: 'ไม่ทราบ',
+    },
+    },
   ko: {
     eyebrow: '시장 포지션',
     title: '테마 라인 및 종목 포지션',
@@ -136,6 +171,11 @@ const RISK_TAG_TEXT = {
     theme_data_partial: '题材主线数据不完整',
     stock_theme_evidence_partial: '个股板块未匹配到市场题材榜单，个股位置按降级证据处理',
     board_membership_missing: '缺少个股所属板块证据，无法判断题材位置',
+  },
+    th: {
+    theme_data_partial: 'ข้อมูลแนวหลักของหัวข้อไม่ครบถ้วน',
+    stock_theme_evidence_partial: 'กลุ่มหุ้นไม่ตรงกับรายการหัวข้อตลาด ตำแหน่งหุ้นถูกจัดการโดยข้อมูลที่ลดระดับ',
+    board_membership_missing: 'ขาดหลักฐานของกลุ่มหุ้น ไม่สามารถวิเคราะห์ตำแหน่งหัวข้อ',
   },
   en: {
     theme_data_partial: 'Market theme data is incomplete',

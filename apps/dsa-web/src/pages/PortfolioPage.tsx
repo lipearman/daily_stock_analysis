@@ -82,20 +82,20 @@ type PortfolioSignalLookupResult = {
   error: string | null;
 };
 
-type PortfolioPageLanguage = 'zh' | 'en';
+type PortfolioPageLanguage = 'en' | 'th';
 
 const PORTFOLIO_LIMITATION_LABELS: Record<string, Record<PortfolioPageLanguage, string>> = {
   realtime_quote_best_effort: {
-    zh: '实时行情为尽力获取',
     en: 'Realtime quotes are best-effort',
+    th: 'ราคาตลาดแบบเรียลไทม์เป็นการพยายามได้มากที่สุด',
   },
   fx_and_cost_basis_partial: {
-    zh: '汇率与成本基础为部分口径',
     en: 'FX and cost basis are partial',
+    th: 'อัตราแลกเปลี่ยนและราคาพื้นฐานบางส่วน',
   },
   sector_and_risk_metrics_limited: {
-    zh: '行业与风险指标覆盖有限',
     en: 'Sector and risk metrics are limited',
+    th: 'การครอบคลุมตัวชี้วัดของอุตสาหกรรมและความเสี่ยงจำกัด',
   },
 };
 
@@ -173,6 +173,33 @@ const PORTFOLIO_RISK_DASHBOARD_TEXT = {
     positions: 'Positions',
     snapshotUnavailable: 'Portfolio snapshot unavailable',
     snapshotUnavailableDescription: 'Holdings and valuation are unknown. Refresh to try again.',
+  },
+  th: {
+    title: 'แดชบอร์ดความเสี่ยงและการพึ่งสัมผัส',
+    riskFlags: 'ธงความเสี่ยง',
+    marketExposure: 'การพึ่งสัมผัสตลาด',
+    currencyExposure: 'การพึ่งสัมผัสตามสกุลเงิน',
+    noExposure: 'ยังไม่มีข้อมูลการพึ่งสัมผัส',
+    exposureUnavailable: 'ข้อมูลการพึ่งสัมผัสใช้ไม่ได้',
+    concentration: 'ความเข้มข้นรายหุ้น',
+    sector: 'ความเข้มข้นตามกลุ่มอุตสาหกรรม',
+    drawdown: 'การย่อตัว',
+    stopLoss: 'ตัดขาดทุน',
+    aiSignal: 'สัญญาณ AI',
+    priceQuality: 'คุณภาพข้อมูลราคา',
+    active: 'ต้องดำเนินการ',
+    stable: 'ปกติ',
+    unavailable: 'ใช้ไม่ได้',
+    maxDrawdown: 'การย่อตัวสูงสุด',
+    topPosition: 'Top1',
+    topSector: 'Top1',
+    triggered: 'แจ้งแล้ว',
+    near: 'ใกล้เกณฑ์',
+    missingPrice: 'ไม่มีราคา',
+    stalePrice: 'ราคาล้าสมัย',
+    positions: 'สถานะ',
+    snapshotUnavailable: 'ภาพพอร์ตใช้ไม่ได้',
+    snapshotUnavailableDescription: 'ยืนยันจำนวนสถานะหรือมูลค่าไม่ได้ โปรดรีเฟรชแล้วลองใหม่',
   },
 } as const;
 
@@ -1424,7 +1451,7 @@ const PortfolioPage: React.FC = () => {
   const snapshotQualityMessage = snapshot?.dataQuality === 'partial' && snapshot.limitations?.length
     ? snapshot.limitations
       .map((limitation) => formatPortfolioLimitation(limitation, language))
-      .join(language === 'en' ? '; ' : '；')
+      .join(language === 'en' || language === 'th' ? '; ' : '；')
     : null;
 
   return (

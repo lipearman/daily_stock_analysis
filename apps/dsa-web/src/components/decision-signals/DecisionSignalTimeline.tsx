@@ -40,8 +40,8 @@ const STATUS_LABEL_KEYS: Record<DecisionSignalStatus, UiTextKey> = {
 };
 
 const LOCALE_BY_LANGUAGE: Record<UiLanguage, string> = {
-  zh: 'zh-CN',
   en: 'en-US',
+  th: 'th-TH',
 };
 
 export type DecisionSignalTimelineProps = {

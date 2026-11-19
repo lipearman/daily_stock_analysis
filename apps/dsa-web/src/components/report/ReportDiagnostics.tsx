@@ -33,7 +33,7 @@ const COMPONENT_ORDER = [
 ];
 
 const TEXT = {
-  zh: {
+          zh: {
     eyebrow: '运行诊断',
     title: '运行状态',
     loading: '诊断加载中...',
@@ -63,7 +63,7 @@ const TEXT = {
       skipped: '已跳过',
     },
   },
-  en: {
+en: {
     eyebrow: 'RUN DIAGNOSTICS',
     title: 'Run Status',
     loading: 'Loading diagnostics...',
@@ -93,6 +93,37 @@ const TEXT = {
       skipped: 'Skipped',
     },
   },
+
+  th: {
+    eyebrow: 'การวินิจฉัยการดำเนินงาน',
+    title: 'สถานะการดำเนินงาน',
+    loading: 'กำลังโหลดการวินิจฉัย...',
+    unavailable: 'การวินิจฉัยการดำเนินงานยังไม่พร้อมใช้งาน',
+    noComponents: 'ยังไม่มีการวินิจฉัยส่วนประกอบ',
+    components: 'ลิงค์สำคัญ',
+    advanced: 'ฟิลด์ขั้นสูง',
+    copy: 'คัดลอกข้อมูลการแก้ไขปัญหา',
+    copied: 'คัดลอกแล้ว',
+    scope: 'การดึงข้อมูล / LLM / การบันทึก / ลิงค์การแจ้งเตือน',
+    trace: 'Trace',
+    task: 'Task',
+    query: 'Query',
+    trigger: 'Trigger Source',
+    overall: {
+      normal: 'ปกติ',
+      degraded: 'ลดระดับบางส่วน',
+      failed: 'ล้มเหลว',
+      unknown: 'ไม่ทราบ',
+    },
+    component: {
+      ok: 'ปกติ',
+      degraded: 'ลดระดับหลังจากล้มเหลวล่าสุด',
+      failed: 'ล้มเหลว',
+      unknown: 'ไม่ทราบ',
+      not_configured: 'ยังไม่ได้ตั้งค่า',
+      skipped: 'Skipped',
+    },
+    },
   ko: {
     eyebrow: '실행 진단',
     title: '실행 상태',
@@ -170,7 +201,7 @@ export const ReportDiagnostics: React.FC<ReportDiagnosticsProps> = ({
 }) => {
   const reportLanguage = normalizeReportLanguage(language);
   const text = TEXT[reportLanguage];
-  const runFlowText = UI_TEXT[reportLanguage === 'ko' ? 'en' : reportLanguage];
+  const runFlowText = UI_TEXT[reportLanguage === 'ko' || reportLanguage === 'zh' ? 'en' : reportLanguage];
   const [fetchState, setFetchState] = useState<{
     recordId?: number;
     summary: RunDiagnosticSummary | null;

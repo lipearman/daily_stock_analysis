@@ -5,7 +5,7 @@
 ===================================
 
 职责：
-1. POST /api/v1/stocks/extract-from-image 从图片提取股票代码
+1. POST /api/v1/stocks/extract-from-image สกัดรหัสหุ้นจากรูปภาพ
 2. POST /api/v1/stocks/parse-import 解析 CSV/Excel/剪贴板
 3. GET /api/v1/stocks/{code}/quote 实时行情接口
 4. GET /api/v1/stocks/{code}/history 历史行情接口
@@ -103,7 +103,7 @@ def _validate_and_normalize_stock_code(code: str) -> str:
     if not stripped:
         raise HTTPException(
             status_code=400,
-            detail={"error": "invalid_stock_code", "message": "股票代码不能为空"},
+            detail={"error": "invalid_stock_code", "message": "Stock code cannot be empty"},
         )
     if not _STOCK_CODE_RE.match(stripped):
         raise HTTPException(
@@ -128,16 +128,16 @@ def _watchlist_match_key(code: str) -> str:
     "/extract-from-image",
     response_model=ExtractFromImageResponse,
     responses={
-        200: {"description": "提取的股票代码"},
-        400: {"description": "图片无效", "model": ErrorResponse},
-        500: {"description": "服务器错误", "model": ErrorResponse},
+        200: {"description": "รหัสหุ้นที่สกัดได้"},
+        400: {"description": "รูปภาพไม่ถูกต้อง", "model": ErrorResponse},
+        500: {"description": "ข้อผิดพลาดของเซิร์ฟเวอร์", "model": ErrorResponse},
     },
-    summary="从图片提取股票代码",
-    description="上传截图/图片，通过 Vision LLM 提取股票代码。支持 JPEG、PNG、WebP、GIF，最大 5MB。",
+    summary="สกัดรหัสหุ้นจากรูปภาพ",
+    description="อัปโหลดภาพหน้าจอ/รูปภาพ เพื่อสกัดรหัสหุ้นด้วย Vision LLM รองรับ JPEG, PNG, WebP, GIF ขนาดสูงสุด 5MB",
 )
 def extract_from_image(
-    file: Optional[UploadFile] = File(None, description="图片文件（表单字段名 file）"),
-    include_raw: bool = Query(False, description="是否在结果中包含原始 LLM 响应"),
+    file: Optional[UploadFile] = File(None, description="ไฟล์รูปภาพ (ฟอร์มฟิลด์ชื่อ file)"),
+    include_raw: bool = Query(False, description="รวมข้อความตอบดิบของ LLM ในผลลัพธ์หรือไม่"),
 ) -> ExtractFromImageResponse:
     """
     从上传的图片中提取股票代码（使用 Vision LLM）。
@@ -147,7 +147,7 @@ def extract_from_image(
     if not file or not file.filename:
         raise HTTPException(
             status_code=400,
-            detail={"error": "bad_request", "message": "未提供文件，请使用表单字段 file 上传图片"},
+            detail={"error": "bad_request", "message": "ยังไม่ได้แนบไฟล์ โปรดอัปโหลดรูปผ่านฟอร์มฟิลด์ file"},
         )
 
     content_type = (file.content_type or "").split(";")[0].strip().lower()
@@ -156,7 +156,7 @@ def extract_from_image(
             status_code=400,
             detail={
                 "error": "unsupported_type",
-                "message": f"不支持的类型: {content_type}。允许: {ALLOWED_MIME_STR}",
+                "message": f"ประเภทที่ไม่รองรับ: {content_type} ที่อนุญาต: {ALLOWED_MIME_STR}",
             },
         )
 
@@ -168,16 +168,16 @@ def extract_from_image(
                 status_code=400,
                 detail={
                     "error": "file_too_large",
-                    "message": f"图片超过 {MAX_SIZE_BYTES // (1024 * 1024)}MB 限制",
+                    "message": f"รูปภาพเกินขีดจำกัด {MAX_SIZE_BYTES // (1024 * 1024)}MB",
                 },
             )
     except HTTPException:
         raise
     except Exception as e:
-        logger.warning(f"读取上传文件失败: {e}")
+        logger.warning(f"ไม่สามารถอ่านไฟล์ที่อัปโหลดได้: {e}")
         raise HTTPException(
             status_code=400,
-            detail={"error": "read_failed", "message": "读取上传文件失败"},
+            detail={"error": "read_failed", "message": "ไม่สามารถอ่านไฟล์ที่อัปโหลดได้"},
         )
 
     try:
@@ -194,10 +194,10 @@ def extract_from_image(
     except ValueError as e:
         raise HTTPException(status_code=400, detail={"error": "extract_failed", "message": str(e)})
     except Exception as e:
-        logger.error(f"图片提取失败: {e}", exc_info=True)
+        logger.error(f"การดึงข้อมูลจากภาพล้มเหลว: {e}", exc_info=True)
         raise HTTPException(
             status_code=500,
-            detail={"error": "internal_error", "message": "图片提取失败"},
+            detail={"error": "internal_error", "message": "การดึงข้อมูลจากภาพล้มเหลว"},
         )
 
 
@@ -205,12 +205,12 @@ def extract_from_image(
     "/parse-import",
     response_model=ExtractFromImageResponse,
     responses={
-        200: {"description": "解析结果"},
-        400: {"description": "未提供数据或解析失败", "model": ErrorResponse},
-        500: {"description": "服务器错误", "model": ErrorResponse},
+        200: {"description": "ผลลัพธ์การวิเคราะห์"},
+        400: {"description": "ไม่ได้รับข้อมูลหรือการวิเคราะห์ล้มเหลว", "model": ErrorResponse},
+        500: {"description": "ข้อผิดพลาดของเซิร์ฟเวอร์", "model": ErrorResponse},
     },
-    summary="解析 CSV/Excel/剪贴板",
-    description="上传 CSV/Excel 文件或粘贴文本，自动解析股票代码。文件上限 2MB，文本上限 100KB。",
+    summary="การวิเคราะห์ CSV/Excel/คลิปบัดกรี",
+    description="Upload CSV/Excel files or paste text, automatically parse stock codes. Maximum file size 2MB, text size limit 100KB.",
 )
 async def parse_import(request: Request) -> ExtractFromImageResponse:
     """
@@ -229,13 +229,13 @@ async def parse_import(request: Request) -> ExtractFromImageResponse:
             logger.warning("[parse_import] JSON parse failed: %s", e)
             raise HTTPException(
                 status_code=400,
-                detail={"error": "invalid_json", "message": f"JSON 解析失败: {e}"},
+                detail={"error": "invalid_json", "message": f"การวิเคราะห์ JSON ล้มเหลว: {e}"},
             )
         text = body.get("text") if isinstance(body, dict) else None
         if not text or not isinstance(text, str):
             raise HTTPException(
                 status_code=400,
-                detail={"error": "bad_request", "message": "未提供 text，请使用 {\"text\": \"...\"}"},
+                detail={"error": "bad_request", "message": "ไม่ได้ระบุ text กรุณาใช้ {\\\"text\\\": \\\"...\\\"}"},
             )
         try:
             items = parse_import_from_text(text)
@@ -253,7 +253,7 @@ async def parse_import(request: Request) -> ExtractFromImageResponse:
         if not file or not hasattr(file, "read"):
             raise HTTPException(
                 status_code=400,
-                detail={"error": "bad_request", "message": "未提供文件，请使用表单字段 file"},
+                detail={"error": "bad_request", "message": "ไม่ได้ระบุไฟล์ กรุณาใช้ฟิลด์แบบฟอร์ม file"},
             )
         file_size = getattr(file, "size", None)
         if isinstance(file_size, int) and file_size > MAX_FILE_BYTES:
@@ -261,7 +261,7 @@ async def parse_import(request: Request) -> ExtractFromImageResponse:
                 status_code=400,
                 detail={
                     "error": "file_too_large",
-                    "message": f"文件超过 {MAX_FILE_BYTES // (1024 * 1024)}MB 限制",
+                    "message": f"ไฟล์เกินขนาด {MAX_FILE_BYTES // (1024 * 1024)}MB",
                 },
             )
         try:
@@ -271,7 +271,7 @@ async def parse_import(request: Request) -> ExtractFromImageResponse:
                     status_code=400,
                     detail={
                         "error": "file_too_large",
-                        "message": f"文件超过 {MAX_FILE_BYTES // (1024 * 1024)}MB 限制",
+                        "message": f"ไฟล์เกินขนาด {MAX_FILE_BYTES // (1024 * 1024)}MB",
                     },
                 )
         except HTTPException:
@@ -287,7 +287,7 @@ async def parse_import(request: Request) -> ExtractFromImageResponse:
             )
             raise HTTPException(
                 status_code=400,
-                detail={"error": "read_failed", "message": "读取文件失败"},
+                detail={"error": "read_failed", "message": "ไม่สามารถอ่านไฟล์ได้"},
             )
         filename = getattr(file, "filename", None) or ""
         try:
@@ -307,7 +307,7 @@ async def parse_import(request: Request) -> ExtractFromImageResponse:
             status_code=400,
             detail={
                 "error": "bad_request",
-                "message": "请使用 multipart/form-data 上传文件，或 application/json 提交 {\"text\": \"...\"}",
+                "message": "กรุณาใช้ multipart/form-data เพื่ออัปโหลดไฟล์ หรือ application/json เพื่อส่ง {\\\"text\\\": \\\"...\\\"}",
             },
         )
 
@@ -323,23 +323,23 @@ async def parse_import(request: Request) -> ExtractFromImageResponse:
     "/watchlist",
     response_model=WatchlistResponse,
     responses={
-        200: {"description": "当前自选队列"},
-        500: {"description": "服务器错误", "model": ErrorResponse},
+        200: {"description": "รายการหุ้นที่เลือกไว้ปัจจุบัน"},
+        500: {"description": "ข้อผิดพลาดของเซิร์ฟเวอร์", "model": ErrorResponse},
     },
-    summary="获取自选队列",
-    description="返回当前 STOCK_LIST 配置中的所有股票代码。",
+    summary="ดึงรายการหุ้นที่เลือกไว้",
+    description="คืนค่ารหัสหุ้นทั้งหมดจากตั้งค่า STOCK_LIST ปัจจุบัน",
 )
 def get_watchlist(
     service: SystemConfigService = Depends(get_system_config_service),
 ) -> WatchlistResponse:
     try:
         codes = _read_watchlist_codes(service)
-        return WatchlistResponse(stock_codes=codes, message=f"当前自选 {len(codes)} 只股票")
+        return WatchlistResponse(stock_codes=codes, message=f"หุ้นที่เลือกไว้ปัจจุบันมีทั้งหมด {len(codes)} ตัว")
     except Exception as e:
-        logger.error(f"获取自选队列失败: {e}", exc_info=True)
+        logger.error(f"ล้มเหลวในการดึงรายการหุ้นที่เลือกไว้: {e}", exc_info=True)
         raise HTTPException(
             status_code=500,
-            detail={"error": "internal_error", "message": f"获取自选队列失败: {str(e)}"},
+            detail={"error": "internal_error", "message": f"ล้มเหลวในการดึงรายการหุ้นที่เลือกไว้: {str(e)}"},
         )
 
 
@@ -347,12 +347,12 @@ def get_watchlist(
     "/watchlist/add",
     response_model=WatchlistResponse,
     responses={
-        200: {"description": "已加入自选"},
-        400: {"description": "参数错误", "model": ErrorResponse},
-        500: {"description": "服务器错误", "model": ErrorResponse},
+        200: {"description": "ได้เพิ่มเข้าไปในรายการหุ้นที่เลือกไว้แล้ว"},
+        400: {"description": "ข้อมูลพารามิเตอร์ผิดพลาด", "model": ErrorResponse},
+        500: {"description": "ข้อผิดพลาดของเซิร์ฟเวอร์", "model": ErrorResponse},
     },
-    summary="加入自选队列",
-    description="将指定股票代码加入 STOCK_LIST。",
+    summary="เพิ่มเข้าไปในรายการหุ้นที่เลือกไว้",
+    description="เพิ่มรหัสหุ้นที่ระบุไว้ลงใน STOCK_LIST",
 )
 def add_to_watchlist(
     request: WatchlistRequest,
@@ -365,14 +365,14 @@ def add_to_watchlist(
         if _watchlist_match_key(validated) not in existing_keys:
             codes.append(request.stock_code.strip())
             _write_watchlist_codes(service, codes)
-        return WatchlistResponse(stock_codes=codes, message=f"已加入 {request.stock_code.strip()}")
+        return WatchlistResponse(stock_codes=codes, message=f"ได้เพิ่มเข้าไปแล้วใน {request.stock_code.strip()}")
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"加入自选失败: {e}", exc_info=True)
+        logger.error(f"ล้มเหลวในการเพิ่มเข้าไปในรายการหุ้นที่เลือกไว้: {e}", exc_info=True)
         raise HTTPException(
             status_code=500,
-            detail={"error": "internal_error", "message": f"加入自选失败: {str(e)}"},
+            detail={"error": "internal_error", "message": f"ล้มเหลวในการเพิ่มเข้าไปในรายการหุ้นที่เลือกไว้: {str(e)}"},
         )
 
 
@@ -380,12 +380,12 @@ def add_to_watchlist(
     "/watchlist/remove",
     response_model=WatchlistResponse,
     responses={
-        200: {"description": "已从自选删除"},
-        400: {"description": "参数错误", "model": ErrorResponse},
-        500: {"description": "服务器错误", "model": ErrorResponse},
+        200: {"description": "ได้ลบออกจากรายการหุ้นที่เลือกไว้แล้ว"},
+        400: {"description": "ข้อมูลพารามิเตอร์ผิดพลาด", "model": ErrorResponse},
+        500: {"description": "ข้อผิดพลาดของเซิร์ฟเวอร์", "model": ErrorResponse},
     },
-    summary="从自选队列删除",
-    description="从 STOCK_LIST 中移除指定股票代码。",
+    summary="ลบออกจากรายการหุ้นที่เลือกไว้",
+    description="ลบรหัสหุ้นที่ระบุไว้ออกจาก STOCK_LIST",
 )
 def remove_from_watchlist(
     request: WatchlistRequest,
@@ -400,14 +400,14 @@ def remove_from_watchlist(
             idx = existing_keys.index(requested_key)
             codes.pop(idx)
             _write_watchlist_codes(service, codes)
-        return WatchlistResponse(stock_codes=codes, message=f"已移除 {request.stock_code.strip()}")
+        return WatchlistResponse(stock_codes=codes, message=f"ได้ลบ {request.stock_code.strip()} ออกแล้ว")
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"从自选删除失败: {e}", exc_info=True)
+        logger.error(f"ล้มเหลวในการลบออกจากรายการหุ้นที่เลือกไว้: {e}", exc_info=True)
         raise HTTPException(
             status_code=500,
-            detail={"error": "internal_error", "message": f"从自选删除失败: {str(e)}"},
+            detail={"error": "internal_error", "message": f"ล้มเหลวในการลบออกจากรายการหุ้นที่เลือกไว้: {str(e)}"},
         )
 
 
@@ -415,15 +415,15 @@ def remove_from_watchlist(
     "/{stock_code}/profile",
     response_model=StockProfileResponse,
     responses={
-        400: {"description": "股票代码无效", "model": ErrorResponse},
-        500: {"description": "服务器错误", "model": ErrorResponse},
+        400: {"description": "รหัสหุ้นไม่ถูกต้อง", "model": ErrorResponse},
+        500: {"description": "ข้อผิดพลาดของเซิร์ฟเวอร์", "model": ErrorResponse},
     },
-    summary="获取个股研究聚合档案",
-    description="按独立质量状态聚合行情、历史、研究产物、资讯、持仓关系和监控规则。",
+    summary="ดึงข้อมูลรวมการวิจัยหุ้นรายตัว",
+    description="รวมข้อมูลตลาด ประวัติการเคลื่อนไหว การวิจัยผลิตภัณฑ์ ข่าวสาร ความสัมพันธ์การถือหุ้น และกฎควบคุมตามสถานะคุณภาพอิสระ",
 )
 def get_stock_profile(
     stock_code: str,
-    history_days: int = Query(60, ge=1, le=365, description="日线历史天数"),
+    history_days: int = Query(60, ge=1, le=365, description="จำนวนวันประวัติการเคลื่อนไหวรายวัน"),
 ) -> StockProfileResponse:
     """Return partial profile data without failing on one optional block."""
     _validate_and_normalize_stock_code(stock_code)
@@ -434,14 +434,14 @@ def get_stock_profile(
     except InvalidStockProfileCode:
         raise HTTPException(
             status_code=400,
-            detail={"error": "invalid_stock_code", "message": "股票代码与交易所不匹配"},
+            detail={"error": "invalid_stock_code", "message": "รหัสหุ้นไม่ตรงกับตลาดหลักทรัพย์"},
         )
     except Exception as exc:
         sanitized = sanitize_diagnostic_text(str(exc), max_length=300) or "internal profile error"
-        logger.error("获取个股研究聚合档案失败: %s", sanitized)
+        logger.error("ล้มเหลวในการดึงข้อมูลรวมการวิจัยหุ้นรายตัว: %s", sanitized)
         raise HTTPException(
             status_code=500,
-            detail={"error": "internal_error", "message": "获取个股研究聚合档案失败"},
+            detail={"error": "internal_error", "message": "ล้มเหลวในการดึงข้อมูลรวมการวิจัยหุ้นรายตัว"},
         )
 
 
@@ -449,27 +449,27 @@ def get_stock_profile(
     "/{stock_code}/quote",
     response_model=StockQuote,
     responses={
-        200: {"description": "行情数据"},
-        404: {"description": "股票不存在", "model": ErrorResponse},
-        500: {"description": "服务器错误", "model": ErrorResponse},
+        200: {"description": "ข้อมูลราคาตลาด"},
+        404: {"description": "ไม่พบหุ้นนี้", "model": ErrorResponse},
+        500: {"description": "ข้อผิดพลาดของเซิร์ฟเวอร์", "model": ErrorResponse},
     },
-    summary="获取股票实时行情",
-    description="获取指定股票的最新行情数据"
+    summary="ดึงราคาเรียลไทม์ของหุ้น",
+    description="ดึงข้อมูลราคาล่าสุดของหุ้นที่ระบุ"
 )
 def get_stock_quote(stock_code: str) -> StockQuote:
     """
-    获取股票实时行情
+    ดึงราคาเรียลไทม์ของหุ้น
     
-    获取指定股票的最新行情数据
+    ดึงข้อมูลราคาล่าสุดของหุ้นที่ระบุ
     
     Args:
         stock_code: 股票代码（如 600519、00700、AAPL）
         
     Returns:
-        StockQuote: 实时行情数据
+        StockQuote: 实时ข้อมูลราคาตลาด
         
     Raises:
-        HTTPException: 404 - 股票不存在
+        HTTPException: 404 - ไม่พบหุ้นนี้
     """
     try:
         service = StockService()
@@ -482,7 +482,7 @@ def get_stock_quote(stock_code: str) -> StockQuote:
                 status_code=404,
                 detail={
                     "error": "not_found",
-                    "message": f"未找到股票 {stock_code} 的行情数据"
+                    "message": f"ไม่พบข้อมูลราคาหุ้น {stock_code}"
                 }
             )
         
@@ -504,12 +504,12 @@ def get_stock_quote(stock_code: str) -> StockQuote:
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"获取实时行情失败: {e}", exc_info=True)
+        logger.error(f"การดึงข้อมูลราคาจริงล้มเหลว: {e}", exc_info=True)
         raise HTTPException(
             status_code=500,
             detail={
                 "error": "internal_error",
-                "message": f"获取实时行情失败: {str(e)}"
+                "message": f"การดึงข้อมูลราคาจริงล้มเหลว: {str(e)}"
             }
         )
 
@@ -518,17 +518,17 @@ def get_stock_quote(stock_code: str) -> StockQuote:
     "/{stock_code}/history",
     response_model=StockHistoryResponse,
     responses={
-        200: {"description": "历史行情数据"},
-        422: {"description": "不支持的周期参数", "model": ErrorResponse},
-        500: {"description": "服务器错误", "model": ErrorResponse},
+        200: {"description": "ข้อมูลราคาหุ้นตามเวลาอดีต"},
+        422: {"description": "พารามิเตอร์รอบเวลาที่ไม่รองรับ", "model": ErrorResponse},
+        500: {"description": "ข้อผิดพลาดของเซิร์ฟเวอร์", "model": ErrorResponse},
     },
-    summary="获取股票历史行情",
-    description="获取指定股票的历史 K 线数据"
+    summary="ดึงข้อมูลราคาหุ้นตามเวลาอดีต",
+    description="ดึงข้อมูลกราฟ K ตามหุ้นที่ระบุไว้"
 )
 def get_stock_history(
     stock_code: str,
-    period: str = Query("daily", description="K 线周期", pattern="^(daily|weekly|monthly)$"),
-    days: int = Query(30, ge=1, le=365, description="获取天数")
+    period: str = Query("daily", description="รอบเวลากราฟ K", pattern="^(daily|weekly|monthly)$"),
+    days: int = Query(30, ge=1, le=365, description="จำนวนวันที่ต้องการดึง")
 ) -> StockHistoryResponse:
     """
     获取股票历史行情
@@ -541,7 +541,7 @@ def get_stock_history(
         days: 获取天数
         
     Returns:
-        StockHistoryResponse: 历史行情数据
+        StockHistoryResponse: 历史ข้อมูลราคาตลาด
     """
     try:
         service = StockService()
@@ -585,11 +585,11 @@ def get_stock_history(
             }
         )
     except Exception as e:
-        logger.error(f"获取历史行情失败: {e}", exc_info=True)
+        logger.error(f"การดึงข้อมูลราคาหุ้นตามเวลาอดีตล้มเหลว: {e}", exc_info=True)
         raise HTTPException(
             status_code=500,
             detail={
                 "error": "internal_error",
-                "message": f"获取历史行情失败: {str(e)}"
+                "message": f"การดึงข้อมิูลราคาหุ้นตามเวลาอดีตล้มเหลว: {str(e)}"
             }
         )

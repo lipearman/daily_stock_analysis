@@ -1365,7 +1365,7 @@ class DatabaseManager(metaclass=_DatabaseManagerMeta):
                 return instance
 
             logger.info(
-                "DatabaseManager 检测到不同的 db_url，切换绑定: %r -> %r",
+                "DatabaseManager พบ db_url ต่างกัน สลับการ bind: %r -> %r",
                 getattr(instance, '_db_url', None),
                 requested_db_url,
             )
@@ -1461,7 +1461,7 @@ class DatabaseManager(metaclass=_DatabaseManagerMeta):
             self._ensure_chat_session_schema()
 
             self._initialized = True
-            logger.info(f"数据库初始化完成: {db_url}")
+            logger.info(f"การเริ่มต้นฐานข้อมูลสำเร็จ: {db_url}")
 
             # 注册退出钩子，确保程序退出时关闭数据库连接
             atexit.register(DatabaseManager._cleanup_engine, self._engine)
@@ -1471,7 +1471,7 @@ class DatabaseManager(metaclass=_DatabaseManagerMeta):
                 if created_engine is not None:
                     created_engine.dispose()
             except Exception as cleanup_exc:
-                logger.warning("数据库初始化失败后的引擎清理也失败: %s", cleanup_exc)
+                logger.warning("การล้างเครื่องมือหลังจากล้มเหลวในการเริ่มต้นฐานข้อมูลก็ล้มเหลวอีกครั้ง: %s", cleanup_exc)
             self._engine = None
             self._SessionLocal = None
             if not is_candidate:
@@ -2299,7 +2299,7 @@ class DatabaseManager(metaclass=_DatabaseManagerMeta):
                 for column in inspect(self._engine).get_columns(IntelligenceItem.__tablename__)
             }
         except Exception as exc:
-            logger.warning("资讯池 scope_value 回填检查失败，已跳过: %s", exc)
+            logger.warning("การตรวจสอบการเติมค่า scope_value ในแหล่งข้อมูลข่าวสารล้มเหลวแล้วข้ามไป: %s", exc)
             return
         if "scope_value" not in existing:
             return
@@ -2312,7 +2312,7 @@ class DatabaseManager(metaclass=_DatabaseManagerMeta):
                     (INTELLIGENCE_ITEM_NULL_SCOPE_VALUE,),
                 )
         except Exception as exc:
-            logger.warning("资讯池 scope_value 回填失败，已跳过: %s", exc)
+            logger.warning("การเติมค่า scope_value ในแหล่งข้อมูลข่าวสารล้มเหลวแล้วข้ามไป: %s", exc)
 
     @classmethod
     def get_instance(cls) -> 'DatabaseManager':
@@ -2345,9 +2345,9 @@ class DatabaseManager(metaclass=_DatabaseManagerMeta):
         try:
             if engine is not None:
                 engine.dispose()
-                logger.debug("数据库引擎已清理")
+                logger.debug("เครื่องมือฐานข้อมูลได้รับการล้างเรียบร้อยแล้ว")
         except Exception as e:
-            logger.warning(f"清理数据库引擎时出错: {e}")
+            logger.warning(f"เกิดข้อผิดพลาดขณะล้างเครื่องมือฐานข้อมูล: {e}")
 
     def _install_sqlite_pragma_handler(self) -> None:
         """为 SQLite 连接安装竞争保护参数。"""
@@ -2362,7 +2362,7 @@ class DatabaseManager(metaclass=_DatabaseManagerMeta):
                 if self._sqlite_file_db and self._sqlite_wal_enabled:
                     cursor.execute("PRAGMA journal_mode=WAL")
             except Exception as exc:
-                logger.warning("初始化 SQLite PRAGMA 失败: %s", exc)
+                logger.warning("การเริ่มต้น SQLite PRAGMA ล้มเหลว: %s", exc)
             finally:
                 cursor.close()
 
@@ -2397,7 +2397,7 @@ class DatabaseManager(metaclass=_DatabaseManagerMeta):
                 ):
                     delay = self._sqlite_write_retry_base_delay * (2 ** attempt)
                     logger.warning(
-                        "SQLite 写入锁冲突，准备重试: %s (%s/%s, %.2fs)",
+                        "ปะทะล็อกการเขียน SQLite กำลังเตรียมลองใหม่: %s (%s/%s, %.2fs)",
                         operation_name,
                         attempt + 1,
                         max_retries,
@@ -2455,8 +2455,8 @@ class DatabaseManager(metaclass=_DatabaseManagerMeta):
         """
         if not getattr(self, '_initialized', False) or not hasattr(self, '_SessionLocal'):
             raise RuntimeError(
-                "DatabaseManager 未正确初始化。"
-                "请确保通过 DatabaseManager.get_instance() 获取实例。"
+                "DatabaseManager เริ่มต้นไม่ถูกต้อง "
+                "กรุณาใช้ DatabaseManager.get_instance() เพื่อรับอินสแตนซ์"
             )
         session = self._SessionLocal()
         try:
@@ -2649,7 +2649,7 @@ class DatabaseManager(metaclass=_DatabaseManagerMeta):
                         session.flush()
                     local_saved_count += 1
                 except IntegrityError:
-                    logger.debug("新闻情报重复（已跳过）: %s %s", code, url_key)
+                    logger.debug("ข่าวสารซ้ำซ้อน (ข้ามไปแล้ว): %s %s", code, url_key)
 
             return local_saved_count
 
@@ -2658,9 +2658,9 @@ class DatabaseManager(metaclass=_DatabaseManagerMeta):
                 f"save_news_intel[{code}]",
                 _write,
             )
-            logger.info(f"保存新闻情报成功: {code}, 新增 {saved_count} 条")
+            logger.info(f"บันทึกข่าวสารสำเร็จ: {code}, เพิ่มข้อมูลใหม่ {saved_count} รายการ")
         except Exception as e:
-            logger.error(f"保存新闻情报失败: {e}")
+            logger.error(f"บันทึกข่าวสารล้มเหลว: {e}")
             raise
 
         return saved_count
@@ -2697,7 +2697,7 @@ class DatabaseManager(metaclass=_DatabaseManagerMeta):
             )
         except Exception as e:
             logger.debug(
-                "基本面快照写入失败（fail-open）: query_id=%s code=%s err=%s",
+                "เขียน snapshot พื้นฐานไม่สำเร็จ (fail-open): query_id=%s code=%s err=%s",
                 query_id,
                 code,
                 e,
@@ -2732,7 +2732,7 @@ class DatabaseManager(metaclass=_DatabaseManagerMeta):
                 ).scalar_one_or_none()
             except Exception as e:
                 logger.debug(
-                    "基本面快照读取失败（fail-open）: query_id=%s code=%s err=%s",
+                    "อ่าน snapshot พื้นฐานไม่สำเร็จ (fail-open): query_id=%s code=%s err=%s",
                     query_id,
                     code,
                     e,
@@ -2788,7 +2788,7 @@ class DatabaseManager(metaclass=_DatabaseManagerMeta):
             )
         except Exception as exc:
             logger.warning(
-                "选股运行历史写入失败（fail-open）: run_id=%s err=%s",
+                "เขียนประวัติการรันคัดหุ้นไม่สำเร็จ (fail-open): run_id=%s err=%s",
                 run_id,
                 exc,
             )
@@ -3014,7 +3014,7 @@ class DatabaseManager(metaclass=_DatabaseManagerMeta):
                 _write,
             )
         except Exception as e:
-            logger.error(f"保存分析历史失败: {e}")
+            logger.error(f"บันทึกประวัติการวิเคราะห์ล้มเหลว: {e}")
             return 0
 
     def update_analysis_history_diagnostics(
@@ -3089,7 +3089,7 @@ class DatabaseManager(metaclass=_DatabaseManagerMeta):
             )
         except Exception as e:
             logger.warning(
-                "更新分析历史诊断快照失败（fail-open）: query_id=%s code=%s err=%s",
+                "อัปเดต snapshot วินิจฉัยประวัติการวิเคราะห์ไม่สำเร็จ (fail-open): query_id=%s code=%s err=%s",
                 query_id,
                 code,
                 e,
@@ -3494,7 +3494,7 @@ class DatabaseManager(metaclass=_DatabaseManagerMeta):
             本次实际新增的记录数（不含更新）
         """
         if df is None or df.empty:
-            logger.warning(f"保存数据为空，跳过 {code}")
+            logger.warning(f"ข้อมูลที่บันทึกไว้เป็นว่างเปล่า ข้ามไปที่ {code}")
             return 0
 
         # D1: canonical_id=None → derive via the Phase 1 parser; on failure
@@ -3645,10 +3645,10 @@ class DatabaseManager(metaclass=_DatabaseManagerMeta):
                 f"save_daily_data[{code}]",
                 _write,
             )
-            logger.info(f"保存 {code} 数据成功，新增 {saved_count} 条")
+            logger.info(f"บันทึกข้อมูล {code} สำเร็จ เพิ่มข้อมูลใหม่ {saved_count} รายการ")
             return saved_count
         except Exception as e:
-            logger.error(f"保存 {code} 数据失败: {e}")
+            logger.error(f"บันทึกข้อมูล {code} ล้มเหลว: {e}")
             raise
     
     def get_analysis_context(
@@ -3679,7 +3679,7 @@ class DatabaseManager(metaclass=_DatabaseManagerMeta):
         recent_data = self.get_latest_data(code, days=2)
         
         if not recent_data:
-            logger.warning(f"未找到 {code} 的数据")
+            logger.warning(f"ไม่พบข้อมูลของ {code}")
             return None
         
         today_data = recent_data[0]
@@ -4800,12 +4800,12 @@ if __name__ == "__main__":
     
     db = get_db()
     
-    print("=== 数据库测试 ===")
-    print(f"数据库初始化成功")
+    print("=== การทดสอบฐานข้อมูล ===")
+    print(f"การเริ่มต้นฐานข้อมูลสำเร็จ")
     
     # 测试检查今日数据
     has_data = db.has_today_data('600519')
-    print(f"茅台今日是否有数据: {has_data}")
+    print(f"มีข้อมูลสำหรับปั่นป่วนวันนี้หรือไม่: {has_data}")
     
     # 测试保存数据
     test_df = pd.DataFrame({
@@ -4824,8 +4824,8 @@ if __name__ == "__main__":
     })
     
     saved = db.save_daily_data(test_df, '600519', 'TestSource')
-    print(f"保存测试数据: {saved} 条")
+    print(f"บันทึกข้อมูลทดสอบ: {saved} รายการ")
     
     # 测试获取上下文
     context = db.get_analysis_context('600519')
-    print(f"分析上下文: {context}")
+    print(f"บริบทการวิเคราะห์: {context}")

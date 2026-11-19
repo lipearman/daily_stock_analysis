@@ -60,6 +60,14 @@ const BLOCK_LABELS: Record<ReportLanguage, Record<string, string>> = {
     fundamentals: '펀더멘털',
     chip: '매물대',
   },
+  th: {
+    quote: 'quote',
+    daily_bars: 'daily bars',
+    technical: 'technical',
+    news: 'news',
+    fundamentals: 'fundamentals',
+    chip: 'chip',
+    },
 };
 
 const TEXT = {
@@ -159,6 +167,38 @@ const TEXT = {
       fetch_failed: '수집 실패',
     },
   },
+  th: {
+    eyebrow: 'DATA CONTEXT',
+    title: 'Input Blocks',
+    counts: 'Status Counts',
+    source: 'Source',
+    sourceUnavailable: 'Input source not recorded',
+    warnings: 'Warnings',
+    missingReasons: 'Details',
+    diagnosticCode: 'Diagnostic code',
+    inputScope: 'Analysis Input',
+    evidenceScope: 'Shows inputs included in this LLM run, not provider run success',
+    qualityScore: 'Quality',
+    limitations: 'Data Limitations',
+    newsResultCount: 'News Results',
+    triggerSource: 'Trigger',
+    qualityLevel: {
+      good: 'Good',
+      usable: 'Usable',
+      limited: 'Limited',
+      poor: 'Poor',
+    },
+    status: {
+      available: 'Available',
+      missing: 'Missing',
+      not_supported: 'Not supported',
+      fallback: 'Fallback',
+      stale: 'Stale',
+      estimated: 'Estimated',
+      partial: 'Partial',
+      fetch_failed: 'Fetch failed',
+    },
+    },
 } as const;
 
 const MISSING_REASON_LABELS: Record<ReportLanguage, Record<string, string>> = {
@@ -207,12 +247,28 @@ const MISSING_REASON_LABELS: Record<ReportLanguage, Record<string, string>> = {
     today_missing: '당일 데이터가 포함되지 않아 장중 판단이 제한될 수 있습니다. 실시간 시세와 대조한 후 다시 분석하세요',
     yesterday_missing: '전일 데이터가 포함되지 않아 일봉 비교가 불완전할 수 있습니다. 소스 갱신 후 다시 분석하세요',
   },
+  th: {
+    daily_bars_missing: 'Daily bars were not included, so technical indicators may be incomplete; check the daily data source, network, or rate limits and rerun',
+    news_context_missing: 'News was not included in this LLM run, so the conclusion did not use news context; related news on the report page is loaded separately and does not indicate that it was used in this analysis. Check search configuration, network, or rate limits and rerun',
+    realtime_quote_missing: 'Real-time quotes were not included, so price-related conclusions may be limited; check the quote source, network, or rate limits and rerun',
+    trend_result_missing: 'Technical analysis was not included, so the technical view may be incomplete; check daily-bar completeness and rerun',
+    fundamental_context_missing: 'Fundamentals were not included, so the conclusion did not use fundamental data; check the data source, network, or rate limits and rerun',
+    fundamental_pipeline_failed: 'Fundamental retrieval failed and this analysis did not use fundamental data; check the data-source configuration, network, or rate limits and rerun',
+    fundamentals_not_supported: 'Fundamental data is not supported for this market or symbol and was not used; cross-check other indicators',
+    fundamental_coverage_missing: 'Fundamental coverage was not included, so some financial context may be missing; check source coverage and rerun',
+    fundamental_source_chain_missing: 'Fundamental source-chain metadata was not recorded; use the current status to determine whether fundamentals were included, and review the source and warnings for provenance',
+    chip_distribution_missing: 'Chip distribution was not included and was not used in the conclusion; confirm support for this market or symbol',
+    chip_not_supported: 'Chip data is not supported for this market or symbol and was not used; cross-check other indicators',
+    today_missing: 'Today\'s data was not included, so intraday conclusions may be limited; cross-check real-time quotes and rerun',
+    yesterday_missing: 'Yesterday\'s data was not included, so daily comparisons may be incomplete; wait for the source to update and rerun',
+    },
 };
 
 const UNKNOWN_REASON_DETAILS: Record<ReportLanguage, string> = {
   zh: '未记录明确原因；请结合状态、来源和告警排查',
   en: 'No specific reason was recorded; review the status, source, and warnings',
   ko: '명확한 원인이 기록되지 않았습니다. 상태, 출처 및 경고를 함께 확인하세요',
+  th: 'No specific reason was recorded; review the status, source, and warnings',
 };
 
 const STATUS_FALLBACK_GUIDANCE: Record<
@@ -246,6 +302,15 @@ const STATUS_FALLBACK_GUIDANCE: Record<
     estimated: '이번 분석은 추정 데이터를 사용했습니다. 원본 데이터와 결과를 교차 확인하세요',
     partial: '데이터의 일부만 포함되어 관련 결론이 불완전할 수 있습니다. 경고와 데이터 소스를 확인한 후 다시 분석하세요',
   },
+  th: {
+    missing: 'Data was not included, so related conclusions may be incomplete; check the data source, configuration, or network and rerun',
+    fetch_failed: 'Data retrieval failed and this analysis did not use the data; check the source, network, or rate limits and rerun',
+    not_supported: 'This data is not supported for the current market or symbol and was not used; cross-check other indicators',
+    fallback: 'This analysis used a fallback data path; review the result against its source and warnings',
+    stale: 'This analysis used data that may not be current; check the timestamp and rerun if needed',
+    estimated: 'This analysis used estimated data; cross-check the result against source data',
+    partial: 'Only part of the data was included, so related conclusions may be incomplete; check warnings and the data source and rerun',
+    },
 };
 
 const STATUS_ORDER: AnalysisContextPackBlockStatus[] = [

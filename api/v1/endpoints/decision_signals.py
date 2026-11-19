@@ -55,7 +55,7 @@ router = APIRouter(dependencies=[Security(admin_session_cookie)])
 AUTH_RESPONSE = {
     401: {
         "model": ErrorResponse,
-        "description": "未登录或管理员会话无效（ADMIN_AUTH_ENABLED=true 时）",
+        "description": "ยังไม่ได้เข้าสู่ระบบ หรือเซสชันผู้ดูแลหมดอายุ (เมื่อ ADMIN_AUTH_ENABLED=true)",
     },
 }
 
@@ -104,17 +104,17 @@ def _guardrail_blocked(exc: DecisionSignalReassessGuardrailBlockedError) -> HTTP
     response_model=DecisionSignalMutationResponse,
     responses={
         **AUTH_RESPONSE,
-        400: {"model": ErrorResponse, "description": "请求字段非法"},
-        422: {"model": ErrorResponse, "description": "请求体或路径参数校验失败"},
-        500: {"model": ErrorResponse, "description": "创建失败"},
+        400: {"model": ErrorResponse, "description": "ฟิลด์ที่ส่งมาไม่ถูกต้อง"},
+        422: {"model": ErrorResponse, "description": "การตรวจสอบรูปแบบข้อมูลร้องขอหรือพารามิเตอร์เส้นทางล้มเหลว"},
+        500: {"model": ErrorResponse, "description": "การสร้างล้มเหลว"},
     },
-    summary="创建或去重决策信号",
+    summary="สร้างหรือลบซ้ำสัญญาณตัดสินใจ",
     description=(
-        "显式写入 DecisionSignal。未传 horizon/expires_at 时由服务补默认生命周期；"
-        "命中同源去重键或窄 relaxed 去重时返回已有记录和 created=false；"
-        "active 新建或 expired 续期会失效同股旧 active 相反信号，"
-        "active duplicate retry 也会重跑该修复；普通旧 duplicate/replay 不作为新的激活事件；"
-        "不保证并发绝对幂等。"
+        "เขียนสัญญาณตัดสินใจอย่างชัดเจน โดยหากไม่ได้ส่ง horizon/expires_at จะให้บริการเติมเต็มช่วงเวลาค่าเริ่มต้นโดยอัตโนมัติ;"
+        "เมื่อพบกับกุญแจซ้ำหรือการลบซ้ำแบบผ่อนปรนจะคืนข้อมูลเดิมพร้อม created=false;"
+        "เมื่อสร้างสัญญาณใหม่หรือยืดอายุสัญญาณที่หมดอายุแล้วจะทำให้สัญญาณ active เดิมหายไป;"
+        "การพยายามซ้ำสัญญาณ active duplicate จะทำซ้ำการแก้ไขครั้งเดิม ส่วนการซ้ำแบบปกติจะไม่ถือเป็นเหตุการณ์การเปิดใช้งานใหม่;"
+        "ไม่รับประกันความเท่าเทียมแบบสมบูรณ์ภายใต้การประมวลผลพร้อมกัน"
     ),
     operation_id="createDecisionSignal",
 )
@@ -136,17 +136,17 @@ def create_signal(request: DecisionSignalCreateRequest) -> DecisionSignalMutatio
     response_model=DecisionSignalListResponse,
     responses={
         **AUTH_RESPONSE,
-        400: {"model": ErrorResponse, "description": "查询参数非法"},
-        422: {"model": ErrorResponse, "description": "查询参数校验失败"},
-        500: {"model": ErrorResponse, "description": "查询失败"},
+        400: {"model": ErrorResponse, "description": "พารามิเตอร์การค้นหาไม่ถูกต้อง"},
+        422: {"model": ErrorResponse, "description": "การตรวจสอบพารามิเตอร์การค้นหาล้มเหลว"},
+        500: {"model": ErrorResponse, "description": "การค้นหาล้มเหลว"},
     },
-    summary="查询决策信号列表",
+    summary="ดึงรายการสัญญาณตัดสินใจ",
     description=(
-        "分页查询 DecisionSignal；读取前会懒过期已到 expires_at 的 active 信号。"
-        "当 source_type=analysis 且只传 source_report_id 查询时，若无命中信号会尝试基于该历史报告一次性懒回填 "
-        "（仅首次命中列表场景，且该精确查询会触发历史决策信号回填写入，属于 read-with-write 行为；"
-        "不影响其他分页列表筛选参数场景）。"
-        "holding_only=true 只读取 active 账户的 portfolio_positions 缓存持仓，不触发 portfolio snapshot replay。"
+        "ดึงรายการ DecisionSignal แบบแบ่งหน้า โดยก่อนอ่านจะตรวจสอบและล่าช้าการหมดอายุของสัญญาณ active ที่ถึง expires_at"
+        "เมื่อ source_type=analysis และส่งเฉพาะ source_report_id มาในการค้นหา หากไม่พบสัญญาณจะพยายามเติมกลับแบบล่าช้าจากรายงานประวัตินี้"
+        "(เฉพาะในสถานการณ์ครั้งแรกที่พบรายการ และการค้นหาแบบแม่นยำนี้จะกระตุ้นให้เติมกลับสัญญาณตัดสินใจจากอดีต ซึ่งเป็นพฤติกรรมแบบ read-with-write;"
+        "ไม่กระทบต่อพารามิเตอร์กรองรายการอื่นๆ ในสถานการณ์แบ่งหน้า)"
+        "holding_only=true only reads cached portfolio_positions for active accounts, does not trigger portfolio snapshot replay."
     ),
     operation_id="listDecisionSignals",
 )
@@ -213,15 +213,15 @@ def list_signals(
     response_model=DecisionSignalOutcomeRunResponse,
     responses={
         **AUTH_RESPONSE,
-        400: {"model": ErrorResponse, "description": "请求字段非法"},
-        404: {"model": ErrorResponse, "description": "信号不存在"},
-        422: {"model": ErrorResponse, "description": "请求体校验失败"},
-        500: {"model": ErrorResponse, "description": "后验计算失败"},
+        400: {"model": ErrorResponse, "description": "ฟิลด์ที่ส่งมาไม่ถูกต้อง"},
+        404: {"model": ErrorResponse, "description": "ไม่มีสัญญาณ"},
+        422: {"model": ErrorResponse, "description": "การตรวจสอบรูปแบบร่างข้อมูลล้มเหลว"},
+        500: {"model": ErrorResponse, "description": "การคำนวณหลังเหตุการณ์ล้มเหลว"},
     },
-    summary="触发决策信号后验评估",
+    summary="ประเมินผลหลังเหตุการณ์สัญญาณตัดสินใจ",
     description=(
-        "显式触发 signal-level outcome 计算；默认跳过 completed 和终态 unable，"
-        "但会重算缺少行情数据等可恢复 unable；force=true 会重算并覆盖同一 "
+        "กระตุ้นการคำนวณผลลัพธ์ระดับสัญญาณอย่างชัดเจน โดยค่า default จะข้าม completed และสถานะสุดท้าย unable"
+        "แต่จะคำนวณใหม่หากขาดข้อมูลราคาหรืออื่นๆ ที่สามารถฟื้นคืนได้ โดยที่ force=true จะคำนวณใหม่และทับซ้อนข้อมูลเดิม"
         "signal_id+horizon+engine_version。"
     ),
     operation_id="runDecisionSignalOutcomes",
@@ -255,12 +255,12 @@ def run_outcomes(request: DecisionSignalOutcomeRunRequest) -> DecisionSignalOutc
     response_model=DecisionSignalOutcomeListResponse,
     responses={
         **AUTH_RESPONSE,
-        400: {"model": ErrorResponse, "description": "查询参数非法"},
-        422: {"model": ErrorResponse, "description": "查询参数校验失败"},
-        500: {"model": ErrorResponse, "description": "查询失败"},
+        400: {"model": ErrorResponse, "description": "พารามิเตอร์การค้นหาไม่ถูกต้อง"},
+        422: {"model": ErrorResponse, "description": "การตรวจสอบพารามิเตอร์การค้นหาล้มเหลว"},
+        500: {"model": ErrorResponse, "description": "การค้นหาล้มเหลว"},
     },
-    summary="查询决策信号后验结果",
-    description="分页查询 signal-level outcome；默认只查当前 signal 后验 engine_version。",
+    summary="ตรวจสอบผลลัพธ์หลังการตัดสินใจของสัญญาณ",
+    description="ดึงข้อมูลผลลัพธ์ระดับสัญญาณ (signal-level outcome) แบบแบ่งหน้า โดยค่าเริ่มต้นจะดึงเฉพาะผลลัพธ์หลังการตัดสินใจของสัญญาณปัจจุบันใน engine_version",
     operation_id="listDecisionSignalOutcomes",
 )
 def list_outcomes(
@@ -296,12 +296,12 @@ def list_outcomes(
     response_model=DecisionSignalOutcomeStatsResponse,
     responses={
         **AUTH_RESPONSE,
-        400: {"model": ErrorResponse, "description": "查询参数非法"},
-        422: {"model": ErrorResponse, "description": "查询参数校验失败"},
-        500: {"model": ErrorResponse, "description": "统计失败"},
+        400: {"model": ErrorResponse, "description": "พารามิเตอร์การค้นหาไม่ถูกต้อง"},
+        422: {"model": ErrorResponse, "description": "การตรวจสอบพารามิเตอร์การค้นหาล้มเหลว"},
+        500: {"model": ErrorResponse, "description": "การนับรวมล้มเหลว"},
     },
-    summary="查询决策信号后验统计",
-    description="默认统计当前 engine_version，且排除 archived 信号。",
+    summary="ตรวจสอบสถิติผลลัพธ์หลังการตัดสินใจของสัญญาณ",
+    description="ค่าเริ่มต้นจะนับรวมข้อมูลจาก engine_version ปัจจุบัน และจะตัดสัญญาณที่ถูกลบออกไป",
     operation_id="getDecisionSignalOutcomeStats",
 )
 def get_outcome_stats(
@@ -329,15 +329,15 @@ def get_outcome_stats(
     response_model=DecisionSignalReviewMemory,
     responses={
         **AUTH_RESPONSE,
-        400: {"model": ErrorResponse, "description": "查询参数非法"},
-        422: {"model": ErrorResponse, "description": "路径或查询参数校验失败"},
-        500: {"model": ErrorResponse, "description": "查询失败"},
+        400: {"model": ErrorResponse, "description": "พารามิเตอร์การค้นหาไม่ถูกต้อง"},
+        422: {"model": ErrorResponse, "description": "การตรวจสอบเส้นทางหรือพารามิเตอร์การค้นหาล้มเหลว"},
+        500: {"model": ErrorResponse, "description": "การค้นหาล้มเหลว"},
     },
-    summary="查询单票决策信号复盘摘要",
+    summary="ดูสรุปผลการวิเคราะห์การตัดสินใจของสัญญาณรายหุ้น",
     description=(
-        "聚合指定股票在当前 engine_version 下的 signal-level outcome/feedback，"
-        "返回只读低敏 ReviewMemory 摘要；样本不足、unable 率高或数据质量弱时 "
-        "confidence_adjustment 固定为 observe，仅供观察，不构成交易信号。"
+        "รวมข้อมูลผลลัพธ์ระดับสัญญาณ (signal-level outcome/feedback) จากหุ้นที่ระบุไว้ใน engine_version ปัจจุบัน"
+        "คืนสรุปเฉพาะการอ่านข้อมูลที่ปลอดภัยต่ำ (low-sensitivity ReviewMemory) โดยหากตัวอย่างไม่เพียงพอ อัตรา unable สูง หรือคุณภาพข้อมูลแย่"
+        "ค่า confidence_adjustment จะถูกตั้งค่าคงที่เป็น observe เพื่อใช้สำหรับการสังเกตเท่านั้น และไม่ใช่สัญญาณการซื้อขาย"
     ),
     operation_id="getDecisionSignalStockReview",
 )
@@ -359,15 +359,15 @@ def get_stock_review(
     response_model=DecisionSignalReassessResponse,
     responses={
         **AUTH_RESPONSE,
-        400: {"model": DecisionSignalReassessErrorResponse, "description": "历史报告不适用或持久化被风控阻断"},
-        404: {"model": ErrorResponse, "description": "来源历史报告不存在"},
-        422: {"model": ErrorResponse, "description": "请求体校验失败"},
-        500: {"model": ErrorResponse, "description": "重评估失败"},
+        400: {"model": DecisionSignalReassessErrorResponse, "description": "รายงานประวัติไม่สามารถใช้งานได้หรือถูกปิดกั้นโดยระบบควบคุมความเสี่ยง"},
+        404: {"model": ErrorResponse, "description": "รายงานประวัติแหล่งที่มาไม่มีอยู่"},
+        422: {"model": ErrorResponse, "description": "การตรวจสอบรูปแบบร่างข้อมูลล้มเหลว"},
+        500: {"model": ErrorResponse, "description": "การประเมินใหม่ล้มเหลว"},
     },
-    summary="重评估决策风格并可选保存",
+    summary="ประเมินรูปแบบการตัดสินใจใหม่ และเลือกเก็บรักษาไว้",
     description=(
-        "基于 source_report_id 对应的持久化历史报告快照重新计算 decision_profile 信号；"
-        "persist=false 返回只读 preview，persist=true 将通过 guardrail 的服务端结果写入 DecisionSignal。"
+        "คำนวณสัญญาณ decision_profile อีกครั้งจากภาพสำเนาประวัติรายงานที่เก็บไว้ตาม source_report_id"
+        "หาก persist=false จะคืนภาพรวมอ่านได้เพียงเท่านั้น ส่วน persist=true จะบันทึกผลลัพธ์จากเซิร์ฟเวอร์ guardrail เข้าไปใน DecisionSignal"
     ),
     operation_id="reassessDecisionSignalPreview",
 )
@@ -398,12 +398,12 @@ def reassess_signal(request: DecisionSignalReassessRequest) -> DecisionSignalRea
     response_model=DecisionSignalListResponse,
     responses={
         **AUTH_RESPONSE,
-        400: {"model": ErrorResponse, "description": "请求参数非法"},
-        422: {"model": ErrorResponse, "description": "路径或查询参数校验失败"},
-        500: {"model": ErrorResponse, "description": "查询失败"},
+        400: {"model": ErrorResponse, "description": "พารามิเตอร์คำขอไม่ถูกต้อง"},
+        422: {"model": ErrorResponse, "description": "การตรวจสอบเส้นทางหรือพารามิเตอร์การค้นหาล้มเหลว"},
+        500: {"model": ErrorResponse, "description": "การค้นหาล้มเหลว"},
     },
-    summary="查询股票最新 active 决策信号",
-    description="返回指定股票最新 active 信号列表；读取前会执行懒过期。",
+    summary="ดูสัญญาณการตัดสินใจที่เป็นไปอยู่ (active) ล่าสุดของหุ้น",
+    description="คืนรายการสัญญาณการตัดสินใจที่เป็นไปอยู่ (active) ล่าสุดของหุ้นที่ระบุไว้ โดยก่อนอ่านจะดำเนินการตรวจสอบการหมดอายุแบบล่าช้า",
     operation_id="getLatestDecisionSignals",
 )
 def get_latest_active(
@@ -433,12 +433,12 @@ def get_latest_active(
     response_model=DecisionSignalItem,
     responses={
         **AUTH_RESPONSE,
-        404: {"model": ErrorResponse, "description": "信号不存在"},
-        422: {"model": ErrorResponse, "description": "路径参数校验失败"},
-        500: {"model": ErrorResponse, "description": "查询失败"},
+        404: {"model": ErrorResponse, "description": "ไม่มีสัญญาณ"},
+        422: {"model": ErrorResponse, "description": "การตรวจสอบพารามิเตอร์เส้นทางล้มเหลว"},
+        500: {"model": ErrorResponse, "description": "การค้นหาล้มเหลว"},
     },
-    summary="查询单条决策信号",
-    description="按 ID 查询单条 DecisionSignal；读取前会执行懒过期。",
+    summary="ดูสัญญาณการตัดสินใจรายรายการ",
+    description="ดู DecisionSignal รายการเดียวตาม ID โดยก่อนอ่านจะดำเนินการตรวจสอบการหมดอายุแบบล่าช้า",
     operation_id="getDecisionSignal",
 )
 def get_signal(signal_id: int) -> DecisionSignalItem:
@@ -458,12 +458,12 @@ def get_signal(signal_id: int) -> DecisionSignalItem:
     response_model=DecisionSignalOutcomeListResponse,
     responses={
         **AUTH_RESPONSE,
-        404: {"model": ErrorResponse, "description": "信号不存在"},
-        422: {"model": ErrorResponse, "description": "路径参数校验失败"},
-        500: {"model": ErrorResponse, "description": "查询失败"},
+        404: {"model": ErrorResponse, "description": "ไม่มีสัญญาณ"},
+        422: {"model": ErrorResponse, "description": "การตรวจสอบพารามิเตอร์เส้นทางล้มเหลว"},
+        500: {"model": ErrorResponse, "description": "การค้นหาล้มเหลว"},
     },
-    summary="查询单个决策信号后验结果",
-    description="返回指定 signal_id 在当前 engine_version 下的后验结果。",
+    summary="ดูผลลัพธ์หลังการตัดสินใจของสัญญาณการตัดสินใจรายรายการ",
+    description="คืนผลลัพธ์หลังการตัดสินใจของสัญญาณตาม signal_id ใน engine_version ปัจจุบัน",
     operation_id="listDecisionSignalOutcomesBySignal",
 )
 def list_signal_outcomes(signal_id: int) -> DecisionSignalOutcomeListResponse:
@@ -481,12 +481,12 @@ def list_signal_outcomes(signal_id: int) -> DecisionSignalOutcomeListResponse:
     response_model=DecisionSignalFeedbackItem,
     responses={
         **AUTH_RESPONSE,
-        404: {"model": ErrorResponse, "description": "信号不存在"},
-        422: {"model": ErrorResponse, "description": "路径参数校验失败"},
-        500: {"model": ErrorResponse, "description": "查询失败"},
+        404: {"model": ErrorResponse, "description": "ไม่มีสัญญาณ"},
+        422: {"model": ErrorResponse, "description": "การตรวจสอบพารามิเตอร์เส้นทางล้มเหลว"},
+        500: {"model": ErrorResponse, "description": "การค้นหาล้มเหลว"},
     },
-    summary="查询决策信号用户反馈",
-    description="没有反馈时返回 feedback_value=null；信号不存在时返回 404。",
+    summary="ดูข้อเสนอแนะจากผู้ใช้งานเกี่ยวกับสัญญาณการตัดสินใจ",
+    description="หากไม่มีข้อเสนอแนะจะคืน feedback_value=null หากสัญญาณไม่มีอยู่จะคืนค่า 404",
     operation_id="getDecisionSignalFeedback",
 )
 def get_feedback(signal_id: int) -> DecisionSignalFeedbackItem:
@@ -504,13 +504,13 @@ def get_feedback(signal_id: int) -> DecisionSignalFeedbackItem:
     response_model=DecisionSignalFeedbackItem,
     responses={
         **AUTH_RESPONSE,
-        400: {"model": ErrorResponse, "description": "请求字段非法"},
-        404: {"model": ErrorResponse, "description": "信号不存在"},
-        422: {"model": ErrorResponse, "description": "请求体或路径参数校验失败"},
-        500: {"model": ErrorResponse, "description": "更新失败"},
+        400: {"model": ErrorResponse, "description": "ฟิลด์ที่ส่งมาไม่ถูกต้อง"},
+        404: {"model": ErrorResponse, "description": "ไม่มีสัญญาณ"},
+        422: {"model": ErrorResponse, "description": "การตรวจสอบรูปแบบข้อมูลร้องขอหรือพารามิเตอร์เส้นทางล้มเหลว"},
+        500: {"model": ErrorResponse, "description": "การอัปเดตล้มเหลว"},
     },
-    summary="写入决策信号用户反馈",
-    description="按 signal_id upsert 最新 useful/not_useful 反馈。",
+    summary="บันทึกข้อเสนอแนะจากผู้ใช้งานเกี่ยวกับสัญญาณการตัดสินใจ",
+    description="อัปเดตข้อเสนอแนะ useful/not_useful ล่าสุดตาม signal_id",
     operation_id="putDecisionSignalFeedback",
 )
 def put_feedback(signal_id: int, request: DecisionSignalFeedbackRequest) -> DecisionSignalFeedbackItem:
@@ -538,16 +538,16 @@ def put_feedback(signal_id: int, request: DecisionSignalFeedbackRequest) -> Deci
     response_model=DecisionSignalItem,
     responses={
         **AUTH_RESPONSE,
-        400: {"model": ErrorResponse, "description": "状态非法"},
-        404: {"model": ErrorResponse, "description": "信号不存在"},
-        422: {"model": ErrorResponse, "description": "请求体或路径参数校验失败"},
-        500: {"model": ErrorResponse, "description": "更新失败"},
+        400: {"model": ErrorResponse, "description": "สถานะไม่ถูกต้อง"},
+        404: {"model": ErrorResponse, "description": "ไม่มีสัญญาณ"},
+        422: {"model": ErrorResponse, "description": "การตรวจสอบรูปแบบข้อมูลร้องขอหรือพารามิเตอร์เส้นทางล้มเหลว"},
+        500: {"model": ErrorResponse, "description": "การอัปเดตล้มเหลว"},
     },
-    summary="更新决策信号状态",
+    summary="อัปเดตสถานะสัญญาณการตัดสินใจ",
     description=(
-        "只更新合法状态和可选 metadata；省略 metadata 时保留原值，null 时清空，"
-        "object 时按整包替换并保持正式 decision_profile 身份。"
-        "expired/invalidated/closed/archived 等 terminal 状态不能直接 PATCH 回 active。"
+        "อัปเดตเฉพาะสถานะที่ถูกต้องและ metadata ที่เลือกใช้ได้ หากไม่ระบุ metadata จะคงค่าเดิม หากเป็น null จะล้างค่าออก"
+        "เมื่อเป็น object จะแทนที่ทั้งชุดข้อมูลและรักษาตัวตนของ decision_profile อย่างเป็นทางการไว้"
+        "สถานะสุดท้าย เช่น expired/invalidated/closed/archived ไม่สามารถเปลี่ยนกลับเป็น active โดยตรงได้"
     ),
     operation_id="updateDecisionSignalStatus",
 )

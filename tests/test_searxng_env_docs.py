@@ -99,7 +99,7 @@ def test_workflow_reports_disabled_when_variable_unset() -> None:
     ).read_text(encoding="utf-8")
 
     assert "默认开启" not in workflow
-    assert "默认关闭" in workflow
+    assert "ปิดโดยค่าเริ่มต้น" in workflow
 
 
 def test_docs_describe_public_searxng_discovery_as_opt_in() -> None:

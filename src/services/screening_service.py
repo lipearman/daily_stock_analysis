@@ -943,7 +943,7 @@ class ScreeningService:
                 status_code=404,
                 detail={
                     "error": "screening_run_not_found",
-                    "message": f"选股运行 {run_id} 不存在。",
+                    "message": f"การรันคัดหุ้น {run_id} ไม่มีอยู่",
                 },
             )
         return {"enabled": True, **run}
@@ -960,7 +960,7 @@ class ScreeningService:
                 status_code=503,
                 detail={
                     "error": "screening_history_unavailable",
-                    "message": "DSA 数据库未注入，无法读取选股运行历史。",
+                    "message": "ยังไม่ได้ inject ฐานข้อมูล DSA อ่านประวัติการรันคัดหุ้นไม่ได้",
                 },
             )
         return self.db_manager
@@ -1123,7 +1123,7 @@ class ScreeningService:
         if not topic_text:
             raise HTTPException(
                 status_code=400,
-                detail={"error": "screening_hotspot_topic_required", "message": "热点题材名称不能为空。"},
+                detail={"error": "screening_hotspot_topic_required", "message": "ชื่อธีมร้อนต้องไม่ว่างเปล่า"},
             )
         provider_name, provider_arg = _resolve_hotspot_provider(provider)
         if not isinstance(provider_arg, DsaEastMoneyHotspotProvider):
@@ -1242,14 +1242,14 @@ class ScreeningService:
         except (TypeError, KeyError) as exc:
             raise HTTPException(
                 status_code=422,
-                detail={"error": "screening_invalid_input", "message": f"Screening 参数非法：{exc}"},
+                detail={"error": "screening_invalid_input", "message": f"พารามิเตอร์ Screening ไม่ถูกต้อง: {exc}"},
             ) from exc
         except HTTPException:
             raise
         except Exception as exc:
             raise HTTPException(
                 status_code=424,
-                detail={"error": "screening_screen_failed", "message": f"Screening 选股运行失败：{exc}"},
+                detail={"error": "screening_screen_failed", "message": f"การรันคัดหุ้น Screening ล้มเหลว: {exc}"},
             ) from exc
 
         raw_data = _to_plain(raw)
@@ -1269,7 +1269,7 @@ class ScreeningService:
         _emit_screening_progress(
             progress_callback,
             92,
-            "正在补充入选股票的新闻与事件",
+            "กำลังเสริมข่าวและเหตุการณ์ของหุ้นที่ติดให้",
         )
         selected, dsa_enrichment = _enrich_candidates_with_dsa(selected, candidate_context_cache=candidate_context_cache)
         selected = [
@@ -1513,7 +1513,7 @@ def _ensure_screening_available_for_use() -> None:
         return
     normalized_diagnostics = _include_screening_diagnostic_suffix(diagnostics)
     raise _screening_unavailable_exception(
-        "选股功能初始化失败，请检查策略文件、依赖和服务端日志。",
+        "เริ่มต้นฟีเจอร์คัดหุ้นไม่สำเร็จ กรุณาตรวจสอบไฟล์กลยุทธ์ การพึ่งพา และ log ฝั่งเซิร์ฟเวอร์",
         diagnostics=normalized_diagnostics,
     )
 
@@ -1574,7 +1574,7 @@ def _call_screening_status() -> Dict[str, Any]:
     except Exception as exc:
         diagnostics = _log_unexpected_screening_exception("strategy_load", exc)
         raise _screening_unavailable_exception(
-            f"选股功能状态检查失败：{exc}",
+            f"ตรวจสอบสถานะฟีเจอร์คัดหุ้นไม่สำเร็จ: {exc}",
             diagnostics=diagnostics,
         ) from exc
     return {
@@ -1621,7 +1621,7 @@ def _list_strategies() -> List[Dict[str, Any]]:
     if not isinstance(raw, list):
         raise HTTPException(
             status_code=424,
-            detail={"error": "screening_invalid_result", "message": "选股策略列表结构非法。"},
+            detail={"error": "screening_invalid_result", "message": "โครงสร้างรายการกลยุทธ์คัดหุ้นไม่ถูกต้อง"},
         )
 
     normalized: List[Dict[str, Any]] = []
@@ -3831,8 +3831,8 @@ def _ensure_supported_market(market: str) -> None:
             detail={
                 "error": "screening_invalid_market",
                 "message": (
-                    f"市场 {market} 不在选股功能支持范围内"
-                    f"（支持市场：{', '.join(map(str, normalized)) or '未知'}）。"
+                    f"ตลาด {market} ไม่อยู่ในขอบเขตที่ฟีเจอร์คัดหุ้นรองรับ"
+                    f" (ตลาดที่รองรับ: {', '.join(map(str, normalized)) or 'ไม่ทราบ'})"
                 ),
             },
         )

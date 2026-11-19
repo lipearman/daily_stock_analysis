@@ -352,11 +352,11 @@ class CircuitBreaker:
                     state['state'] = self.HALF_OPEN
                     state['half_open_calls'] = 0
                     state['last_failure_time'] = current_time
-                    logger.info(f"[熔断器] {source} 冷却完成，进入半开状态")
+                    logger.info(f"[เครื่องควบคุมการปิดบัญชี] {source} เสร็จสิ้นการเย็นลงแล้ว เข้าสู่สถานะเปิดครึ่ง")
                     # Fall through to HALF_OPEN check below
                 else:
                     remaining = self.cooldown_seconds - time_since_failure
-                    logger.debug(f"[熔断器] {source} 处于熔断状态，剩余冷却时间: {remaining:.0f}s")
+                    logger.debug(f"[เครื่องควบคุมการปิดบัญชี] {source} อยู่ในสถานะปิดบัญชี เหลือเวลาเย็นลงอีก {remaining:.0f}s")
                     return False
 
             if state['state'] == self.HALF_OPEN:
@@ -370,7 +370,7 @@ class CircuitBreaker:
                 if time_since_failure >= self.cooldown_seconds:
                     state['half_open_calls'] = 1
                     state['last_failure_time'] = current_time
-                    logger.info(f"[熔断器] {source} 半开状态探测超时，重新探测")
+                    logger.info(f"[Circuit Breaker] {source} การตรวจสอบสถานะครึ่งเปิดหมดเวลา กำลังตรวจสอบใหม่")
                     return True
                 return False
 
@@ -388,7 +388,7 @@ class CircuitBreaker:
                 state['state'] = self.OPEN
                 state['half_open_calls'] = 0
                 state['last_failure_time'] = time.time()
-                logger.info(f"[熔断器] {source} 半开探测结果不确定，重新进入冷却")
+                logger.info(f"[Circuit Breaker] {source} ผลการตรวจสอบครึ่งเปิดไม่แน่นอน กำลังกลับสู่โหมดเย็น")
 
     def record_success(self, source: str) -> None:
         """记录成功请求"""
@@ -397,7 +397,7 @@ class CircuitBreaker:
 
             if state['state'] == self.HALF_OPEN:
                 # 半开状态下成功，完全恢复
-                logger.info(f"[熔断器] {source} 半开状态请求成功，恢复正常")
+                logger.info(f"[Circuit Breaker] {source} คำขอสถานะครึ่งเปิดสำเร็จ กลับสู่สถานะปกติ")
 
             # 重置状态
             state['state'] = self.CLOSED
@@ -417,14 +417,14 @@ class CircuitBreaker:
                 # 半开状态下失败，继续熔断
                 state['state'] = self.OPEN
                 state['half_open_calls'] = 0
-                logger.warning(f"[熔断器] {source} 半开状态请求失败，继续熔断 {self.cooldown_seconds}s")
+                logger.warning(f"[Circuit Breaker] {source} คำขอสถานะครึ่งเปิดล้มเหลว ยังคงอยู่ในโหมดปิด {self.cooldown_seconds}s")
             elif state['failures'] >= self.failure_threshold:
                 # 达到阈值，进入熔断
                 state['state'] = self.OPEN
-                logger.warning(f"[熔断器] {source} 连续失败 {state['failures']} 次，进入熔断状态 "
-                              f"(冷却 {self.cooldown_seconds}s)")
+                logger.warning(f"[เซอร์กิตเบรกเกอร์] {source} ล้มเหลวติดกัน {state['failures']} ครั้ง เข้าสู่สถานะตัดวงจร "
+                              f"(หน่วง {self.cooldown_seconds}s)")
                 if error:
-                    logger.warning(f"[熔断器] 最后错误: {error}")
+                    logger.warning(f"[Circuit Breaker] ข้อผิดพลาดสุดท้าย: {error}")
     
     def get_status(self) -> Dict[str, str]:
         """获取所有数据源状态"""

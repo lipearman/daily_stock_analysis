@@ -331,14 +331,14 @@ def create_app(static_dir: Optional[Path] = None) -> FastAPI:
     app = FastAPI(
         title="Daily Stock Analysis API",
         description=(
-            "A股/港股/美股自选股智能分析系统 API\n\n"
-            "## 功能模块\n"
-            "- 股票分析：触发 AI 智能分析\n"
-            "- 历史记录：查询历史分析报告\n"
-            "- 股票数据：获取行情数据\n\n"
-            "## 认证方式\n"
-            "支持可选管理员认证：ADMIN_AUTH_ENABLED=true 时，除登录、状态、健康检查和 "
-            "OpenAPI 文档外，/api/v1/* 需要有效管理员会话 Cookie；关闭时不强制认证。"
+            "ระบบวิเคราะห์หุ้นอัจฉริยะสำหรับหุ้น A-share / ฮ่องกง / สหรัฐ API\n\n"
+            "## โมดูลหลัก\n"
+            "- วิเคราะห์หุ้น: เรียกการวิเคราะห์ด้วย AI\n"
+            "- ประวัติ: ค้นหารายงานการวิเคราะห์ย้อนหลัง\n"
+            "- ข้อมูลหุ้น: ดึงข้อมูลราคาตลาด\n\n"
+            "## วิธียืนยันตัวตน\n"
+            "รองรับการยืนยันผู้ดูแลระบบแบบเลือกได้: เมื่อ ADMIN_AUTH_ENABLED=true ทุก endpoint ใน /api/v1/*"
+            "จำเป็นต้องมี session Cookie ของผู้ดูแลระบบ ยกเว้นหน้าล็อกอิน สถานะ และ health check ปิดสวิตช์นี้เมื่อไม่ต้องการยืนยัน"
         ),
         version="1.0.0",
         lifespan=app_lifespan,
@@ -395,7 +395,7 @@ def create_app(static_dir: Optional[Path] = None) -> FastAPI:
     add_error_handlers(app)
     
     # ============================================================
-    # 根路由和健康检查
+    # 根路由和Health check
     # ============================================================
     
     has_frontend = static_dir.exists() and (static_dir / "index.html").exists()
@@ -408,7 +408,7 @@ def create_app(static_dir: Optional[Path] = None) -> FastAPI:
 
         @app.get("/", include_in_schema=False)
         async def root():
-            """根路由 - 返回前端页面"""
+            """Root route - ส่งหน้าเว็บ frontend"""
             return _frontend_index_response(static_dir)
     else:
         _FRONTEND_NOT_BUILT_HTML = """<!DOCTYPE html>
@@ -440,25 +440,25 @@ def create_app(static_dir: Optional[Path] = None) -> FastAPI:
 
         @app.get("/", include_in_schema=False)
         async def root():
-            """根路由 - 前端未构建时返回引导页面"""
+            """Root route - ส่งหน้าแนะนำเมื่อ frontend ยังไม่ได้ build"""
             return HTMLResponse(content=_FRONTEND_NOT_BUILT_HTML)
     
     @app.get(
         "/health",
         response_model=HealthResponse,
         tags=["Health"],
-        summary="健康检查",
-        description="用于负载均衡器或监控系统检查服务状态"
+        summary="Health check",
+        description="สำหรับ load balancer หรือระบบมอนิเตอร์ตรวจสถานะเซิร์ฟเวอร์"
     )
     @app.get(
         "/api/health",
         response_model=HealthResponse,
         tags=["Health"],
-        summary="健康检查",
-        description="用于负载均衡器或监控系统检查服务状态"
+        summary="Health check",
+        description="สำหรับ load balancer หรือระบบมอนิเตอร์ตรวจสถานะเซิร์ฟเวอร์"
     )
     async def health_check() -> HealthResponse:
-        """健康检查接口"""
+        """Health check endpoint"""
         return HealthResponse(
             status="ok",
             timestamp=datetime.now().isoformat()
@@ -546,7 +546,7 @@ def create_app(static_dir: Optional[Path] = None) -> FastAPI:
         # SPA 路由回退
         @app.get("/{full_path:path}", include_in_schema=False)
         async def serve_spa(request: Request, full_path: str):
-            """SPA 路由回退 - 非 API 路由返回 index.html"""
+            """SPA route fallback - เส้นทางที่ไม่ใช่ API ส่ง index.html"""
             if full_path == "api" or full_path.startswith("api/"):
                 return JSONResponse(
                     status_code=404,

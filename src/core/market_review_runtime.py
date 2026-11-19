@@ -115,15 +115,15 @@ def build_market_review_runtime(
         analyzer = GeminiAnalyzer(config=config)
         backend_error = _get_analyzer_generation_backend_config_error(analyzer)
         if backend_error is not None:
-            logger.error("AI 分析器生成后端配置错误: %s", backend_error)
+            logger.error("ผิดพลาดในการสร้างการตั้งค่า backend ของเครื่องมือวิเคราะห์ AI: %s", backend_error)
         elif not analyzer.is_available():
-            logger.warning("AI 分析器初始化后不可用，请检查 LLM 配置")
+            logger.warning("เครื่องมือวิเคราะห์ AI ไม่สามารถใช้งานได้หลังจากเริ่มต้น กรุณาตรวจสอบการตั้งค่า LLM")
             analyzer = None
     else:
         backend_error = _get_config_generation_backend_error(config)
         if backend_error is not None:
-            logger.error("AI 分析器生成后端配置错误: %s", backend_error)
+            logger.error("ผิดพลาดในการสร้างการตั้งค่า backend ของเครื่องมือวิเคราะห์ AI: %s", backend_error)
         else:
-            logger.warning("未检测到 LLM 模型配置，将仅使用模板生成报告")
+            logger.warning("ไม่พบการตั้งค่าโมเดล LLM จะใช้เทมเพลตสร้างรายงานเท่านั้น")
 
     return notifier, analyzer, search_service

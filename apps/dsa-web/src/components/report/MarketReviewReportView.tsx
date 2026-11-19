@@ -347,7 +347,30 @@ const MARKET_REVIEW_TEXT: Record<ReportLanguage, {
     industryBoards: '업종 섹터',
     conceptBoards: '테마 섹터',
     leading: '강세',
-    lagging: '약세',
+    lagging: 'นำการขาลง',
+  },
+  th: {
+    reviewSummary: 'สรุปรีวิวตลาด',
+    noReviewSummary: 'ยังไม่มีสรุปรีวิวตลาด',
+    noSentimentScore: 'ยังไม่มีคะแนนความรู้สึก',
+    rotationAndFunds: 'การหมุนเวียนและเงินทุน',
+    noRotationView: 'ยังไม่มีมุมมองการหมุนเวียน',
+    riskAndWatch: 'ความเสี่ยงและจุดเฝ้าดู',
+    noRiskWatch: 'ยังไม่มีจุดเฝ้าดูสำคัญ',
+    structuredMarketData: 'ข้อมูลตลาดโครงสร้าง',
+    noBreadthData: 'ไม่มีข้อมูล',
+    advancers: 'จำนวนหุ้นขึ้น',
+    decliners: 'จำนวนหุ้นลง',
+    limitUpDown: 'ขึ้นเพดาน/ลงเพดาน',
+    turnover: 'มูลค่าซื้อขาย',
+    index: 'ดัชนี',
+    last: 'ล่าสุด',
+    change: '% เปลี่ยนแปลง',
+    highLow: 'สูง/ต่ำ',
+    industryBoards: 'กลุ่มอุตสาหกรรม',
+    conceptBoards: 'กลุ่มแนวคิด',
+    leading: 'นำขาขึ้น',
+    lagging: 'นำขาลง',
   },
 };
 
@@ -371,8 +394,8 @@ export const MarketReviewReportView: React.FC<MarketReviewReportViewProps> = ({
 }) => {
   const normalizedReportLanguage = normalizeReportLanguage(reportLanguage);
   const text = getReportText(normalizedReportLanguage);
-  const runFlowText = UI_TEXT[normalizedReportLanguage === 'ko' ? 'en' : normalizedReportLanguage];
-  const marketReviewText = MARKET_REVIEW_TEXT[normalizedReportLanguage];
+  const runFlowText = UI_TEXT[normalizedReportLanguage === 'ko' || normalizedReportLanguage === 'zh' ? 'en' : normalizedReportLanguage];
+  const marketReviewText = MARKET_REVIEW_TEXT[normalizedReportLanguage === 'zh' ? 'en' : normalizedReportLanguage];
   const [loadedMarkdown, setLoadedMarkdown] = useState<LoadedMarkdown | null>(null);
   const [loadError, setLoadError] = useState<LoadError | null>(null);
   const [copiedType, setCopiedType] = useState<CopyType | null>(null);
