@@ -4,15 +4,17 @@
 
 Data pipeline (per symbol, e.g. THB_BTC):
   1. Bitkub public ticker  -> local THB price, 24h change, THB volume
-  2. Binance klines (USD)  -> OHLCV for indicators (deep global liquidity),
-     Coingecko OHLC as fallback when Binance is unreachable
+  2. Bitkub daily history  -> OHLCV in THB from Bitkub itself (primary source,
+     no geo-block, no API key); Binance klines (USD) and Coingecko are
+     fallbacks for symbols Bitkub does not chart
   3. Technical indicators  -> MA5/10/20/50, RSI(14), MACD(12,26,9), Bollinger(20,2), ATR(14)
   4. LLM (optional)        -> Thai decision dashboard via any OpenAI-compatible channel
                               (default: local Ollama; set BITKUB_LLM_* to use another)
   5. Telegram (optional)   -> send the Thai report (TELEGRAM_BOT_TOKEN/TELEGRAM_CHAT_ID)
 
-Prices: indicators are computed on USD candles; all displayed levels are converted
-to THB using the implied THB/USDT rate from Bitkub's local price.
+Prices: when candles come from Bitkub they are already in THB (no conversion).
+For USD fallback candles, all displayed levels are converted to THB using the
+implied THB/USDT rate from Bitkub's local price.
 
 Usage:
   python scripts/bitkub_crypto_analyzer.py --symbols THB_BTC,THB_ETH
@@ -42,7 +44,17 @@ TH_TZ = timezone(timedelta(hours=7))
 BITKUB_BASE = "https://api.bitkub.com"
 BINANCE_KLINES = "https://api.binance.com/api/v3/klines"
 COINGECKO_OHLC = "https://api.coingecko.com/api/v3/coins/{coin_id}/ohlc?vs_currency=usd&days={days}"
-COINGECKO_IDS = {"THB_KUB": "bitkub-coin"}
+COINGECKO_IDS = {
+    "THB_BTC": "bitcoin",
+    "THB_ETH": "ethereum",
+    "THB_KUB": "bitkub-coin",
+    "THB_XRP": "ripple",
+    "THB_SOL": "solana",
+    "THB_DOGE": "dogecoin",
+    "THB_ADA": "cardano",
+    "THB_GAS": "gas",
+    "THB_JFIN": "jfin-chain",
+}
 
 DEFAULT_SYMBOLS = "THB_BTC,THB_ETH,THB_KUB"
 DEFAULT_LLM_BASE = "http://llm-server:11434/v1"
@@ -89,10 +101,48 @@ def bitkub_tickers(symbols: list[str]) -> dict[str, dict]:
     return {k: v for k, v in raw.items() if k.upper() in want}
 
 
-def fetch_ohlcv(symbol: str, interval: str = "1d", limit: int = 100) -> list[dict]:
-    """OHLCV candles in USD for the symbol's base asset (Binance, Coingecko fallback).
+def fetch_bitkub_history(symbol: str, limit: int = 100) -> list[dict]:
+    """Daily OHLCV in THB straight from Bitkub's TradingView history endpoint.
 
-    Returns ascending list of {ts, o, h, l, c, v} (ts in ms)."""
+    Works from any region (no geo-block, no API key) and reflects Bitkub's own
+    THB market, so no FX conversion is needed."""
+    base = symbol.split("_")[1].upper()
+    now = int(time.time())
+    frm = now - limit * 86400
+    raw = http_get_json(
+        f"{BITKUB_BASE}/tradingview/history?symbol={base}_THB&resolution=D&from={frm}&to={now}",
+        timeout=30,
+    )
+    stamps = raw.get("t") or []
+    if not stamps:
+        raise RuntimeError(f"bitkub history empty for {symbol}: {str(raw)[:120]}")
+    volumes = raw.get("v") or [0.0] * len(stamps)
+    candles = [
+        {
+            "ts": int(t) * 1000,
+            "o": float(o),
+            "h": float(h),
+            "l": float(l),
+            "c": float(c),
+            "v": float(v),
+        }
+        for t, o, h, l, c, v in zip(stamps, raw["o"], raw["h"], raw["l"], raw["c"], volumes)
+    ]
+    return candles
+
+
+def fetch_ohlcv(symbol: str, interval: str = "1d", limit: int = 100) -> tuple[list[dict], str]:
+    """OHLCV candles for the symbol's base asset.
+
+    Source order: Bitkub THB history (no geo-block) -> Binance USD klines ->
+    Coingecko USD daily aggregation.
+
+    Returns (ascending candles {ts, o, h, l, c, v}, currency)."""
+    try:
+        return fetch_bitkub_history(symbol, limit=limit), "THB"
+    except Exception as exc:
+        print(f"  [warn] Bitkub history failed for {symbol}: {exc} -- trying Binance")
+
     binance_symbol = SYMBOL_MAP_OVERRIDES.get(symbol.upper(), f"{symbol.split('_')[1].upper()}USDT")
     try:
         raw = http_get_json(
@@ -110,7 +160,7 @@ def fetch_ohlcv(symbol: str, interval: str = "1d", limit: int = 100) -> list[dic
                     "v": float(row[5]),
                 }
             )
-        return candles
+        return candles, "USD"
     except Exception as exc:
         print(f"  [warn] Binance klines failed for {symbol}: {exc} -- trying Coingecko")
 
@@ -120,14 +170,24 @@ def fetch_ohlcv(symbol: str, interval: str = "1d", limit: int = 100) -> list[dic
     # Coingecko market_chart gives hourly prices for days<=90 — aggregate them
     # into daily candles ourselves (o/c = day open/close, h/l = day extremes)
     days = 90 if interval == "1d" else 2
-    raw = http_get_json(
-        f"https://api.coingecko.com/api/v3/coins/{coin_id}/market_chart?vs_currency=usd&days={days}",
-        timeout=30,
-    )
+    raw = None
+    for attempt in range(2):  # public tier sometimes answers 429 — retry once
+        try:
+            raw = http_get_json(
+                f"https://api.coingecko.com/api/v3/coins/{coin_id}/market_chart?vs_currency=usd&days={days}",
+                timeout=30,
+            )
+            break
+        except Exception as exc:
+            if attempt == 0:
+                print(f"  [warn] Coingecko attempt 1 failed ({exc}) -- retrying in 6s")
+                time.sleep(6)
+            else:
+                raise
     prices = raw.get("prices", [])
     volumes = raw.get("total_volumes", [])
     if not prices:
-        return []
+        return [], "USD"
     candles: list[dict] = []
     current_day: Optional[str] = None
     day_open = day_high = day_low = None
@@ -176,7 +236,7 @@ def fetch_ohlcv(symbol: str, interval: str = "1d", limit: int = 100) -> list[dic
     for candle in candles:
         day = datetime.fromtimestamp(candle["ts"] / 1000, tz=timezone.utc).strftime("%Y-%m-%d")
         candle["v"] = vol_by_day.get(day, 0.0)
-    return candles
+    return candles, "USD"
 
 
 # ---------------------------------------------------------------------------
@@ -322,7 +382,7 @@ def fmt_thb(value: Optional[float]) -> str:
     return f"{value:,.2f}"
 
 
-def build_technical_report(symbol: str, ticker: dict, tech: dict, rate: float) -> str:
+def build_technical_report(symbol: str, ticker: dict, tech: dict, rate: float, currency: str = "USD") -> str:
     last_thb = ticker.get("last", 0)
     change24 = ticker.get("percentChange", 0)
     vol_thb = ticker.get("quoteVolume", 0)
@@ -332,6 +392,16 @@ def build_technical_report(symbol: str, ticker: dict, tech: dict, rate: float) -
     stop = last_usd - 1.5 * (tech["atr"] or 0)
     target = last_usd + 2.0 * (tech["atr"] or 0)
     conv = rate or 1.0
+    source_note = (
+        "ข้อมูลเทคนิคจากกราฟรายวันของ Bitkub (หน่วยบาท) โดยตรง"
+        if currency == "THB"
+        else "ข้อมูลเทคนิคจากตลาด global (USD) แปลงเป็นบาทด้วยอัตราโดยปริมาณจากราคา Bitkub"
+    )
+    plan_heading = (
+        "**แผนอ้างอิงระดับราคา (บาท):**"
+        if currency == "THB"
+        else "**แผนอ้างอิง (แปลงเป็นบาทจากราคา global):**"
+    )
 
     lines = [
         f"📊 **รายงานคริปโต {symbol} (Bitkub)**",
@@ -350,12 +420,12 @@ def build_technical_report(symbol: str, ticker: dict, tech: dict, rate: float) -
         f"**MA20:** {fmt_thb(tech['ma20'] * conv)} บาท | **MA50:** {fmt_thb(tech['ma50'] * conv)} บาท",
         f"**Bollinger:** {fmt_thb(tech['bb_lower'] * conv)} — {fmt_thb(tech['bb_upper'] * conv)} บาท",
         "",
-        "**แผนอ้างอิง (แปลงเป็นบาทจากราคา global):**",
+        plan_heading,
         f"- จุดเข้าอ้างอิง: {fmt_thb(entry * conv)} บาท",
         f"- จุดตัดขาดทุน: {fmt_thb(stop * conv)} บาท",
         f"- จุดทำกำไรเป้าหมาย: {fmt_thb(target * conv)} บาท",
         "",
-        "ข้อมูลเทคนิคจากตลาด global (USD) แปลงเป็นบาทด้วยอัตราโดยปริมาณจากราคา Bitkub",
+        source_note,
         "⚠️ AI/เทคนิควิเคราะห์เพื่ออ้างอิงเท่านั้น ไม่ใช่คำแนะนำการลงทุน",
     ]
     return "\n".join(lines)
@@ -377,7 +447,7 @@ LLM_PROMPT = """คุณเป็นนักวิเคราะห์คร�
 """
 
 
-def build_llm_report(symbol: str, ticker: dict, tech: dict, rate: float) -> Optional[str]:
+def build_llm_report(symbol: str, ticker: dict, tech: dict, rate: float, currency: str = "USD") -> Optional[str]:
     base_url = os.getenv("BITKUB_LLM_BASE_URL", DEFAULT_LLM_BASE).rstrip("/")
     model = os.getenv("BITKUB_LLM_MODEL", DEFAULT_LLM_MODEL)
     data = json.dumps(
@@ -385,6 +455,8 @@ def build_llm_report(symbol: str, ticker: dict, tech: dict, rate: float) -> Opti
             "bitkub_thb_last": ticker.get("last"),
             "change_24h_pct": ticker.get("percentChange"),
             "quote_volume_thb": ticker.get("quoteVolume"),
+            "candle_currency": currency,
+            "fx_rate_applied": rate,
             "technical": {k: v for k, v in tech.items() if k != "notes"},
             "signals": tech["notes"],
         },
@@ -447,18 +519,22 @@ def analyze_symbol(symbol: str, use_llm: bool, use_telegram: bool, as_json: bool
     if not ticker:
         return f"❌ {symbol}: ไม่พบข้อมูล ticker บน Bitkub"
 
-    candles = fetch_ohlcv(symbol)
+    candles, currency = fetch_ohlcv(symbol)
     if len(candles) < 35:
         return f"❌ {symbol}: ข้อมูลราคาไม่เพียงพอสำหรับวิเคราะห์"
 
     tech = analyze_technicals(candles)
-    rate = implied_thb_rate(ticker, tech["last_usd"])
+    if currency == "THB":
+        # Bitkub candles are already in THB — no FX conversion needed.
+        rate = 1.0
+    else:
+        rate = implied_thb_rate(ticker, tech["last_usd"])
 
     report: Optional[str] = None
     if use_llm:
-        report = build_llm_report(symbol, ticker, tech, rate)
+        report = build_llm_report(symbol, ticker, tech, rate, currency)
     if not report:
-        report = build_technical_report(symbol, ticker, tech, rate)
+        report = build_technical_report(symbol, ticker, tech, rate, currency)
 
     if as_json:
         return json.dumps(
@@ -467,6 +543,7 @@ def analyze_symbol(symbol: str, use_llm: bool, use_telegram: bool, as_json: bool
                 "bitkub_thb": ticker.get("last"),
                 "score": tech["score"],
                 "trend": tech["trend"],
+                "currency": currency,
                 "rate_implied": round(rate, 4),
                 "report": report,
             },
